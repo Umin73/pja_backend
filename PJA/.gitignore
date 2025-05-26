@@ -17,6 +17,9 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+# Do not commit local environment config
+application-*.properties
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
