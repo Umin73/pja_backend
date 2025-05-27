@@ -12,9 +12,9 @@ services:
   my-db:
     image: postgres:15
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: pwd1234
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     ports:
