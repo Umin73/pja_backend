@@ -11,6 +11,6 @@ public class WorkspaceResponse {
     private Long id;
     private String projectName;
     private String teamName;
-    //private Long ownerId;
+    private Long ownerId;
     private Boolean isCompleted;
 }

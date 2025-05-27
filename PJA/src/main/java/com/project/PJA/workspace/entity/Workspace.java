@@ -1,10 +1,13 @@
 package com.project.PJA.workspace.entity;
 
+import com.project.PJA.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 
@@ -19,13 +22,13 @@ import java.util.Map;
 public class Workspace {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "workspace_id")
+    @Column(name = "workspace_id", nullable = false)
     private Long workspaceId;
 
-    //@ManyToOne(fetch = FetchType.LAZY)
-    //@JoinColumn(name = "owner_id", nullable = false, foreignKey = @ForeignKey(name = "FK_WORKSPACE_USER"))
-    //@OnDelete(action = OnDeleteAction.CASCADE)
-    //private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false, foreignKey = @ForeignKey(name = "FK_WORKSPACE_USER"))
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Users user;
 
     @Column(name = "project_name", nullable = false)
     private String projectName;
