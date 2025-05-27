@@ -1,12 +1,10 @@
 package com.project.PJA.workspace.controller;
 
+import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
 import com.project.PJA.workspace.dto.WorkspaceResponse;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,13 +19,12 @@ public class WorkspaceController {
     public void getMyWorkspaces() {
         Long userId = 0L;
         List<WorkspaceResponse> userWorkspaceList = workspaceService.getMyWorkspaces(userId);
-        return;
     }
 
     // 워크스페이스 생성
     @PostMapping("/")
-    public void createWorkspace() {
+    public void createWorkspace(@RequestBody WorkspaceCreateRequest workspaceCreateRequest) {
         Long userId = 0L;
-
+        workspaceService.createWorkspace(userId, workspaceCreateRequest);
     }
 }

@@ -1,5 +1,7 @@
 package com.project.PJA.workspace.service;
 
+import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
 import com.project.PJA.workspace.dto.WorkspaceResponse;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WorkspaceService {
+    private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
 
@@ -36,8 +39,18 @@ public class WorkspaceService {
         return userWorkspaceList;
     }
 
+    // 워크스페이스 생성
     @Transactional
-    public void createWorkspace() {
+    public void createWorkspace(Long userId, WorkspaceCreateRequest workspaceCreateRequest) {
+        Users foundUser = userRepository.findById(userId);
 
+        Workspace newWorkspace = Workspace.builder()
+                .user(foundUser)
+                .projectName(workspaceCreateRequest.getProjectName())
+                .teamName(workspaceCreateRequest.getTeamName())
+                .isSharedAgree(workspaceCreateRequest.getIsSharedAgree())
+                .build();
+
+        workspaceRepository.save(newWorkspace);
     }
 }

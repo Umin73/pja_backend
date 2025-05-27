@@ -3,13 +3,13 @@ package com.project.PJA.workspace.entity;
 import com.project.PJA.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -36,7 +36,6 @@ public class Workspace {
     @Column(name = "team_name", nullable = false)
     private String teamName;
 
-    @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
@@ -53,9 +52,18 @@ public class Workspace {
     private String projectDescription;
 
     @Column(name = "project_summary", columnDefinition = "TEXT", nullable = true)
-    private String project_summary;
+    private String projectSummary;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "project_features", columnDefinition = "json", nullable = true)
     private Map<String, Object> projectFeatures;
+
+    @Builder
+    public Workspace(Users user, String projectName, String teamName, Boolean isSharedAgree) {
+        this.user = user;
+        this.projectName = projectName;
+        this.teamName = teamName;
+        this.isSharedAgree = (isSharedAgree = null) ? false : isSharedAgree;
+        this.createdAt = LocalDateTime.now();
+    }
 }

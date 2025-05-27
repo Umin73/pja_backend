@@ -8,8 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkspaceCreateRequest {
-    private Long id;
     private String projectName;
     private String teamName;
-    private Long ownerId;
+    private Boolean isSharedAgree;
 }
