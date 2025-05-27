@@ -3,6 +3,7 @@ package com.project.PJA.workspace.service;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
 import com.project.PJA.workspace.dto.WorkspaceResponse;
+import com.project.PJA.workspace.dto.WorkspaceUpdateRequest;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
@@ -52,5 +53,11 @@ public class WorkspaceService {
                 .build();
 
         workspaceRepository.save(newWorkspace);
+    }
+
+    // 워크스페이스 수정
+    public void updateWorkspace(Long userId, Long workspaceId, WorkspaceUpdateRequest workspaceUpdateRequest) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new RuntimeException("해당 워크스페이스가 존재하지 않습니다."));
     }
 }

@@ -2,6 +2,7 @@ package com.project.PJA.workspace.controller;
 
 import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
 import com.project.PJA.workspace.dto.WorkspaceResponse;
+import com.project.PJA.workspace.dto.WorkspaceUpdateRequest;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -26,5 +27,12 @@ public class WorkspaceController {
     public void createWorkspace(@RequestBody WorkspaceCreateRequest workspaceCreateRequest) {
         Long userId = 0L;
         workspaceService.createWorkspace(userId, workspaceCreateRequest);
+    }
+    
+    // 워크스페이스 수정
+    @PutMapping("/{workspaceId}")
+    public void updateWorkspace(@PathVariable Long workspaceId, @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
+        Long userId = 0L;
+        workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
     }
 }
