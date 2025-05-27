@@ -19,6 +19,7 @@ bin/
 
 # Do not commit local environment config
 application-*.properties
+src/main/resources/application-dev.properties
 
 ### IntelliJ IDEA ###
 .idea
