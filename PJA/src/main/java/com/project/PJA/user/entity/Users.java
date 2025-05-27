@@ -15,28 +15,21 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "users")
 public class Users implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private int userId;
+    private int user_id;
 
-    @Column(nullable = false, unique = true)
     private String uid;
 
-    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
     private String password;
 
-    @Column(name = "profile_image")
-    private String profileImage;
+    private String profile_image;
 
     private UserRole role = UserRole.ROLE_USER;
 
