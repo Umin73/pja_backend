@@ -1,9 +1,10 @@
 package com.project.PJA.workspace.entity;
 
 import com.project.PJA.user.entity.Users;
-import com.project.PJA.workspace.enumeration.Role;
+import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
@@ -33,8 +34,16 @@ public class WorkspaceMember {
     private Users user;
 
     @Column(name = "role", nullable = false)
-    private Role role;
+    private WorkspaceRole workspaceRole;
 
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt;
+
+    @Builder
+    public WorkspaceMember(Workspace workspace, Users user, WorkspaceRole workspaceRole) {
+        this.workspace = workspace;
+        this.user = user;
+        this.workspaceRole = workspaceRole;
+        this.joinedAt = LocalDateTime.now();
+    }
 }
