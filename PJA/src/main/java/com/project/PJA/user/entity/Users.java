@@ -1,6 +1,8 @@
 package com.project.PJA.user.entity;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,10 +23,13 @@ public class Users implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long user_id;
 
+    @Nullable
     private String uid;
 
+    @Nullable
     private String email;
 
+    @Nullable
     private String name;
 
     private String password;
