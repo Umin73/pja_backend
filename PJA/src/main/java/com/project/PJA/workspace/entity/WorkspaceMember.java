@@ -33,7 +33,7 @@ public class WorkspaceMember {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Users user;
 
-    @Column(name = "role", nullable = false)
+    @Column(name = "workspace_role", nullable = false)
     private WorkspaceRole workspaceRole;
 
     @Column(name = "joined_at", nullable = false)
