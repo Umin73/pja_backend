@@ -1,5 +1,5 @@
 package com.project.PJA.workspace.enumeration;
 
-public enum Role {
+public enum WorkspaceRole {
     OWNER, MEMBER, GUEST
 }
