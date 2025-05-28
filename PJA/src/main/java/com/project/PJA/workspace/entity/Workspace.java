@@ -1,6 +1,7 @@
 package com.project.PJA.workspace.entity;
 
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,10 +41,10 @@ public class Workspace {
     private LocalDateTime createdAt;
 
     @Column(name = "is_shared_agree", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isSharedAgree = false;
+    private Boolean isPublic = false;
 
-    @Column(name = "is_completed", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isCompleted = false;
+    @Column(name = "progress_step", nullable = false, columnDefinition = "VARCHAR(2) DEFAULT '0'")
+    private ProgressStep progressStep = ProgressStep.ZERO;
 
     @Column(name = "project_target", nullable = true)
     private String projectTarget;
@@ -59,11 +60,20 @@ public class Workspace {
     private Map<String, Object> projectFeatures;
 
     @Builder
-    public Workspace(Users user, String projectName, String teamName, Boolean isSharedAgree) {
+    public Workspace(Users user, String projectName, String teamName, Boolean isPublic) {
         this.user = user;
         this.projectName = projectName;
         this.teamName = teamName;
-        this.isSharedAgree = (isSharedAgree = null) ? false : isSharedAgree;
+        this.isPublic = (isPublic = null) ? false : isPublic;
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void update(String projectName, String teamName) {
+        this.projectName = projectName;
+        this.teamName = teamName;
+    }
+
+    public void updateIsCompleted(ProgressStep progressStep) {
+        this.progressStep = progressStep;
     }
 }

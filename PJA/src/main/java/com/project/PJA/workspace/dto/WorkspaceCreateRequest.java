@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class WorkspaceCreateRequest {
     private String projectName;
     private String teamName;
-    private Boolean isSharedAgree;
+    private Boolean isPublic;
 }

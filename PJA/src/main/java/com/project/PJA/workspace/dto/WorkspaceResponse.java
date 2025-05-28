@@ -1,5 +1,6 @@
 package com.project.PJA.workspace.dto;
 
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,5 +13,5 @@ public class WorkspaceResponse {
     private String projectName;
     private String teamName;
     private Long ownerId;
-    private Boolean isCompleted;
+    private ProgressStep progressStep;
 }
