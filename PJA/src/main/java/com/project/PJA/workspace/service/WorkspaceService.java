@@ -4,6 +4,7 @@ import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
