@@ -19,7 +19,7 @@ public class Users implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int user_id;
+    private Long user_id;
 
     private String uid;
 
