@@ -1,11 +1,14 @@
 package com.project.PJA.workspace.service;
 
+import com.project.PJA.exception.BadRequestException;
+import com.project.PJA.exception.ForbiddenException;
+import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
-import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
-import com.project.PJA.workspace.dto.WorkspaceResponse;
-import com.project.PJA.workspace.dto.WorkspaceUpdateRequest;
+import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.enumeration.ProgressStep;
+import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,16 +29,25 @@ public class WorkspaceService {
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
     public List<WorkspaceResponse> getMyWorkspaces(Long userId) {
-        List<WorkspaceMember> foundworkspaceMembers = workspaceMemberRepository.findAllByUserId(userId);
+        // 사용자가 참여한 워크스페이스들
+        List<WorkspaceMember> participatingWorkspaces = workspaceMemberRepository.findAllByUserId(userId);
 
-        List<Long> workspaceIds = foundworkspaceMembers.stream()
+        // 해당 워크스페이스들의 아이디
+        List<Long> workspaceIds = participatingWorkspaces.stream()
                 .map(workspace -> workspace.getWorkspace().getWorkspaceId())
                 .collect(Collectors.toList());
 
+        // 해당 워크스페이스 아이디로 워크스페이스 찾기
         List<Workspace> foundWorkspaces = workspaceRepository.findAllById(workspaceIds);
 
+        // 워크스페이스 정보들 가져오기
         List<WorkspaceResponse> userWorkspaceList = foundWorkspaces.stream()
-                .map(workspace -> new WorkspaceResponse(workspace.getWorkspaceId(), workspace.getProjectName(), workspace.getTeamName(), workspace.getUser().getUser_id(), workspace.getIsCompleted()))
+                .map(workspace -> new WorkspaceResponse(
+                        workspace.getWorkspaceId(),
+                        workspace.getProjectName(),
+                        workspace.getTeamName(),
+                        workspace.getUser().getUser_id(),
+                        workspace.getProgressStep()))
                 .collect(Collectors.toList());
 
         return userWorkspaceList;
@@ -42,22 +55,129 @@ public class WorkspaceService {
 
     // 워크스페이스 생성
     @Transactional
-    public void createWorkspace(Long userId, WorkspaceCreateRequest workspaceCreateRequest) {
-        Users foundUser = userRepository.findById(userId);
+    public WorkspaceResponse createWorkspace(Long userId, WorkspaceCreateRequest workspaceCreateRequest) {
+        if (workspaceCreateRequest.getProjectName() == null || workspaceCreateRequest.getProjectName().trim().isEmpty()) {
+            throw new BadRequestException("필수 항목이 누락되어 워크스페이스를 생성할 수 없습니다.");
+        }
 
+        if (workspaceCreateRequest.getTeamName() == null || workspaceCreateRequest.getTeamName().trim().isEmpty()) {
+            throw new BadRequestException("필수 항목이 누락되어 워크스페이스를 생성할 수 없습니다.");
+        }
+
+        if (workspaceCreateRequest.getIsPublic() == null) {
+            throw new BadRequestException("필수 항목이 누락되어 워크스페이스를 생성할 수 없습니다.");
+        }
+
+        // 사용자 조회
+        Users foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+
+        // 워크스페이스 생성 및 저장
         Workspace newWorkspace = Workspace.builder()
                 .user(foundUser)
                 .projectName(workspaceCreateRequest.getProjectName())
                 .teamName(workspaceCreateRequest.getTeamName())
-                .isSharedAgree(workspaceCreateRequest.getIsSharedAgree())
+                .isPublic(workspaceCreateRequest.getIsPublic())
                 .build();
+        Workspace savedWorkspace = workspaceRepository.save(newWorkspace);
 
-        workspaceRepository.save(newWorkspace);
+        // 워크스페이스 멤버 생성 및 저장
+        WorkspaceMember workspaceMember = WorkspaceMember.builder()
+                .workspace(savedWorkspace)
+                .user(foundUser)
+                .workspaceRole(WorkspaceRole.OWNER)
+                .build();
+        workspaceMemberRepository.save(workspaceMember);
+
+        return new WorkspaceResponse(
+                savedWorkspace.getWorkspaceId(),
+                savedWorkspace.getProjectName(),
+                savedWorkspace.getTeamName(),
+                savedWorkspace.getUser().getUser_id(),
+                savedWorkspace.getProgressStep());
     }
 
     // 워크스페이스 수정
-    public void updateWorkspace(Long userId, Long workspaceId, WorkspaceUpdateRequest workspaceUpdateRequest) {
+    @Transactional
+    public WorkspaceResponse updateWorkspace(Long userId, Long workspaceId, WorkspaceUpdateRequest workspaceUpdateRequest) {
+        // 워크스페이스 찾기
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new RuntimeException("해당 워크스페이스가 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
+        if(foundWorkspace.getUser().getUser_id() != userId) {
+            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
+        }
+
+        // 해당 워크스페이스의 오너이면 수정
+        foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName());
+
+        return new WorkspaceResponse(
+                foundWorkspace.getWorkspaceId(),
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName(),
+                foundWorkspace.getUser().getUser_id(),
+                foundWorkspace.getProgressStep());
+    }
+
+    // 워크스페이스 진행도 완료 상태 수정
+    @Transactional
+    public WorkspaceResponse updateCompletionStatus(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
+        // 워크스페이스 찾기
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
+        if(foundWorkspace.getUser().getUser_id() != userId) {
+            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
+        }
+
+        // 해당 워크스페이스의 오너이면 수정
+        ProgressStep stepEnum = ProgressStep.fromValue(workspaceProgressStep.getProgressStep());
+        foundWorkspace.updateIsCompleted(stepEnum);
+
+        return new WorkspaceResponse(
+                foundWorkspace.getWorkspaceId(),
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName(),
+                foundWorkspace.getUser().getUser_id(),
+                foundWorkspace.getProgressStep());
+    }
+
+    // 워크스페이스 삭제
+    @Transactional
+    public WorkspaceResponse deleteWorkspace(Long userId, Long workspaceId) {
+        // 워크스페이스 찾기
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
+        if(foundWorkspace.getUser().getUser_id() != userId) {
+            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
+        }
+
+        // 해당 워크스페이스의 오너이면 삭제
+        workspaceRepository.delete(foundWorkspace);
+
+        return new WorkspaceResponse(
+                foundWorkspace.getWorkspaceId(),
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName(),
+                foundWorkspace.getUser().getUser_id(),
+                foundWorkspace.getProgressStep());
+    }
+    
+    // 워크스페이스 팀원 초대 메일
+    public void sendInvitation(Long userId, Long workspaceId, WorkspaceInviteRequest workspaceInviteRequest) {
+        // 워크스페이스 조회
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
+        if(foundWorkspace.getUser().getUser_id() != userId) {
+            throw new ForbiddenException("워크스페이스에 팀원을 초대할 권한이 없습니다.");
+        }
+
+        String emailToken = UUID.randomUUID().toString();
     }
 }
