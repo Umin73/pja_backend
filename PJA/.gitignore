@@ -43,3 +43,6 @@ out/
 
 ### .env 파일
 .env
+
+### PostgreSQL의 데이터 파일
+postgres_data/
