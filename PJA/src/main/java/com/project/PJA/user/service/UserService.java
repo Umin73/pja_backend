@@ -4,24 +4,23 @@ import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.entity.UserRole;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
-import org.apache.catalina.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final PasswordEncoder passwordEncoder;
 
     public boolean signup(SignupDto signupDto) {
 
         Users user = new Users();
         user.setUid(signupDto.getUid());
         user.setName(signupDto.getName());
-        user.setPassword(signupDto.getPassword());
+        user.setPassword(passwordEncoder.encode(signupDto.getPassword()));
         user.setEmail(signupDto.getEmail());
         user.setRole(UserRole.ROLE_USER);
 
