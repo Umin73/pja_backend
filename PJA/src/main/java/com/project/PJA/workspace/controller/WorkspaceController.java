@@ -1,6 +1,7 @@
 package com.project.PJA.workspace.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.security.service.CustomUserDetailService;
 import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
@@ -89,10 +90,11 @@ public class WorkspaceController {
     }
 
     // 워크스페이스 팀원 초대
-    /*@PostMapping("/{workspaceId}/invite")
+    @PostMapping("/{workspaceId}/invite")
     public ResponseEntity<SuccessResponse<Void>> inviteUserToWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                                        @PathVariable Long workspaceId,
                                                                        @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
-
-    }*/
+        Long userId = userDetails.getUserId;
+        workspaceService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
+    }
 }
