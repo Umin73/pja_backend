@@ -8,6 +8,8 @@ services:
         condition: service_healthy
       my-cache-server:
         condition: service_healthy
+    env_file:
+      - .env
 
   my-db:
     image: postgres:15
