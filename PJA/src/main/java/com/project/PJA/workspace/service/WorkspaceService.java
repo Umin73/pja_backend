@@ -6,18 +6,24 @@ import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.dto.*;
+import com.project.PJA.workspace.entity.Invitation;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
+import com.project.PJA.workspace.repository.InvitationRepository;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +32,8 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final InvitationRepository invitationRepository;
+    private final EmailService emailService;
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
@@ -71,7 +79,7 @@ public class WorkspaceService {
 
         // 사용자 조회
         Users foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
         // 워크스페이스 생성 및 저장
         Workspace newWorkspace = Workspace.builder()
@@ -179,6 +187,37 @@ public class WorkspaceService {
             throw new ForbiddenException("워크스페이스에 팀원을 초대할 권한이 없습니다.");
         }
 
-        String emailToken = UUID.randomUUID().toString();
+        //String emailToken = UUID.randomUUID().toString();
+
+        List<Invitation> invitations = workspaceInviteRequest.getEmails().stream()
+                        .map(email -> Invitation.builder()
+                                .workspace(foundWorkspace)
+                                .invitedEmail(email)
+                                .workspaceRole(workspaceInviteRequest.getWorkspaceRole())
+                                .token(generateToken(email))
+                                .build())
+                .collect(Collectors.toList());
+
+        invitationRepository.saveAll(invitations);
+
+        for (Invitation invitation : invitations) {
+            String inviteUrl = "https://{yourdomain.com}/invite/accept?token=" + invitation.getToken();
+            emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
+        }
+    }
+
+    public String generateToken(String email) {
+        String base = email + Instant.now().toString();
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(base.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                hexString.append(String.format("%02x", b));
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("토큰 생성 실패", e);
+        }
     }
 }
