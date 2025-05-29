@@ -2,7 +2,6 @@ package com.project.PJA.user.entity;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +20,8 @@ public class Users implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+    @Column(name = "user_id")
+    private Long userId;
 
     @Nullable
     private String uid;
@@ -34,9 +34,13 @@ public class Users implements UserDetails {
 
     private String password;
 
-    private String profile_image;
+    @Column(name = "profile_image")
+    private String profileImage;
 
     private UserRole role = UserRole.ROLE_USER;
+
+    @Column(name = "email_verified")
+    private boolean emailVerified = false;
 
     // 스프링 시큐리티
 
