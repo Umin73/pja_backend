@@ -1,8 +1,11 @@
 package com.project.PJA.security.controller;
 
+import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.security.dto.LoginDto;
 import com.project.PJA.security.jwt.JwtTokenProvider;
-import com.project.PJA.user.repository.UserRepository;
+import com.project.PJA.security.service.AuthUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -13,35 +16,29 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsService userDetailsService;
     private final StringRedisTemplate redisTemplate;
-    private final UserRepository userRepository;
+    private final AuthUserService authUserService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String uid, @RequestParam String password) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(uid, password));
-
-        UserDetails user = userDetailsService.loadUserByUsername(uid);
-        String accessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority());
-        String refreshToken = jwtTokenProvider.createToken(uid, "REFRESH");
-
-        // Redis에 RefreshToken 저장
-        redisTemplate.opsForValue().set("RT:" + uid, refreshToken, 7, TimeUnit.DAYS);
-
-        return ResponseEntity.ok().body(
-                Map.of("status","success",
-                        "message", "로그인에 성공하였습니다.",
-                        "accessToken", accessToken,
-                        "refreshToken", refreshToken)
-        );
+    public SuccessResponse<?> login(@RequestBody LoginDto loginDto) {
+        log.info("== 로그인 API 진입 == UID: {}", loginDto.getUid());
+        try {
+            Map<Object, Object> tokens = authUserService.login(loginDto);
+            return new SuccessResponse<>("success", "로그인에 성공하였습니다", tokens);
+        } catch (Exception e) {
+            log.error("로그인 중 예외 발생", e);
+            return new SuccessResponse<>("fail", "로그인 중 오류 발생", null);
+        }
     }
+
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(@RequestParam String refreshToken) {
