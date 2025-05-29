@@ -51,4 +51,18 @@ public class UserService {
             throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
         }
     }
+
+    public Map<String, String> findEmail(String uid) {
+        Optional<Users> optionalUsers = userRepository.findByUid(uid);
+        if (optionalUsers.isPresent()) {
+            Users users = optionalUsers.get();
+
+            Map<String, String> map = new HashMap<>();
+            map.put("email", users.getEmail());
+
+            return map;
+        } else {
+            throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
+        }
+    }
 }

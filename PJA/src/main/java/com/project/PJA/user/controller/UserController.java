@@ -4,6 +4,7 @@ import com.project.PJA.common.dto.ErrorResponse;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.user.dto.EmailRequestDto;
 import com.project.PJA.user.dto.SignupDto;
+import com.project.PJA.user.dto.UidRequestDto;
 import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -42,5 +43,12 @@ public class UserController {
         log.info("== 아이디 찾기 API 진입 == email: {}", emailRequestDto.getEmail());
         Map<String, String> data = userService.findId(emailRequestDto.getEmail());
         return new SuccessResponse<>("success", "요청하신 아이디를 성공적으로 찾았습니다.", data);
+    }
+
+    @PostMapping("/find-email")
+    public SuccessResponse<?> findEmail(@RequestBody UidRequestDto uidRequestDto) {
+        log.info("== 이메일 찾기 API 진입 == email: {}", uidRequestDto.getUid());
+        Map<String, String> data = userService.findEmail(uidRequestDto.getUid());
+        return new SuccessResponse<>("status", "요청하신 이메일을 성공적으로 찾았습니다.", data);
     }
 }
