@@ -1,21 +1,13 @@
 package com.project.PJA.user.controller;
 
-import com.project.PJA.common.dto.ErrorResponse;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.user.dto.EmailRequestDto;
 import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.dto.UidRequestDto;
-import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -32,10 +24,24 @@ public class UserController {
         boolean success =userService.signup(signupDto);
 
         if (success) {
-            return new SuccessResponse<>("success", "회원가입에 성공하였습니다", null);
+            return new SuccessResponse<>("success", "회원가입(폼 입력)에 성공하였습니다", null);
         } else {
             throw new RuntimeException("회원가입에 실패하였습니다.");
         }
+    }
+
+    @GetMapping("/send-email")
+    public SuccessResponse<?> sendVerifyEmail(@RequestParam String email) {
+        log.info("== 이메일 보내기 API 진입 == UID: {}", email);
+        userService.sendVerificationEmail(email);
+        return new SuccessResponse<>("success", "이메일 인증이 완료되었습니다.", null);
+    }
+
+    @GetMapping("/verify-email")
+    public SuccessResponse<?> verifyEmail(@RequestParam String email, @RequestParam String token) {
+        log.info("== 회원가입 이메일 인증 API 진입 == UID: {}, token={}", email, token);
+        userService.verifyEmail(email, token);
+        return new SuccessResponse<>("success", "이메일 인증이 완료되었습니다.", null);
     }
 
     @PostMapping("/find-id")
@@ -49,6 +55,6 @@ public class UserController {
     public SuccessResponse<?> findEmail(@RequestBody UidRequestDto uidRequestDto) {
         log.info("== 이메일 찾기 API 진입 == email: {}", uidRequestDto.getUid());
         Map<String, String> data = userService.findEmail(uidRequestDto.getUid());
-        return new SuccessResponse<>("status", "요청하신 이메일을 성공적으로 찾았습니다.", data);
+        return new SuccessResponse<>("success", "요청하신 이메일을 성공적으로 찾았습니다.", data);
     }
 }
