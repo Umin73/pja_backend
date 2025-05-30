@@ -89,12 +89,24 @@ public class WorkspaceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 워크스페이스 팀원 초대
+    // 워크스페이스 팀원 초대 메일 전송
     @PostMapping("/{workspaceId}/invite")
-    public ResponseEntity<SuccessResponse<Void>> inviteUserToWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceInviteResponse>> inviteUserToWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                                        @PathVariable Long workspaceId,
                                                                        @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
         Long userId = userDetails.getUserId;
-        workspaceService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
+        WorkspaceInviteResponse workspaceInviteResponse = workspaceService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
+
+        SuccessResponse<WorkspaceInviteResponse> response = new SuccessResponse<>(
+                "success", "팀원 초대 이메일이 성공적으로 전송됐습니다.", workspaceInviteResponse
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+    
+    // 팀원 초대 수락
+    @PostMapping("/invitations/accept")
+    public void acceptInvitation(@RequestBody InvitationTokenRequest tokenRequest) {
+
     }
 }

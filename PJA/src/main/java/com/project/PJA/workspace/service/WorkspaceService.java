@@ -176,8 +176,8 @@ public class WorkspaceService {
                 foundWorkspace.getProgressStep());
     }
     
-    // 워크스페이스 팀원 초대 메일
-    public void sendInvitation(Long userId, Long workspaceId, WorkspaceInviteRequest workspaceInviteRequest) {
+    // 워크스페이스 팀원 초대 메일 전송
+    public WorkspaceInviteResponse sendInvitation(Long userId, Long workspaceId, WorkspaceInviteRequest request) {
         // 워크스페이스 조회
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -189,11 +189,11 @@ public class WorkspaceService {
 
         //String emailToken = UUID.randomUUID().toString();
 
-        List<Invitation> invitations = workspaceInviteRequest.getEmails().stream()
+        List<Invitation> invitations = request.getEmails().stream()
                         .map(email -> Invitation.builder()
                                 .workspace(foundWorkspace)
                                 .invitedEmail(email)
-                                .workspaceRole(workspaceInviteRequest.getWorkspaceRole())
+                                .workspaceRole(request.getWorkspaceRole())
                                 .token(generateToken(email))
                                 .build())
                 .collect(Collectors.toList());
@@ -201,9 +201,11 @@ public class WorkspaceService {
         invitationRepository.saveAll(invitations);
 
         for (Invitation invitation : invitations) {
-            String inviteUrl = "https://{yourdomain.com}/invite/accept?token=" + invitation.getToken();
+            String inviteUrl = "https://{my-front-domain.com}/invite/accept?token=" + invitation.getToken();
             emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
         }
+
+        return new WorkspaceInviteResponse(workspaceId, request.getEmails(), request.getWorkspaceRole());
     }
 
     public String generateToken(String email) {
@@ -218,6 +220,15 @@ public class WorkspaceService {
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("토큰 생성 실패", e);
+        }
+    }
+
+    public void acceptInvitation(InvitationTokenRequest tokenRequest) {
+        Invitation invitation = invitationRepository.findByToken(tokenRequest.getToken())
+                .orElseThrow(() -> new BadRequestException("유효하지 않은 초대 토큰입니다."));
+
+        if (invitation.getAcceptedAt() != null) {
+            throw new
         }
     }
 }
