@@ -2,18 +2,23 @@ package com.project.PJA.security.controller;
 
 import com.project.PJA.common.dto.ErrorResponse;
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.exception.UnauthorizedException;
+import com.project.PJA.security.dto.CheckPwDto;
 import com.project.PJA.security.dto.LoginDto;
 import com.project.PJA.security.dto.TokenRequestDto;
 import com.project.PJA.security.jwt.JwtTokenProvider;
 import com.project.PJA.security.service.AuthUserService;
+import com.project.PJA.user.entity.Users;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthController {
 
     private final AuthUserService authUserService;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public SuccessResponse<?> login(@RequestBody LoginDto loginDto) {
@@ -43,8 +49,18 @@ public class AuthController {
         return new SuccessResponse<>("success", "토큰 재발급에 성공하였습니다.", Map.of("accessToken", newAccessToken));
     }
 
+    @PostMapping("/check-password")
+    public SuccessResponse<?> checkPassword(@AuthenticationPrincipal Users user,
+                                            @RequestBody CheckPwDto checkPwDto) {
+        if(!passwordEncoder.matches(checkPwDto.getPassword(), user.getPassword())) {
+            throw new UnauthorizedException("비밀번호가 올바르지 않습니다.");
+        }
+        return new SuccessResponse<>("success", "비밀번호 확인에 성공하였습니다.", null);
+    }
+
     @PostMapping("/logout")
     public SuccessResponse<?> logout(HttpServletRequest request, @RequestBody String uid) {
+        log.info("== 로그아웃 API 진입 == uid: {}", uid);
         if(authUserService.logout(request, uid)) {
             return new SuccessResponse<>("success", "로그아웃에 성공하였습니다.", null);
         } else {

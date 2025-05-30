@@ -3,6 +3,8 @@ package com.project.PJA.security.service;
 import com.project.PJA.exception.UnauthorizedException;
 import com.project.PJA.security.dto.LoginDto;
 import com.project.PJA.security.jwt.JwtTokenProvider;
+import com.project.PJA.user.entity.UserStatus;
+import com.project.PJA.user.entity.Users;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,11 +43,12 @@ public class AuthUserService {
             throw e;
         }
 
-        log.info("uid는 " + uid);
-        log.info("password는 " + password);
         UserDetails user = userDetailsService.loadUserByUsername(uid);
+
         String accessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority());
         String refreshToken = jwtTokenProvider.createToken(uid, "REFRESH");
+
+        log.info("access token: {}", accessToken);
 
         redisTemplate.opsForValue().set("RT:" + uid, refreshToken, 7, TimeUnit.DAYS);
 
@@ -71,12 +74,20 @@ public class AuthUserService {
         UserDetails user = userDetailsService.loadUserByUsername(uid);
         log.info("user: {}", user);
         String newAccessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority());
+        log.info("newAccessToken: {}", newAccessToken);
 
         return newAccessToken;
     }
 
     public boolean logout(HttpServletRequest request, String uid) {
+        log.info("request: {}",request);
         String AT = jwtTokenProvider.resolveToken(request);
+
+        if (AT == null) {
+            throw new UnauthorizedException("유효한 Access Token이 전달되지 않았습니다.");
+        }
+
+        log.info("AT: {}",AT);
         long expiration = jwtTokenProvider.getExpiration(AT);
 
         // Redis에 블랙리스트로 등록
@@ -87,5 +98,4 @@ public class AuthUserService {
 
         return true;
     }
-
 }

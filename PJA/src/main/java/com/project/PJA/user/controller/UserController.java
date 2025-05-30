@@ -4,9 +4,11 @@ import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.user.dto.EmailRequestDto;
 import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.dto.UidRequestDto;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -56,5 +58,12 @@ public class UserController {
         log.info("== 이메일 찾기 API 진입 == email: {}", uidRequestDto.getUid());
         Map<String, String> data = userService.findEmail(uidRequestDto.getUid());
         return new SuccessResponse<>("success", "요청하신 이메일을 성공적으로 찾았습니다.", data);
+    }
+
+    @DeleteMapping("/delete")
+    public SuccessResponse<?> delete(/*@AuthenticationPrincipal Users user*/ @RequestBody UidRequestDto uidRequestDto) {
+        log.info("== 회원 탈퇴 API 진입 == uid: {}", uidRequestDto.getUid());
+        userService.withdraw(uidRequestDto.getUid());
+        return new SuccessResponse<>("success", "회원 탈퇴가 성공적으로 처리되었습니다.", null);
     }
 }

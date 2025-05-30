@@ -6,6 +6,7 @@ import com.project.PJA.exception.UnauthorizedException;
 import com.project.PJA.security.service.EmailVerificationService;
 import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.entity.UserRole;
+import com.project.PJA.user.entity.UserStatus;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,12 +32,20 @@ public class UserService {
 
     public boolean signup(SignupDto signupDto) {
 
+        if(userRepository.existsByUid(signupDto.getUid())) {
+            throw new RuntimeException("이미 존재하는 아이디입니다.");
+        }
+        if(userRepository.existsByEmail(signupDto.getEmail())) {
+            throw new RuntimeException("이미 등록된 이메일입니다.");
+        }
+
         Users user = new Users();
         user.setUid(signupDto.getUid());
         user.setName(signupDto.getName());
         user.setPassword(passwordEncoder.encode(signupDto.getPassword()));
         user.setEmail(signupDto.getEmail());
         user.setRole(UserRole.ROLE_USER);
+        user.setStatus(UserStatus.UNVERIFIED);
         user.setEmailVerified(false);
 
         userRepository.save(user);
@@ -76,6 +86,7 @@ public class UserService {
             }
 
             user.setEmailVerified(true);
+            user.setStatus(UserStatus.ACTIVE);
             userRepository.save(user);
 
             // 인증된 이메일 토큰은 삭제
@@ -111,6 +122,27 @@ public class UserService {
             return map;
         } else {
             throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
+        }
+    }
+
+    @Transactional
+    public void withdraw(String uid) {
+        Optional<Users> optionalUser = userRepository.findByUid(uid);
+        log.info("optionalUser: {}", optionalUser);
+
+        if(optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+
+            user.setStatus(UserStatus.WITHDRAW);
+            user.setUid(null);
+            user.setEmail(null);
+            user.setPassword(null);
+            user.setName("탈퇴한 사용자");
+            user.setProfileImage(null);
+
+            userRepository.save(user);
+        } else {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
     }
 }

@@ -23,13 +23,13 @@ public class Users implements UserDetails {
     @Column(name = "user_id")
     private Long userId;
 
-    @Nullable
+    @Column(unique = true)
     private String uid;
 
-    @Nullable
+    @Column(unique = true)
     private String email;
 
-    @Nullable
+    @Column(nullable = false)
     private String name;
 
     private String password;
@@ -37,9 +37,15 @@ public class Users implements UserDetails {
     @Column(name = "profile_image")
     private String profileImage;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role = UserRole.ROLE_USER;
 
-    @Column(name = "email_verified")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.UNVERIFIED;
+
+    @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
 
     // 스프링 시큐리티
@@ -77,7 +83,7 @@ public class Users implements UserDetails {
     }
 
     @Override
-    public boolean isEnabled() {
-        return true;
+    public boolean isEnabled() { // 유저 활성화 여부 판단 메서드
+        return this.status == UserStatus.ACTIVE;
     }
 }

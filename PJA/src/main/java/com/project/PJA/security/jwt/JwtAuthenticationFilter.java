@@ -35,7 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/api/auth/user/email",
             "/api/auth/user/id",
             "/api/auth/user/change-pw",
-            "/api/auth/logout",
             "/api/auth/login",
             "/api/auth/signup",
             "/api/auth/reissue",
@@ -76,6 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
+            // 인증된 사용자임을 설정 ( @AuthenticationPrincipal로 이 정보 꺼내 사용 )
             SecurityContextHolder.getContext().setAuthentication(auth);
         }
 
