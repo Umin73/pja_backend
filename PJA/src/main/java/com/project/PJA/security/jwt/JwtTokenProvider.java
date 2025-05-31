@@ -4,15 +4,19 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
     @Value("${JWT_SECRET}")
     private String secret;
 
@@ -21,7 +25,8 @@ public class JwtTokenProvider {
     private final long accessTokenValidity = 1000L * 60 * 30; // 30분
 
     @PostConstruct
-    protected void init() {
+    public void init() {
+        System.out.println("== JWT_SECRET 사용됨 == " + secret); // 디버그용
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
@@ -43,6 +48,7 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            log.info("토큰 검증 실패: {}", e.getMessage());
             return false;
         }
     }
@@ -52,8 +58,27 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
+    public long getExpiration(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Date expiration = claims.getExpiration();
+            long now = System.currentTimeMillis();
+            return expiration.getTime() - now; // 남은 만료 시간(ms)
+        } catch (JwtException | IllegalArgumentException e) {
+            log.warn("만료 시간 추출 실패: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+
     public String resolveToken(HttpServletRequest request) {
         String bearer = request.getHeader("Authorization");
+        log.info("Authorization 헤더: {}", bearer);
         if (bearer != null && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }

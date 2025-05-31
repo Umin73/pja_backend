@@ -2,7 +2,6 @@ package com.project.PJA.user.entity;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,22 +20,33 @@ public class Users implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Nullable
+    @Column(unique = true)
     private String uid;
 
-    @Nullable
+    @Column(unique = true)
     private String email;
 
-    @Nullable
+    @Column(nullable = false)
     private String name;
 
     private String password;
 
-    private String profile_image;
+    @Column(name = "profile_image")
+    private String profileImage;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role = UserRole.ROLE_USER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.UNVERIFIED;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
 
     // 스프링 시큐리티
 
@@ -73,7 +83,7 @@ public class Users implements UserDetails {
     }
 
     @Override
-    public boolean isEnabled() {
-        return true;
+    public boolean isEnabled() { // 유저 활성화 여부 판단 메서드
+        return this.status == UserStatus.ACTIVE;
     }
 }
