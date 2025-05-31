@@ -1,6 +1,6 @@
-package com.project.PJA.workspace.repository;
+package com.project.PJA.invitation.repository;
 
-import com.project.PJA.workspace.entity.Invitation;
+import com.project.PJA.invitation.entity.Invitation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

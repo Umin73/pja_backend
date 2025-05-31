@@ -1,4 +1,4 @@
-package com.project.PJA.workspace.enumeration;
+package com.project.PJA.invitation.enumeration;
 
 public enum InvitationStatus {
     PENDING, ACCEPTED, DECLINED

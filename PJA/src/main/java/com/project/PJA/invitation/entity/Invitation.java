@@ -1,6 +1,8 @@
-package com.project.PJA.workspace.entity;
+package com.project.PJA.invitation.entity;
 
-import com.project.PJA.workspace.enumeration.InvitationStatus;
+
+import com.project.PJA.invitation.enumeration.InvitationStatus;
+import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -57,5 +59,14 @@ public class Invitation {
         this.token = token;
         this.createdAt = LocalDateTime.now();
         this.expiresAt = this.createdAt.plusHours(24);
+    }
+
+    public void updateAccept(InvitationStatus invitationStatus, LocalDateTime acceptedAt) {
+        this.invitationStatus = invitationStatus;
+        this.acceptedAt = acceptedAt;
+    }
+
+    public void updateDecline(InvitationStatus invitationStatus) {
+        this.invitationStatus = invitationStatus;
     }
 }
