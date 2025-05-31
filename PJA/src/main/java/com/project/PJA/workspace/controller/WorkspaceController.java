@@ -1,7 +1,7 @@
 package com.project.PJA.workspace.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.security.service.CustomUserDetailService;
+import com.project.PJA.invitation.service.InvitationService;
 import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/workspaces")
+@RequestMapping("/api/workspaces")
 @RequiredArgsConstructor
 public class WorkspaceController {
     private final WorkspaceService workspaceService;
+    private final InvitationService invitationService;
 
     // 사용자의 워크스페이스 전체 조회
     @GetMapping("/")
@@ -95,18 +96,12 @@ public class WorkspaceController {
                                                                        @PathVariable Long workspaceId,
                                                                        @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
         Long userId = userDetails.getUserId;
-        WorkspaceInviteResponse workspaceInviteResponse = workspaceService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
+        WorkspaceInviteResponse workspaceInviteResponse = invitationService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
 
         SuccessResponse<WorkspaceInviteResponse> response = new SuccessResponse<>(
                 "success", "팀원 초대 이메일이 성공적으로 전송됐습니다.", workspaceInviteResponse
         );
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-    
-    // 팀원 초대 수락
-    @PostMapping("/invitations/accept")
-    public void acceptInvitation(@RequestBody InvitationTokenRequest tokenRequest) {
-
     }
 }

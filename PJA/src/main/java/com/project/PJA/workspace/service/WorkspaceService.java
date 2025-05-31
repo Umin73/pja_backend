@@ -5,13 +5,14 @@ import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
-import com.project.PJA.workspace.dto.*;
-import com.project.PJA.workspace.entity.Invitation;
+import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
+import com.project.PJA.workspace.dto.WorkspaceProgressStep;
+import com.project.PJA.workspace.dto.WorkspaceResponse;
+import com.project.PJA.workspace.dto.WorkspaceUpdateRequest;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
-import com.project.PJA.workspace.repository.InvitationRepository;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +20,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,8 +29,6 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
-    private final InvitationRepository invitationRepository;
-    private final EmailService emailService;
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
@@ -55,7 +50,7 @@ public class WorkspaceService {
                         workspace.getWorkspaceId(),
                         workspace.getProjectName(),
                         workspace.getTeamName(),
-                        workspace.getUser().getUser_id(),
+                        workspace.getUser().getUserId(),
                         workspace.getProgressStep()))
                 .collect(Collectors.toList());
 
@@ -102,7 +97,7 @@ public class WorkspaceService {
                 savedWorkspace.getWorkspaceId(),
                 savedWorkspace.getProjectName(),
                 savedWorkspace.getTeamName(),
-                savedWorkspace.getUser().getUser_id(),
+                savedWorkspace.getUser().getUserId(),
                 savedWorkspace.getProgressStep());
     }
 
@@ -114,7 +109,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUser_id() != userId) {
+        if(foundWorkspace.getUser().getUserId() != userId) {
             throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
         }
 
@@ -125,7 +120,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
-                foundWorkspace.getUser().getUser_id(),
+                foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
 
@@ -137,7 +132,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUser_id() != userId) {
+        if(foundWorkspace.getUser().getUserId() != userId) {
             throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
         }
 
@@ -149,7 +144,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
-                foundWorkspace.getUser().getUser_id(),
+                foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
 
@@ -161,7 +156,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUser_id() != userId) {
+        if(foundWorkspace.getUser().getUserId() != userId) {
             throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
         }
 
@@ -172,63 +167,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
-                foundWorkspace.getUser().getUser_id(),
+                foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
-    }
-    
-    // 워크스페이스 팀원 초대 메일 전송
-    public WorkspaceInviteResponse sendInvitation(Long userId, Long workspaceId, WorkspaceInviteRequest request) {
-        // 워크스페이스 조회
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUser_id() != userId) {
-            throw new ForbiddenException("워크스페이스에 팀원을 초대할 권한이 없습니다.");
-        }
-
-        //String emailToken = UUID.randomUUID().toString();
-
-        List<Invitation> invitations = request.getEmails().stream()
-                        .map(email -> Invitation.builder()
-                                .workspace(foundWorkspace)
-                                .invitedEmail(email)
-                                .workspaceRole(request.getWorkspaceRole())
-                                .token(generateToken(email))
-                                .build())
-                .collect(Collectors.toList());
-
-        invitationRepository.saveAll(invitations);
-
-        for (Invitation invitation : invitations) {
-            String inviteUrl = "https://{my-front-domain.com}/invite/accept?token=" + invitation.getToken();
-            emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
-        }
-
-        return new WorkspaceInviteResponse(workspaceId, request.getEmails(), request.getWorkspaceRole());
-    }
-
-    public String generateToken(String email) {
-        String base = email + Instant.now().toString();
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(base.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                hexString.append(String.format("%02x", b));
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("토큰 생성 실패", e);
-        }
-    }
-
-    public void acceptInvitation(InvitationTokenRequest tokenRequest) {
-        Invitation invitation = invitationRepository.findByToken(tokenRequest.getToken())
-                .orElseThrow(() -> new BadRequestException("유효하지 않은 초대 토큰입니다."));
-
-        if (invitation.getAcceptedAt() != null) {
-            throw new
-        }
     }
 }
