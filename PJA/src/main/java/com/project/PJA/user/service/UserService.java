@@ -1,9 +1,10 @@
 package com.project.PJA.user.service;
 
-import ch.qos.logback.core.subst.Token;
 import com.project.PJA.email.service.EmailServiceImpl;
+import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.exception.UnauthorizedException;
+import com.project.PJA.user.dto.ChangePwRequestDto;
 import com.project.PJA.security.service.EmailVerificationService;
 import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.entity.UserRole;
@@ -78,6 +79,7 @@ public class UserService {
     }
 
     // 이메일 인증하기
+    @Transactional
     public void verifyEmail(String email, String token) {
         Optional<Users> optionalUser = userRepository.findByEmail(email);
 
@@ -158,6 +160,41 @@ public class UserService {
         }
         Users user = optionalUsers.get();
         user.setName(newName);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(String uid, ChangePwRequestDto dto) {
+        Optional<Users> optionalUsers = userRepository.findByUid(uid);
+
+        if(optionalUsers.isEmpty()) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        Users user = optionalUsers.get();
+
+        // 현재 비밀번호 일치 확인
+        if(!passwordEncoder.matches(dto.getCurrentPw(), user.getPassword())) {
+            throw new UnauthorizedException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 새 비밀번호 유효성 체크
+        String newPw = dto.getNewPw();
+        if (!newPw.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,16}$")) {
+            throw new BadRequestException("비밀번호는 8~16자의 영문, 숫자, 특수문자를 포함해야 합니다.");
+        }
+
+        // 새 비밀번호 == 현재 비밀번호 검사
+        if(passwordEncoder.matches(newPw, user.getPassword())) {
+            throw new BadRequestException("새 비밀번호가 이전 비밀번호화 일치합니다.");
+        }
+
+        // 새 비밀번호 != 확인 비밀번호 검사
+        if(!newPw.equals(dto.getConfirmPw())) {
+            throw new BadRequestException("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPw));
         userRepository.save(user);
     }
 }
