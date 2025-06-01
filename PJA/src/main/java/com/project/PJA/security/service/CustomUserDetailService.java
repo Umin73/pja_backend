@@ -34,10 +34,11 @@ public class CustomUserDetailService implements UserDetailsService {
             throw new UnauthorizedException("비활성화된 계정입니다.");
         }
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUid())
-                .password(user.getPassword())
-                .roles(user.getRole().name().replace("ROLE_", ""))
-                .build();
+//        return org.springframework.security.core.userdetails.User.builder()
+//                .username(user.getUid())
+//                .password(user.getPassword())
+//                .roles(user.getRole().name().replace("ROLE_", ""))
+//                .build();
+        return user;
     }
 }
