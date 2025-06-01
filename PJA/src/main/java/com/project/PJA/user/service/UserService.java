@@ -1,6 +1,7 @@
 package com.project.PJA.user.service;
 
 import ch.qos.logback.core.subst.Token;
+import com.project.PJA.email.service.EmailServiceImpl;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.exception.UnauthorizedException;
 import com.project.PJA.security.service.EmailVerificationService;
@@ -16,10 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final EmailServiceImpl emailServiceImpl;
 
     public boolean signup(SignupDto signupDto) {
 
@@ -63,11 +62,16 @@ public class UserService {
             if (user.isEmailVerified()) {
                 throw new RuntimeException("이미 이메일 인증이 완료되었습니다.");
             }
-            String token = UUID.randomUUID().toString(); // 토큰 생성
+
+            // 6자리 숫자 토큰 생성
+            String token = String.format("%06d", new Random().nextInt(1000000));
             log.info("token: {}", token);
+
             emailVerificationService.saveEmailVerificationToken(user.getEmail(), token, 60*24); // 토큰 24시간동안 유효함
 
-            // 이메일 보내기 추가 필요
+            // 이메일 전송
+            emailServiceImpl.sendSignupEmail(email, token);
+
         } else {
             throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
         }
