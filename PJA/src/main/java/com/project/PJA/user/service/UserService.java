@@ -145,4 +145,15 @@ public class UserService {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
     }
+
+    @Transactional
+    public void updateUserName(String uid, String newName) {
+        Optional<Users> optionalUsers = userRepository.findByUid(uid);
+        if(optionalUsers.isEmpty()) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+        Users user = optionalUsers.get();
+        user.setName(newName);
+        userRepository.save(user);
+    }
 }
