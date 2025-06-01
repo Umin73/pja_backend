@@ -1,29 +1,21 @@
 package com.project.PJA.security.controller;
 
-import com.project.PJA.common.dto.ErrorResponse;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.exception.UnauthorizedException;
 import com.project.PJA.security.dto.CheckPwDto;
 import com.project.PJA.security.dto.LoginDto;
 import com.project.PJA.security.dto.TokenRequestDto;
-import com.project.PJA.security.jwt.JwtTokenProvider;
 import com.project.PJA.security.service.AuthUserService;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -33,6 +25,7 @@ public class AuthController {
 
     private final AuthUserService authUserService;
     private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
     @PostMapping("/login")
     public SuccessResponse<?> login(@RequestBody LoginDto loginDto) {

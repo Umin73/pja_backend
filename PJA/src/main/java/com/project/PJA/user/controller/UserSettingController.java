@@ -2,8 +2,8 @@ package com.project.PJA.user.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.user.dto.ChangePwRequestDto;
 import com.project.PJA.user.dto.ChangeNameRequestDto;
-import com.project.PJA.user.dto.UidRequestDto;
 import com.project.PJA.user.dto.UserProfileDto;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
@@ -54,4 +54,11 @@ public class UserSettingController {
         return new SuccessResponse<>("success", "이름이 성공적으로 변경되었습니다.", null);
     }
 
+    @PatchMapping("/change-pw")
+    public SuccessResponse<?> changePassword(@AuthenticationPrincipal Users user,
+                                             @RequestBody ChangePwRequestDto dto) {
+        log.info("== 비밀번호 변경 API 진입 == uid: {}", user.getUid());
+        userService.changePassword(user.getUid(), dto);
+        return new SuccessResponse<>("success", "비밀번호 변경에 성공하였습니다.", null);
+    }
 }
