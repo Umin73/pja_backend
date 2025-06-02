@@ -65,6 +65,13 @@ public class UserController {
         return new SuccessResponse<>("success", "인증이 완료되었습니다.", null);
     }
 
+    @PatchMapping("/change-pw")
+    public SuccessResponse<?> changePassword(@RequestBody ChangePw2RequestDto changePw2RequestDto) {
+        log.info("== 비밀번호 변경 API 진입 == uid: {}", changePw2RequestDto.getUid());
+        userService.changePassword2(changePw2RequestDto);
+        return new SuccessResponse<>("success", "비밀번호 변경에 성공하였습니다.", null);
+    }
+
     @PostMapping("/find-email")
     public SuccessResponse<?> findEmail(@RequestBody UidRequestDto uidRequestDto) {
         log.info("== 이메일 찾기 API 진입 == email: {}", uidRequestDto.getUid());

@@ -4,11 +4,8 @@ import com.project.PJA.email.service.EmailServiceImpl;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.exception.UnauthorizedException;
-import com.project.PJA.user.dto.ChangePwRequestDto;
+import com.project.PJA.user.dto.*;
 import com.project.PJA.security.service.EmailVerificationService;
-import com.project.PJA.user.dto.IdEmailRequestDto;
-import com.project.PJA.user.dto.SignupDto;
-import com.project.PJA.user.dto.VerifyEmailRequestDto;
 import com.project.PJA.user.entity.UserRole;
 import com.project.PJA.user.entity.UserStatus;
 import com.project.PJA.user.entity.Users;
@@ -210,6 +207,31 @@ public class UserService {
         }
         Users user = optionalUsers.get();
         user.setName(newName);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword2(ChangePw2RequestDto dto) {
+        Optional<Users> optionalUsers = userRepository.findByUid(dto.getUid());
+
+        if(optionalUsers.isEmpty()) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        Users user = optionalUsers.get();
+
+        // 새 비밀번호 유효성 체크
+        String newPw = dto.getNewPw();
+        if (!newPw.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,16}$")) {
+            throw new BadRequestException("비밀번호는 8~16자의 영문, 숫자, 특수문자를 포함해야 합니다.");
+        }
+
+        // 새 비밀번호 != 확인 비밀번호 검사
+        if(!newPw.equals(dto.getConfirmPw())) {
+            throw new BadRequestException("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPw));
         userRepository.save(user);
     }
 
