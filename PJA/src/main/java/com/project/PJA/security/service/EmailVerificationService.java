@@ -23,4 +23,16 @@ public class EmailVerificationService {
     public void deleteEmailVerificationToken(String email) {
         redisTemplate.delete("emailToken:" + email);
     }
+
+    public void saveFindPwVerificationToken(String email, String token, long expirationMinutes) {
+        redisTemplate.opsForValue().set("findPwToken:" + email, token, Duration.ofMinutes(expirationMinutes));
+    }
+
+    public String getFindPwVerificationToken(String email) {
+        return redisTemplate.opsForValue().get("findPwToken:" + email);
+    }
+
+    public void deleteFindPwVerificationToken(String email) {
+        redisTemplate.delete("findPwToken:" + email);
+    }
 }
