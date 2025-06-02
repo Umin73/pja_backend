@@ -36,6 +36,13 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("fail", ex.getMessage()));
     }
 
+    // 409 Conflict
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse("fail", ex.getMessage()));
+    }
+
     // 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
