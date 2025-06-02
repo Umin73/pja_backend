@@ -4,4 +4,5 @@ public interface EmailService {
     void sendInvitationEmail(String to, String inviteUrl);
     void sendVerificationCode(String to, String code);
     void sendSignupEmail(String to, String code);
+    void sendFindPwEmail(String to, String code);
 }
