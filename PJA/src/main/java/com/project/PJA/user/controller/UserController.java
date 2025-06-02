@@ -2,6 +2,7 @@ package com.project.PJA.user.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.user.dto.EmailRequestDto;
+import com.project.PJA.user.dto.IdEmailRequestDto;
 import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.dto.UidRequestDto;
 import com.project.PJA.user.entity.Users;
@@ -51,6 +52,13 @@ public class UserController {
         log.info("== 아이디 찾기 API 진입 == email: {}", emailRequestDto.getEmail());
         Map<String, String> data = userService.findId(emailRequestDto.getEmail());
         return new SuccessResponse<>("success", "요청하신 아이디를 성공적으로 찾았습니다.", data);
+    }
+
+    @PostMapping("/find-pw")
+    public SuccessResponse<?> findPw(@RequestBody IdEmailRequestDto idEmailRequestDto) {
+        log.info("== 비밀번호 찾기 API 진입 == email: {}", idEmailRequestDto.getUid());
+        userService.sendFindPwEmail(idEmailRequestDto);
+        return new SuccessResponse<>("success","인증번호를 성공적으로 발송했습니다.", null);
     }
 
     @PostMapping("/find-email")

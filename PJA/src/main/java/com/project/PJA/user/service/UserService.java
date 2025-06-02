@@ -6,6 +6,7 @@ import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.exception.UnauthorizedException;
 import com.project.PJA.user.dto.ChangePwRequestDto;
 import com.project.PJA.security.service.EmailVerificationService;
+import com.project.PJA.user.dto.IdEmailRequestDto;
 import com.project.PJA.user.dto.SignupDto;
 import com.project.PJA.user.entity.UserRole;
 import com.project.PJA.user.entity.UserStatus;
@@ -112,6 +113,36 @@ public class UserService {
             map.put("uid", users.getUid());
 
             return map;
+        } else {
+            throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
+        }
+    }
+
+    // 비밀번호 찾기 인증번호 보내기
+    public void sendFindPwEmail(IdEmailRequestDto dto) {
+
+        log.info("dto.getUid: {}", dto.getUid());
+        log.info("dto.getEmail: {}", dto.getEmail());
+
+        Optional<Users> optionalUser = userRepository.findByUid(dto.getUid());
+        log.info("optionalUser: {}", optionalUser);
+        if(optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+            log.info("user: {}", user);
+
+            if(!Objects.equals(user.getEmail(), dto.getEmail())) {
+                throw new BadRequestException("계정에 등록된 이메일과 입력하신 이메일이 일치하지 않습니다.");
+            }
+
+            // 6자리 숫자 토큰 생성
+            String token = String.format("%06d", new Random().nextInt(1000000));
+            log.info("token: {}", token);
+
+            emailVerificationService.saveEmailVerificationToken(user.getEmail(), token, 60*24); // 토큰 24시간동안 유효함
+
+            // 이메일 전송
+            emailServiceImpl.sendFindPwEmail(dto.getEmail(), token);
+
         } else {
             throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
         }

@@ -39,4 +39,14 @@ public class EmailServiceImpl implements EmailService {
 
         mailSender.send(message);
     }
+
+    @Override
+    public void sendFindPwEmail(String to, String certificationNumber) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("PJA 비밀번호 찾기 인증번호 메일입니다.");
+        message.setText("인증번호는 다음과 같습니다:\n\n" + certificationNumber);
+
+        mailSender.send(message);
+    }
 }
