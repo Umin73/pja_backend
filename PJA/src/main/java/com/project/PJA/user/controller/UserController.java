@@ -1,10 +1,7 @@
 package com.project.PJA.user.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.user.dto.EmailRequestDto;
-import com.project.PJA.user.dto.IdEmailRequestDto;
-import com.project.PJA.user.dto.SignupDto;
-import com.project.PJA.user.dto.UidRequestDto;
+import com.project.PJA.user.dto.*;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +56,13 @@ public class UserController {
         log.info("== 비밀번호 찾기 API 진입 == email: {}", idEmailRequestDto.getUid());
         userService.sendFindPwEmail(idEmailRequestDto);
         return new SuccessResponse<>("success","인증번호를 성공적으로 발송했습니다.", null);
+    }
+
+    @PostMapping("/verify-pw-code")
+    public SuccessResponse<?> verifyPwCode(@RequestBody VerifyEmailRequestDto verifyEmailRequestDto) {
+        log.info("== 비밀번호 찾기 인증번호 확인 API 진입 == token: {}", verifyEmailRequestDto.getToken());
+        userService.verifyFindPwCode(verifyEmailRequestDto);
+        return new SuccessResponse<>("success", "인증이 완료되었습니다.", null);
     }
 
     @PostMapping("/find-email")

@@ -8,6 +8,7 @@ import com.project.PJA.user.dto.ChangePwRequestDto;
 import com.project.PJA.security.service.EmailVerificationService;
 import com.project.PJA.user.dto.IdEmailRequestDto;
 import com.project.PJA.user.dto.SignupDto;
+import com.project.PJA.user.dto.VerifyEmailRequestDto;
 import com.project.PJA.user.entity.UserRole;
 import com.project.PJA.user.entity.UserStatus;
 import com.project.PJA.user.entity.Users;
@@ -138,11 +139,29 @@ public class UserService {
             String token = String.format("%06d", new Random().nextInt(1000000));
             log.info("token: {}", token);
 
-            emailVerificationService.saveEmailVerificationToken(user.getEmail(), token, 60*24); // 토큰 24시간동안 유효함
+            emailVerificationService.saveFindPwVerificationToken(user.getEmail(), token, 60*24); // 토큰 24시간동안 유효함
 
             // 이메일 전송
             emailServiceImpl.sendFindPwEmail(dto.getEmail(), token);
 
+        } else {
+            throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
+        }
+    }
+
+    public void verifyFindPwCode(VerifyEmailRequestDto dto) {
+        Optional<Users> optionalUser = userRepository.findByEmail(dto.getEmail());
+
+        if(optionalUser.isPresent()) {
+            Users user = optionalUser.get();
+
+            String storedToken = emailVerificationService.getFindPwVerificationToken(user.getEmail());
+            if(storedToken == null || !storedToken.equals(dto.getToken())) {
+                throw new UnauthorizedException("유효하지 않거나 만료된 인증 토큰 입니다.");
+            }
+
+            // 인증된 이메일 토큰은 삭제
+            emailVerificationService.deleteFindPwVerificationToken(dto.getEmail());
         } else {
             throw new NotFoundException("일치하는 사용자를 찾을 수 없습니다.");
         }
