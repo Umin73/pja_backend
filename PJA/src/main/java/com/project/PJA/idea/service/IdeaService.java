@@ -95,14 +95,18 @@ public class IdeaService {
 
     // 아이디어 저장
     @Transactional
-    public void saveIdea(Long userId, Long workspaceId, ProjectInfoRequest projectInfoRequest) {
+    public ProjectInfoRequest saveIdea(Long userId, Long workspaceId, ProjectInfoRequest projectInfoRequest) {
         // 워크스페이스 확인
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자 확인
-        if(foundWorkspace.getUser.getUserId != userId) {
+        if(foundWorkspace.getUser().getUserId() != userId) {
             throw new ForbiddenException("아이디어 요약을 요청할 권한이 없습니다.");
         }
+
+        // 레파지토리에 저장
+        foundWorkspace.update(projectInfoRequest.getProjectDescription());
+        return projectInfoRequest;
     }
 }

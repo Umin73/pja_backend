@@ -69,9 +69,16 @@ public class IdeaController {
     }
 
     @PostMapping("/{workspaceId}/project-info")
-    public ResponseEntity<SuccessResponse<Void>> saveIdea(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<ProjectInfoRequest>> saveIdea(@AuthenticationPrincipal CustomUserDetails userDetails,
                                                           @PathVariable Long workspaceId,
                                                           @RequestBody ProjectInfoRequest projectInfoRequest) {
         Long userId = userDetails.getUserId;
+        ProjectInfoRequest projectInfo = ideaService.saveIdea(userId, workspaceId, projectInfoRequest);
+
+        SuccessResponse<ProjectInfoRequest> response = new SuccessResponse<>(
+                "success", "아이디어 요약이 성공적으로 저장되었습니다.", projectInfo
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
