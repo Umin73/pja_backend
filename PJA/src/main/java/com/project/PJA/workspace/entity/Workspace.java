@@ -40,10 +40,11 @@ public class Workspace {
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "is_shared_agree", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(name = "is_shared_agree", nullable = false)
     private Boolean isPublic = false;
 
-    @Column(name = "progress_step", nullable = false, columnDefinition = "VARCHAR(2) DEFAULT '0'")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "progress_step", nullable = false, length = 10)
     private ProgressStep progressStep = ProgressStep.ZERO;
 
     @Column(name = "project_target", nullable = true)
@@ -55,8 +56,9 @@ public class Workspace {
     @Column(name = "project_summary", columnDefinition = "TEXT", nullable = true)
     private String projectSummary;
 
+    // @Column(name = "project_features", columnDefinition = "json", nullable = true)
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "project_features", columnDefinition = "json", nullable = true)
+    @Column(name = "project_features", nullable = true)
     private Map<String, Object> projectFeatures;
 
     @Builder
@@ -64,7 +66,7 @@ public class Workspace {
         this.user = user;
         this.projectName = projectName;
         this.teamName = teamName;
-        this.isPublic = (isPublic = null) ? false : isPublic;
+        this.isPublic = (isPublic == null) ? false : isPublic;
         this.createdAt = LocalDateTime.now();
     }
 

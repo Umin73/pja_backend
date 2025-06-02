@@ -33,6 +33,7 @@ public class WorkspaceMember {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Users user;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "workspace_role", nullable = false)
     private WorkspaceRole workspaceRole;
 

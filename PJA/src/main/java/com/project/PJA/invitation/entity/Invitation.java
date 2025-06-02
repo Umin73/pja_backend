@@ -39,6 +39,7 @@ public class Invitation {
     @Column(name = "token", nullable = false)
     private String token;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "invitation_status", nullable = false)
     private InvitationStatus invitationStatus = InvitationStatus.PENDING;
 

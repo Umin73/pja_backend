@@ -16,6 +16,7 @@ import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkspaceService {
@@ -34,7 +36,7 @@ public class WorkspaceService {
     @Transactional(readOnly = true)
     public List<WorkspaceResponse> getMyWorkspaces(Long userId) {
         // 사용자가 참여한 워크스페이스들
-        List<WorkspaceMember> participatingWorkspaces = workspaceMemberRepository.findAllByUserId(userId);
+        List<WorkspaceMember> participatingWorkspaces = workspaceMemberRepository.findAllByUser_UserId(userId);
 
         // 해당 워크스페이스들의 아이디
         List<Long> workspaceIds = participatingWorkspaces.stream()
@@ -157,7 +159,7 @@ public class WorkspaceService {
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
         if(foundWorkspace.getUser().getUserId() != userId) {
-            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
+            throw new ForbiddenException("이 워크스페이스를 삭제할 권한이 없습니다.");
         }
 
         // 해당 워크스페이스의 오너이면 삭제

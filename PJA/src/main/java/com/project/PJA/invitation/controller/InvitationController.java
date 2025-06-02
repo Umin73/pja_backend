@@ -4,6 +4,7 @@ import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.invitation.dto.InvitationDecisionResponse;
 import com.project.PJA.invitation.dto.InvitationInfoResponse;
 import com.project.PJA.invitation.service.InvitationService;
+import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +19,9 @@ public class InvitationController {
 
     // 초대 링크 정보 조회
     @GetMapping("/{token}")
-    public ResponseEntity<SuccessResponse<InvitationInfoResponse>> getInvitationInfo(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<InvitationInfoResponse>> getInvitationInfo(@AuthenticationPrincipal Users user,
                                             @PathVariable String token) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         InvitationInfoResponse invitationInfo = invitationService.getInvitationInfo(userId, token);
 
         SuccessResponse<InvitationInfoResponse> response = new SuccessResponse<>(
@@ -32,9 +33,9 @@ public class InvitationController {
 
     // 팀원 초대 수락
     @PatchMapping("/{token}/accept")
-    public ResponseEntity<SuccessResponse<InvitationDecisionResponse>> acceptInvitation(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<InvitationDecisionResponse>> acceptInvitation(@AuthenticationPrincipal Users user,
                                                                                         @PathVariable String token) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         InvitationDecisionResponse acceptInvitation = invitationService.acceptInvitation(userId, token);
 
         SuccessResponse<InvitationDecisionResponse> response = new SuccessResponse<>(
@@ -46,9 +47,9 @@ public class InvitationController {
 
     // 팀원 초대 거절
     @PatchMapping("/{token}/decline")
-    public ResponseEntity<SuccessResponse<InvitationDecisionResponse>> declineInvitation(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<InvitationDecisionResponse>> declineInvitation(@AuthenticationPrincipal Users user,
                                                                                          @PathVariable String token) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         InvitationDecisionResponse declineInvitation = invitationService.declineInvitation(userId, token);
 
         SuccessResponse<InvitationDecisionResponse> response = new SuccessResponse<>(

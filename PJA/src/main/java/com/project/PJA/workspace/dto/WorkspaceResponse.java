@@ -14,4 +14,8 @@ public class WorkspaceResponse {
     private String teamName;
     private Long ownerId;
     private ProgressStep progressStep;
+
+    public String getProgressStep() {
+        return progressStep.getValue();
+    }
 }

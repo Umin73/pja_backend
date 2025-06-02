@@ -2,9 +2,11 @@ package com.project.PJA.workspace.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.invitation.service.InvitationService;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/workspaces")
 @RequiredArgsConstructor
@@ -20,9 +23,9 @@ public class WorkspaceController {
     private final InvitationService invitationService;
 
     // 사용자의 워크스페이스 전체 조회
-    @GetMapping("/")
-    public ResponseEntity<SuccessResponse<List<WorkspaceResponse>>> getMyWorkspaces(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId = userDetails.getUserId;
+    @GetMapping({ "", "/" })
+    public ResponseEntity<SuccessResponse<List<WorkspaceResponse>>> getMyWorkspaces(@AuthenticationPrincipal Users user) {
+        Long userId = user.getUserId();
         List<WorkspaceResponse> userWorkspaceList = workspaceService.getMyWorkspaces(userId);
 
         SuccessResponse<List<WorkspaceResponse>> response = new SuccessResponse<>(
@@ -33,10 +36,10 @@ public class WorkspaceController {
     }
 
     // 워크스페이스 생성
-    @PostMapping("/")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> createWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
+    @PostMapping({ "", "/" })
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> createWorkspace(@AuthenticationPrincipal Users user,
                                                                               @RequestBody WorkspaceCreateRequest workspaceCreateRequest) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceResponse savedWorkspace = workspaceService.createWorkspace(userId, workspaceCreateRequest);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -48,10 +51,10 @@ public class WorkspaceController {
     
     // 워크스페이스 수정
     @PutMapping("/{workspaceId}")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspace(@AuthenticationPrincipal Users user,
                                 @PathVariable Long workspaceId,
                                 @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -63,10 +66,10 @@ public class WorkspaceController {
 
     // 워크스페이스 진행도 완료 수정
     @PatchMapping("/{workspaceId}/complete")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateCompletionStatus(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateCompletionStatus(@AuthenticationPrincipal Users user,
                                                                                      @PathVariable Long workspaceId,
                                                                                      @RequestBody WorkspaceProgressStep workspaceProgressStep) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceResponse updatedWorkspace = workspaceService.updateCompletionStatus(userId, workspaceId, workspaceProgressStep);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -78,9 +81,9 @@ public class WorkspaceController {
 
     // 워크스페이스 삭제
     @DeleteMapping("/{workspaceId}")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> deleteWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> deleteWorkspace(@AuthenticationPrincipal Users user,
                                                                               @PathVariable Long workspaceId) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceResponse deletedWorkspace = workspaceService.deleteWorkspace(userId, workspaceId);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -92,10 +95,10 @@ public class WorkspaceController {
 
     // 워크스페이스 팀원 초대 메일 전송
     @PostMapping("/{workspaceId}/invite")
-    public ResponseEntity<SuccessResponse<WorkspaceInviteResponse>> inviteUserToWorkspace(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceInviteResponse>> inviteUserToWorkspace(@AuthenticationPrincipal Users user,
                                                                        @PathVariable Long workspaceId,
                                                                        @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceInviteResponse workspaceInviteResponse = invitationService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
 
         SuccessResponse<WorkspaceInviteResponse> response = new SuccessResponse<>(
