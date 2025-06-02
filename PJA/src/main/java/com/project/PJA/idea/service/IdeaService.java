@@ -5,6 +5,11 @@ import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.idea.dto.ProjectInfoRequest;
 import com.project.PJA.idea.dto.WorkspaceIdeaRequest;
 import com.project.PJA.idea.dto.WorkspaceIdeaResponse;
+import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.enumeration.WorkspaceRole;
+import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
+import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +32,7 @@ public class IdeaService {
 
         // 비공개인데 멤버가 아니면 403 반환
         if (!foundWorkspace.getIsPublic()) {
-            boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUserId(workspaceId, userId);
+            boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUser_UserId(workspaceId, userId);
             if(!isMember) {
                 throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
             }
@@ -43,18 +48,17 @@ public class IdeaService {
 
         // 비공개인데 멤버가 아니면 403 반환
         if (!foundWorkspace.getIsPublic()) {
-            boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUserId(workspaceId, userId);
+            boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUser_UserId(workspaceId, userId);
             if(!isMember) {
                 throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
             }
         }
 
         // 수정 권한 확인(멤버 or 오너)
-        WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspaceIdAndUserId(workspaceId, userId)
-                .orElseThrow(() -> new NotFoundException("해당 워크스페이스의 구성원이 아닙니다."));
+        WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspaceIdAndUser_UserId(workspaceId, userId);
 
         if (foundWorkspaceMember.getWorkspaceRole() != WorkspaceRole.OWNER &&
-                foundWorkspaceMember.getWorkspaceRole != WorkspaceRole.MEMBER) {
+                foundWorkspaceMember.getWorkspaceRole() != WorkspaceRole.MEMBER) {
             throw new ForbiddenException("이 워크스페이스에 수정할 권한이 없습니다.");
         }
 
@@ -78,7 +82,7 @@ public class IdeaService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자 확인
-        if(foundWorkspace.getUser.getUserId != userId) {
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
             throw new ForbiddenException("아이디어 요약을 요청할 권한이 없습니다.");
         }
 

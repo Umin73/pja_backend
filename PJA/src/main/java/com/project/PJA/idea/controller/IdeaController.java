@@ -5,6 +5,7 @@ import com.project.PJA.idea.dto.ProjectInfoRequest;
 import com.project.PJA.idea.dto.WorkspaceIdeaRequest;
 import com.project.PJA.idea.dto.WorkspaceIdeaResponse;
 import com.project.PJA.idea.service.IdeaService;
+import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +20,9 @@ public class IdeaController {
     
     // 아이디어 조회
     @GetMapping("/{workspaceId}/prject-info")
-    public ResponseEntity<SuccessResponse<WorkspaceIdeaResponse>> getIdea(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceIdeaResponse>> getIdea(@AuthenticationPrincipal Users user,
                                                                           @PathVariable Long workspaceId) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceIdeaResponse workspaceIdea = ideaService.getIdea(userId, workspaceId);
 
         SuccessResponse<WorkspaceIdeaResponse> response = new SuccessResponse<>(
@@ -33,10 +34,10 @@ public class IdeaController {
 
     // 아이디어 수정
     @PutMapping("/{workspaceId}/prject-info")
-    public ResponseEntity<SuccessResponse<WorkspaceIdeaResponse>> updateIdea(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<WorkspaceIdeaResponse>> updateIdea(@AuthenticationPrincipal Users user,
                                                                              @PathVariable Long workspaceId,
                                                                              @RequestBody WorkspaceIdeaRequest workspaceIdeaRequest) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         WorkspaceIdeaResponse updatedIdea = ideaService.updateIdea(userId, workspaceId, workspaceIdeaRequest);
 
         SuccessResponse<WorkspaceIdeaResponse> response = new SuccessResponse<>(
@@ -55,10 +56,10 @@ public class IdeaController {
 
     // 아이디어 ai 생성
     @PostMapping("/{workspaceId}/prject-info")
-    public ResponseEntity<SuccessResponse<ProjectInfoRequest>> createIdea(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<ProjectInfoRequest>> createIdea(@AuthenticationPrincipal Users user,
                                                                           @PathVariable Long workspaceId,
                                                                           @RequestBody ProjectInfoRequest projectInfoRequest) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         ProjectInfoRequest projectInfo = ideaService.createIdea(userId, workspaceId, projectInfoRequest);
 
         SuccessResponse<ProjectInfoRequest> response = new SuccessResponse<>(
@@ -69,10 +70,10 @@ public class IdeaController {
     }
 
     @PostMapping("/{workspaceId}/project-info")
-    public ResponseEntity<SuccessResponse<ProjectInfoRequest>> saveIdea(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<SuccessResponse<ProjectInfoRequest>> saveIdea(@AuthenticationPrincipal Users user,
                                                           @PathVariable Long workspaceId,
                                                           @RequestBody ProjectInfoRequest projectInfoRequest) {
-        Long userId = userDetails.getUserId;
+        Long userId = user.getUserId();
         ProjectInfoRequest projectInfo = ideaService.saveIdea(userId, workspaceId, projectInfoRequest);
 
         SuccessResponse<ProjectInfoRequest> response = new SuccessResponse<>(
