@@ -25,6 +25,7 @@ public class WorkspaceController {
     // 사용자의 워크스페이스 전체 조회
     @GetMapping({ "", "/" })
     public ResponseEntity<SuccessResponse<List<WorkspaceResponse>>> getMyWorkspaces(@AuthenticationPrincipal Users user) {
+        log.info("=== workspace 생성 api 진입 == username: {}", user.getUsername());
         Long userId = user.getUserId();
         List<WorkspaceResponse> userWorkspaceList = workspaceService.getMyWorkspaces(userId);
 
