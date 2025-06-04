@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkspaceResponse {
-    private Long id;
+    private Long workspaceId;
     private String projectName;
     private String teamName;
     private Long ownerId;
