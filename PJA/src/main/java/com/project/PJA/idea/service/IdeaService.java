@@ -3,7 +3,8 @@ package com.project.PJA.idea.service;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.idea.dto.ProjectInfoRequest;
-import com.project.PJA.idea.dto.ProjectSummaryRequest;
+import com.project.PJA.idea.dto.ProjectSummaryReponse;
+import com.project.PJA.idea.dto.ProjectSummaryDto;
 import com.project.PJA.idea.entity.Idea;
 import com.project.PJA.idea.repository.IdeaRepository;
 import com.project.PJA.workspace.entity.Workspace;
@@ -29,7 +30,7 @@ public class IdeaService {
 
     // 아이디어 조회
     @Transactional(readOnly = true)
-    public Idea getIdea(Long userId, Long workspaceId) {
+    public ProjectSummaryReponse getIdea(Long userId, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
@@ -41,11 +42,29 @@ public class IdeaService {
             }
         }
 
-        return ideaRepository.findByWorkspaceId(workspaceId);
+        Idea foundIdea = ideaRepository.findByWorkspaceId(workspaceId);
+
+        return new ProjectSummaryReponse(
+                foundIdea.getProjectSummaryId(),
+                workspaceId,
+                foundIdea.getTitle(),
+                foundIdea.getCategory(),
+                foundIdea.getTargetUsers(),
+                foundIdea.getMainPurpose(),
+                foundIdea.getKeyFeatures(),
+                foundIdea.getCoreTechnologies(),
+                foundIdea.getProblemSolving(),
+                foundIdea.getSpecialFeatures(),
+                foundIdea.getBusinessModel(),
+                foundIdea.getScalability(),
+                foundIdea.getDevelopmentTimeline(),
+                foundIdea.getSuccessMetrics(),
+                foundIdea.getChallengesAndRisks()
+        );
     }
 
     // 아이디어 ai 생성
-    public ProjectSummaryRequest createIdea(Long userId, Long workspaceId, ProjectInfoRequest projectInfo) {
+    public ProjectSummaryDto createIdea(Long userId, Long workspaceId, ProjectInfoRequest projectInfo) {
         // 워크스페이스 확인
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -59,10 +78,10 @@ public class IdeaService {
         String mlopsUrl = "http://{mlops-domain.com}/mlops/models/project-info/generate";
 
         try {
-            ResponseEntity<ProjectSummaryRequest> response = restTemplate.postForEntity(
+            ResponseEntity<ProjectSummaryDto> response = restTemplate.postForEntity(
                     mlopsUrl,
                     projectInfo,
-                    ProjectSummaryRequest.class);
+                    ProjectSummaryDto.class);
 
             return response.getBody();
         }
@@ -73,25 +92,56 @@ public class IdeaService {
 
     // 아이디어 저장
     @Transactional
-    public ProjectSummaryRequest saveIdea(Long userId, Long workspaceId, ProjectSummaryRequest projectSummaryRequest) {
+    public ProjectSummaryReponse saveIdea(Long userId, Long workspaceId, ProjectSummaryDto projectSummaryDto) {
         // 워크스페이스 확인
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 사용자가 멤버이거나 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
-            throw new ForbiddenException("아이디어 요약을 요청할 권한이 없습니다.");
+        // 사용자가 오너가 아니면 403 반환
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
+            throw new ForbiddenException("아이디어 요약을 저장할 권한이 없습니다.");
         }
 
         // 레파지토리에 저장
-        //foundWorkspace.update(projectInfoRequest.getProjectDescription());
+        Idea newIdea = Idea.builder()
+                .workspace(foundWorkspace)
+                .title(projectSummaryDto.getTitle())
+                .category(projectSummaryDto.getCategory())
+                .targetUsers(projectSummaryDto.getTargetUsers())
+                .mainPurpose(projectSummaryDto.getMainPurpose())
+                .keyFeatures(projectSummaryDto.getKeyFeatures())
+                .coreTechnologies(projectSummaryDto.getCoreTechnologies())
+                .problemSolving(projectSummaryDto.getProblemSolving())
+                .specialFeatures(projectSummaryDto.getSpecialFeatures())
+                .businessModel(projectSummaryDto.getBusinessModel())
+                .scalability(projectSummaryDto.getScalability())
+                .developmentTimeline(projectSummaryDto.getDevelopmentTimeline())
+                .successMetrics(projectSummaryDto.getSuccessMetrics())
+                .challengesAndRisks(projectSummaryDto.getChallengesAndRisks())
+                .build();
 
-        return projectSummaryRequest;
+        return new ProjectSummaryReponse(
+                newIdea.getProjectSummaryId(),
+                workspaceId,
+                newIdea.getTitle(),
+                newIdea.getCategory(),
+                newIdea.getTargetUsers(),
+                newIdea.getMainPurpose(),
+                newIdea.getKeyFeatures(),
+                newIdea.getCoreTechnologies(),
+                newIdea.getProblemSolving(),
+                newIdea.getSpecialFeatures(),
+                newIdea.getBusinessModel(),
+                newIdea.getScalability(),
+                newIdea.getDevelopmentTimeline(),
+                newIdea.getSuccessMetrics(),
+                newIdea.getChallengesAndRisks()
+        );
     }
 
     // 아이디어 수정
     @Transactional
-    public ProjectSummaryRequest updateIdea(Long userId, Long workspaceId, ProjectSummaryRequest projectSummaryRequest) {
+    public ProjectSummaryReponse updateIdea(Long userId, Long workspaceId, Long ideaId, ProjectSummaryDto projectSummaryDto) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
@@ -112,9 +162,41 @@ public class IdeaService {
         }
 
         // 맞으면 수정 가능
-        //foundWorkspace.updateProjectSummary(workspaceIdeaRequest.getProjectSummary());
+        Idea foundIdea = ideaRepository.findById(ideaId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 요약을 찾을 수 없습니다."));
 
-        //return new WorkspaceIdeaResponse(workspaceId, projectSummaryRequest);
-        return projectSummaryRequest;
+        foundIdea.update(
+                projectSummaryDto.getTitle(),
+                projectSummaryDto.getCategory(),
+                projectSummaryDto.getTargetUsers(),
+                projectSummaryDto.getMainPurpose(),
+                projectSummaryDto.getKeyFeatures(),
+                projectSummaryDto.getCoreTechnologies(),
+                projectSummaryDto.getProblemSolving(),
+                projectSummaryDto.getSpecialFeatures(),
+                projectSummaryDto.getBusinessModel(),
+                projectSummaryDto.getScalability(),
+                projectSummaryDto.getDevelopmentTimeline(),
+                projectSummaryDto.getSuccessMetrics(),
+                projectSummaryDto.getChallengesAndRisks()
+                );
+
+        return new ProjectSummaryReponse(
+                ideaId,
+                workspaceId,
+                projectSummaryDto.getTitle(),
+                projectSummaryDto.getCategory(),
+                projectSummaryDto.getTargetUsers(),
+                projectSummaryDto.getMainPurpose(),
+                projectSummaryDto.getKeyFeatures(),
+                projectSummaryDto.getCoreTechnologies(),
+                projectSummaryDto.getProblemSolving(),
+                projectSummaryDto.getSpecialFeatures(),
+                projectSummaryDto.getBusinessModel(),
+                projectSummaryDto.getScalability(),
+                projectSummaryDto.getDevelopmentTimeline(),
+                projectSummaryDto.getSuccessMetrics(),
+                projectSummaryDto.getChallengesAndRisks()
+        );
     }
 }

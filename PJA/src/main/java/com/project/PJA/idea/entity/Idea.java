@@ -1,5 +1,6 @@
 package com.project.PJA.idea.entity;
 
+import com.project.PJA.idea.dto.*;
 import com.project.PJA.workspace.entity.Workspace;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -86,68 +87,65 @@ public class Idea {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
-    public static class KeyFeature {
-        private String feature;
-        private String description;
+    public Idea(Workspace workspace,
+                String title,
+                String category,
+                List<String> targetUsers,
+                String mainPurpose,
+                List<KeyFeature> keyFeatures,
+                List<CoreTechnology> coreTechnologies,
+                ProblemSolving problemSolving,
+                List<String> specialFeatures,
+                BusinessModel businessModel,
+                Map<String, Object> scalability,
+                DevelopmentTimeline developmentTimeline,
+                List<String> successMetrics,
+                List<ChallengeAndRisk> challengesAndRisks) {
+        this.workspace = workspace;
+        this.title = title;
+        this.category = category;
+        this.targetUsers = targetUsers;
+        this.mainPurpose = mainPurpose;
+        this.keyFeatures = keyFeatures;
+        this.coreTechnologies = coreTechnologies;
+        this.problemSolving = problemSolving;
+        this.specialFeatures = specialFeatures;
+        this.businessModel = businessModel;
+        this.scalability = scalability;
+        this.developmentTimeline = developmentTimeline;
+        this.successMetrics = successMetrics;
+        this.challengesAndRisks = challengesAndRisks;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class CoreTechnology {
-        private String category;
-        private List<String> technologies;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class ProblemSolving {
-        private String currentProblem;
-        private String solutionApproach;
-        private List<String> expectedBenefits;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class BusinessModel {
-        private String type;
-        private List<String> revenueStreams;
-        private String targetMarket;
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class DevelopmentTimeline {
-        private String estimatedDuration;
-        private List<KeyMilestone> keyMilestones;
-
-        @Getter
-        @NoArgsConstructor
-        @AllArgsConstructor
-        @Builder
-        public static class KeyMilestone {
-            private String phase;
-            private String duration;
-        }
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class ChallengeAndRisk {
-        private String challenge;
-        private String mitigation;
+    public void update(String title,
+                       String category,
+                       List<String> targetUsers,
+                       String mainPurpose,
+                       List<KeyFeature> keyFeatures,
+                       List<CoreTechnology> coreTechnologies,
+                       ProblemSolving problemSolving,
+                       List<String> specialFeatures,
+                       BusinessModel businessModel,
+                       Map<String, Object> scalability,
+                       DevelopmentTimeline developmentTimeline,
+                       List<String> successMetrics,
+                       List<ChallengeAndRisk> challengesAndRisks) {
+        this.title = title;
+        this.category = category;
+        this.targetUsers = targetUsers;
+        this.mainPurpose = mainPurpose;
+        this.keyFeatures = keyFeatures;
+        this.coreTechnologies = coreTechnologies;
+        this.problemSolving = problemSolving;
+        this.specialFeatures = specialFeatures;
+        this.businessModel = businessModel;
+        this.scalability = scalability;
+        this.developmentTimeline = developmentTimeline;
+        this.successMetrics = successMetrics;
+        this.challengesAndRisks = challengesAndRisks;
+        this.updatedAt = LocalDateTime.now();
     }
 }

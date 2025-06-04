@@ -2,8 +2,8 @@ package com.project.PJA.idea.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.idea.dto.ProjectInfoRequest;
-import com.project.PJA.idea.dto.ProjectSummaryRequest;
-import com.project.PJA.idea.entity.Idea;
+import com.project.PJA.idea.dto.ProjectSummaryReponse;
+import com.project.PJA.idea.dto.ProjectSummaryDto;
 import com.project.PJA.idea.service.IdeaService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -20,28 +20,28 @@ public class IdeaController {
     
     // 아이디어 조회
     @GetMapping("/{workspaceId}/project-info")
-    public ResponseEntity<SuccessResponse<Idea>> getIdea(@AuthenticationPrincipal Users user,
-                                                         @PathVariable Long workspaceId) {
+    public ResponseEntity<SuccessResponse<ProjectSummaryReponse>> getIdea(@AuthenticationPrincipal Users user,
+                                                                          @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
-        Idea foundIdea = ideaService.getIdea(userId, workspaceId);
+        ProjectSummaryReponse projectSummary = ideaService.getIdea(userId, workspaceId);
 
-        SuccessResponse<Idea> response = new SuccessResponse<>(
-                "success", "아이디어 요약을 성공적으로 조회했습니다.", foundIdea
+        SuccessResponse<ProjectSummaryReponse> response = new SuccessResponse<>(
+                "success", "아이디어 요약을 성공적으로 조회했습니다.", projectSummary
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     // 아이디어 ai 생성
-    @PostMapping("/{workspaceId}/project-info/ai")
-    public ResponseEntity<SuccessResponse<ProjectSummaryRequest>> createIdea(@AuthenticationPrincipal Users user,
-                                                                             @PathVariable Long workspaceId,
-                                                                             @RequestBody ProjectInfoRequest projectInfoRequest) {
+    @PostMapping("/{workspaceId}/project-info/generate")
+    public ResponseEntity<SuccessResponse<ProjectSummaryDto>> createIdea(@AuthenticationPrincipal Users user,
+                                                                         @PathVariable Long workspaceId,
+                                                                         @RequestBody ProjectInfoRequest projectInfoRequest) {
         Long userId = user.getUserId();
-        ProjectSummaryRequest projectSummary = ideaService.createIdea(userId, workspaceId, projectInfoRequest);
+        ProjectSummaryDto projectSummaryData = ideaService.createIdea(userId, workspaceId, projectInfoRequest);
 
-        SuccessResponse<ProjectSummaryRequest> response = new SuccessResponse<>(
-                "success", "아이디어 요약을 성공적으로 반환했습니다.", projectSummary
+        SuccessResponse<ProjectSummaryDto> response = new SuccessResponse<>(
+                "success", "아이디어 요약을 성공적으로 반환했습니다.", projectSummaryData
         );
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -49,13 +49,13 @@ public class IdeaController {
 
     // ai가 생성한 아이디어 저장
     @PostMapping("/{workspaceId}/project-info/summary")
-    public ResponseEntity<SuccessResponse<ProjectSummaryRequest>> saveIdea(@AuthenticationPrincipal Users user,
-                                                                        @PathVariable Long workspaceId,
-                                                                        @RequestBody ProjectSummaryRequest projectSummaryRequest) {
+    public ResponseEntity<SuccessResponse<ProjectSummaryReponse>> saveIdea(@AuthenticationPrincipal Users user,
+                                                                           @PathVariable Long workspaceId,
+                                                                           @RequestBody ProjectSummaryDto projectSummaryDtoRequest) {
         Long userId = user.getUserId();
-        ProjectSummaryRequest projectSummary = ideaService.saveIdea(userId, workspaceId, projectSummaryRequest);
+        ProjectSummaryReponse projectSummary = ideaService.saveIdea(userId, workspaceId, projectSummaryDtoRequest);
 
-        SuccessResponse<ProjectSummaryRequest> response = new SuccessResponse<>(
+        SuccessResponse<ProjectSummaryReponse> response = new SuccessResponse<>(
                 "success", "아이디어 요약이 성공적으로 저장되었습니다.", projectSummary
         );
 
@@ -63,14 +63,15 @@ public class IdeaController {
     }
 
     // 아이디어 수정
-    @PutMapping("/{workspaceId}/project-info")
-    public ResponseEntity<SuccessResponse<ProjectSummaryRequest>> updateIdea(@AuthenticationPrincipal Users user,
+    @PutMapping("/{workspaceId}/project-info/{ideaId}")
+    public ResponseEntity<SuccessResponse<ProjectSummaryReponse>> updateIdea(@AuthenticationPrincipal Users user,
                                                                              @PathVariable Long workspaceId,
-                                                                             @RequestBody ProjectSummaryRequest projectSummaryRequest) {
+                                                                             @PathVariable Long ideaId,
+                                                                             @RequestBody ProjectSummaryDto projectSummaryDto) {
         Long userId = user.getUserId();
-        ProjectSummaryRequest updatedIdea = ideaService.updateIdea(userId, workspaceId, projectSummaryRequest);
+        ProjectSummaryReponse updatedIdea = ideaService.updateIdea(userId, workspaceId, ideaId, projectSummaryDto);
 
-        SuccessResponse<ProjectSummaryRequest> response = new SuccessResponse<>(
+        SuccessResponse<ProjectSummaryReponse> response = new SuccessResponse<>(
                 "success", "아이디어 요약이 성공적으로 수정되었습니다.", updatedIdea
         );
 
