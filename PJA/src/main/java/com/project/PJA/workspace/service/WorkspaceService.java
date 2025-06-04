@@ -126,7 +126,7 @@ public class WorkspaceService {
                 foundWorkspace.getProgressStep());
     }
 
-    // 워크스페이스 진행도 완료 상태 수정
+    // 워크스페이스 진행도 상태 수정
     @Transactional
     public WorkspaceResponse updateCompletionStatus(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
         // 워크스페이스 찾기
