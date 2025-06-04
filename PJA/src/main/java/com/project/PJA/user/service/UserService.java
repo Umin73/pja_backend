@@ -192,13 +192,10 @@ public class UserService {
     }
 
     @Transactional
-    public void withdraw(String uid) {
-        Optional<Users> optionalUser = userRepository.findByUid(uid);
-        log.info("optionalUser: {}", optionalUser);
+    public void withdraw(Users user) {
+        log.info("회원 탈퇴 할 user: {}", user);
 
-        if(optionalUser.isPresent()) {
-            Users user = optionalUser.get();
-
+        if(user != null) {
             user.setStatus(UserStatus.WITHDRAW);
             user.setUid(null);
             user.setEmail(null);
