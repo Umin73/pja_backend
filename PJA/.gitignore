@@ -22,6 +22,7 @@ application-*.properties
 src/main/resources/application-dev.properties
 
 ### IntelliJ IDEA ###
+.idea\
 .idea
 *.iws
 *.iml
@@ -46,3 +47,6 @@ out/
 
 ### PostgreSQL의 데이터 파일
 postgres_data/
+
+### User uploads
+uploads/
