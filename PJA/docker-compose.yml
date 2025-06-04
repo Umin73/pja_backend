@@ -10,7 +10,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
-
+    volumes:
+      - ./uploads:/app/uploads
 
   my-db:
     image: postgres:15
