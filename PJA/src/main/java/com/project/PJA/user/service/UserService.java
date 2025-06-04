@@ -1,5 +1,6 @@
 package com.project.PJA.user.service;
 
+import com.project.PJA.common.file.FileStorageService;
 import com.project.PJA.email.service.EmailServiceImpl;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
@@ -11,12 +12,19 @@ import com.project.PJA.user.entity.UserStatus;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.aspectj.weaver.ast.Not;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -28,6 +36,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
     private final EmailServiceImpl emailServiceImpl;
+    private final FileStorageService fileStorageService;
+
+    @Value("${FILE_UPLOAD_DIR}")
+    private String uploadDir;
 
     public boolean signup(SignupDto signupDto) {
 
@@ -200,12 +212,10 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserName(String uid, String newName) {
-        Optional<Users> optionalUsers = userRepository.findByUid(uid);
-        if(optionalUsers.isEmpty()) {
+    public void updateUserName(Users user, String newName) {
+        if(user == null) {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
-        Users user = optionalUsers.get();
         user.setName(newName);
         userRepository.save(user);
     }
@@ -236,14 +246,11 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(String uid, ChangePwRequestDto dto) {
-        Optional<Users> optionalUsers = userRepository.findByUid(uid);
+    public void changePassword(Users user, ChangePwRequestDto dto) {
 
-        if(optionalUsers.isEmpty()) {
+        if(user == null) {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
-
-        Users user = optionalUsers.get();
 
         // 현재 비밀번호 일치 확인
         if(!passwordEncoder.matches(dto.getCurrentPw(), user.getPassword())) {
@@ -268,5 +275,55 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(newPw));
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void updateProfileImage(Users user, MultipartFile file) throws IOException {
+
+        if(user == null) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        // 프로필 이미지가 있으면 삭제
+        String oldPath = user.getProfileImage();
+        if (oldPath != null && !oldPath.isBlank()) {
+            String fileName = Paths.get(oldPath).getFileName().toString();
+            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
+            Files.deleteIfExists(fullPath);
+        }
+
+        String newImagePath = fileStorageService.storeFile(file, user.getUserId());
+        user.setProfileImage(newImagePath);
+    }
+
+    @Transactional
+    public void deleteProfileImage(Users user) throws IOException {
+
+        if (user == null) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+        String imagePath = user.getProfileImage();
+
+        if(imagePath != null && !imagePath.isBlank()) {
+            String fileName = Paths.get(imagePath).getFileName().toString();
+            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
+
+            Files.deleteIfExists(fullPath);
+        }
+
+        user.setProfileImage(null);
+    }
+
+    public Map<String, Object> getUserInfo(Users user) {
+
+        if(user == null) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("username", user.getUsername());
+        userInfo.put("profileImage", user.getProfileImage());
+
+        return userInfo;
     }
 }
