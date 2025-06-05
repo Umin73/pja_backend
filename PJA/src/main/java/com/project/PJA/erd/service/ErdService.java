@@ -18,6 +18,9 @@ public class ErdService {
     }
 
     public Erd createErd(Long workspaceId) {
+        // GUEST는 생성X
+        // 멤버 권한 로직 작성 완료 시 추가 필요
+
         if(erdRepository.existsById(workspaceId)) {
             throw new
                     ConflictException("해당 워크스페이스에는 이미 ERD가 존재합니다.");
