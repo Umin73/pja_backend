@@ -2,17 +2,13 @@ package com.project.PJA.idea.service;
 
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.idea.dto.ProjectInfoRequest;
-import com.project.PJA.idea.dto.ProjectSummaryReponse;
-import com.project.PJA.idea.dto.AiProjectSummaryResponse;
-import com.project.PJA.idea.dto.ProjectSummaryRequest;
+import com.project.PJA.idea.dto.*;
 import com.project.PJA.idea.entity.Idea;
 import com.project.PJA.idea.repository.IdeaRepository;
 import com.project.PJA.workspace.entity.Workspace;
-import com.project.PJA.workspace.entity.WorkspaceMember;
-import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
+import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,6 +24,7 @@ public class IdeaService {
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final IdeaRepository ideaRepository;
     private final RestTemplate restTemplate;
+    private final WorkspaceService workspaceService;
 
     // 아이디어 조회
     @Transactional(readOnly = true)
@@ -43,7 +40,8 @@ public class IdeaService {
             }
         }
 
-        Idea foundIdea = ideaRepository.findByWorkspaceId(workspaceId);
+        Idea foundIdea = ideaRepository.findByWorkspace_WorkspaceId(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어를 찾을 수 없습니다."));
 
         return new ProjectSummaryReponse(
                 foundIdea.getProjectSummaryId(),
@@ -85,7 +83,7 @@ public class IdeaService {
                     body.getTargetUsers(),
                     body.getCoreFeatures(),
                     body.getTechnologyStack(),
-                    body.getProblemSolving()
+                    (ProblemSolving) body.getProblemSolving()
             );
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -101,9 +99,7 @@ public class IdeaService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 오너가 아니면 403 반환
-        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
-            throw new ForbiddenException("아이디어 요약을 저장할 권한이 없습니다.");
-        }
+        workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "아이디어 요약을 저장할 권한이 없습니다.");
 
         // 레파지토리에 저장
         Idea newIdea = Idea.builder()
@@ -143,12 +139,7 @@ public class IdeaService {
         }
 
         // 수정 권한 확인(멤버 or 오너)
-        WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspaceIdAndUser_UserId(workspaceId, userId);
-
-        if (foundWorkspaceMember.getWorkspaceRole() != WorkspaceRole.OWNER &&
-                foundWorkspaceMember.getWorkspaceRole() != WorkspaceRole.MEMBER) {
-            throw new ForbiddenException("이 워크스페이스에 수정할 권한이 없습니다.");
-        }
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         // 맞으면 수정 가능
         Idea foundIdea = ideaRepository.findById(ideaId)
