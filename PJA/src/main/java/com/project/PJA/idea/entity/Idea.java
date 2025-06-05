@@ -39,7 +39,6 @@ public class Idea {
     @Column(name = "category")
     private String category;
 
-    //@JdbcTypeCode(SqlTypes.JSON)
     @Type(JsonType.class)
     @Column(name = "target_users", columnDefinition = "jsonb")
     private List<String> targetUsers;
@@ -52,8 +51,6 @@ public class Idea {
     @Column(name = "technology_stack", columnDefinition = "jsonb")
     private List<String> technologyStack;
 
-    //@JdbcTypeCode(SqlTypes.JSON)
-    //@Type(JsonType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "problem_solving", columnDefinition = "jsonb")
     private ProblemSolving problemSolving;
