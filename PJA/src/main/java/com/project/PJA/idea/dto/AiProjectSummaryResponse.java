@@ -27,5 +27,5 @@ public class AiProjectSummaryResponse {
     private List<String> technologyStack;
 
     @JsonProperty("problem_solving")
-    private ProblemSolving problemSolving;
+    private AiProblemSolving problemSolving;
 }
