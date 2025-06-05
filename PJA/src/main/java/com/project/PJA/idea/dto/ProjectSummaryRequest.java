@@ -1,7 +1,6 @@
 package com.project.PJA.idea.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,8 +9,11 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class CoreTechnology {
+public class ProjectSummaryRequest {
+    private String title;
     private String category;
-    private List<String> technologies;
+    private List<String> targetUsers;
+    private List<String> coreFeatures;
+    private List<String> technologyStack;
+    private ProblemSolving problemSolving;
 }

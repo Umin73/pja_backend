@@ -16,8 +16,8 @@ public class ProblemSolving {
     @JsonProperty("current_problem")
     private String currentProblem;
 
-    @JsonProperty("solution_approach")
-    private String solutionApproach;
+    @JsonProperty("solution_idea")
+    private String solutionIdea;
 
     @JsonProperty("expected_benefits")
     private List<String> expectedBenefits;

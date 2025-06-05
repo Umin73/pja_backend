@@ -3,7 +3,7 @@ package com.project.PJA.idea.controller;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.idea.dto.ProjectInfoRequest;
 import com.project.PJA.idea.dto.ProjectSummaryReponse;
-import com.project.PJA.idea.dto.ProjectSummaryDto;
+import com.project.PJA.idea.dto.ProjectSummaryRequest;
 import com.project.PJA.idea.service.IdeaService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +23,10 @@ public class IdeaController {
     public ResponseEntity<SuccessResponse<ProjectSummaryReponse>> getIdea(@AuthenticationPrincipal Users user,
                                                                           @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
-        ProjectSummaryReponse projectSummary = ideaService.getIdea(userId, workspaceId);
+        ProjectSummaryReponse idea = ideaService.getIdea(userId, workspaceId);
 
         SuccessResponse<ProjectSummaryReponse> response = new SuccessResponse<>(
-                "success", "아이디어 요약을 성공적으로 조회했습니다.", projectSummary
+                "success", "아이디어 요약을 성공적으로 조회했습니다.", idea
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -34,14 +34,14 @@ public class IdeaController {
 
     // 아이디어 ai 생성
     @PostMapping("/{workspaceId}/project-info/generate")
-    public ResponseEntity<SuccessResponse<ProjectSummaryDto>> createIdea(@AuthenticationPrincipal Users user,
-                                                                         @PathVariable Long workspaceId,
-                                                                         @RequestBody ProjectInfoRequest projectInfoRequest) {
+    public ResponseEntity<SuccessResponse<ProjectSummaryRequest>> createIdea(@AuthenticationPrincipal Users user,
+                                                                                @PathVariable Long workspaceId,
+                                                                                @RequestBody ProjectInfoRequest projectInfoRequest) {
         Long userId = user.getUserId();
-        ProjectSummaryDto projectSummaryData = ideaService.createIdea(userId, workspaceId, projectInfoRequest);
+        ProjectSummaryRequest createProjectSummaryByAI = ideaService.createIdea(userId, workspaceId, projectInfoRequest);
 
-        SuccessResponse<ProjectSummaryDto> response = new SuccessResponse<>(
-                "success", "아이디어 요약을 성공적으로 반환했습니다.", projectSummaryData
+        SuccessResponse<ProjectSummaryRequest> response = new SuccessResponse<>(
+                "success", "아이디어 요약을 성공적으로 반환했습니다.", createProjectSummaryByAI
         );
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -51,25 +51,25 @@ public class IdeaController {
     @PostMapping("/{workspaceId}/project-info/summary")
     public ResponseEntity<SuccessResponse<ProjectSummaryReponse>> saveIdea(@AuthenticationPrincipal Users user,
                                                                            @PathVariable Long workspaceId,
-                                                                           @RequestBody ProjectSummaryDto projectSummaryDtoRequest) {
+                                                                           @RequestBody ProjectSummaryRequest projectSummary) {
         Long userId = user.getUserId();
-        ProjectSummaryReponse projectSummary = ideaService.saveIdea(userId, workspaceId, projectSummaryDtoRequest);
+        ProjectSummaryReponse saveProjectSummary = ideaService.saveIdea(userId, workspaceId, projectSummary);
 
         SuccessResponse<ProjectSummaryReponse> response = new SuccessResponse<>(
-                "success", "아이디어 요약이 성공적으로 저장되었습니다.", projectSummary
+                "success", "아이디어 요약이 성공적으로 저장되었습니다.", saveProjectSummary
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 아이디어 수정
+    // 아이디어 수정(동시 수정 불가능하게 바꾸기 or 동시에 실시간으로 수정 가능하게 바꾸기)
     @PutMapping("/{workspaceId}/project-info/{ideaId}")
     public ResponseEntity<SuccessResponse<ProjectSummaryReponse>> updateIdea(@AuthenticationPrincipal Users user,
                                                                              @PathVariable Long workspaceId,
                                                                              @PathVariable Long ideaId,
-                                                                             @RequestBody ProjectSummaryDto projectSummaryDto) {
+                                                                             @RequestBody ProjectSummaryRequest projectSummaryRequest) {
         Long userId = user.getUserId();
-        ProjectSummaryReponse updatedIdea = ideaService.updateIdea(userId, workspaceId, ideaId, projectSummaryDto);
+        ProjectSummaryReponse updatedIdea = ideaService.updateIdea(userId, workspaceId, ideaId, projectSummaryRequest);
 
         SuccessResponse<ProjectSummaryReponse> response = new SuccessResponse<>(
                 "success", "아이디어 요약이 성공적으로 수정되었습니다.", updatedIdea

@@ -1,7 +1,8 @@
 package com.project.PJA.idea.entity;
 
-import com.project.PJA.idea.dto.*;
+import com.project.PJA.idea.dto.ProblemSolving;
 import com.project.PJA.workspace.entity.Workspace;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,11 +11,11 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Entity
 @Getter
@@ -38,48 +39,24 @@ public class Idea {
     @Column(name = "category")
     private String category;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    //@JdbcTypeCode(SqlTypes.JSON)
+    @Type(JsonType.class)
     @Column(name = "target_users", columnDefinition = "jsonb")
     private List<String> targetUsers;
 
-    @Column(name = "main_purpose", columnDefinition = "text")
-    private String mainPurpose;
+    @Type(JsonType.class)
+    @Column(name = "core_features", columnDefinition = "jsonb")
+    private List<String> coreFeatures;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "key_features", columnDefinition = "jsonb")
-    private List<KeyFeature> keyFeatures;
+    @Type(JsonType.class)
+    @Column(name = "technology_stack", columnDefinition = "jsonb")
+    private List<String> technologyStack;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "core_technologies", columnDefinition = "jsonb")
-    private List<CoreTechnology> coreTechnologies;
-
+    //@JdbcTypeCode(SqlTypes.JSON)
+    //@Type(JsonType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "problem_solving", columnDefinition = "jsonb")
     private ProblemSolving problemSolving;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "special_features", columnDefinition = "jsonb")
-    private List<String> specialFeatures;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "business_model", columnDefinition = "jsonb")
-    private BusinessModel businessModel;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "scalability", columnDefinition = "jsonb")
-    private Map<String, Object> scalability;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "development_timeline", columnDefinition = "jsonb")
-    private DevelopmentTimeline developmentTimeline;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "success_metrics", columnDefinition = "jsonb")
-    private List<String> successMetrics;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "challenges_and_risks", columnDefinition = "jsonb")
-    private List<ChallengeAndRisk> challengesAndRisks;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -92,30 +69,17 @@ public class Idea {
                 String title,
                 String category,
                 List<String> targetUsers,
-                String mainPurpose,
-                List<KeyFeature> keyFeatures,
-                List<CoreTechnology> coreTechnologies,
-                ProblemSolving problemSolving,
-                List<String> specialFeatures,
-                BusinessModel businessModel,
-                Map<String, Object> scalability,
-                DevelopmentTimeline developmentTimeline,
-                List<String> successMetrics,
-                List<ChallengeAndRisk> challengesAndRisks) {
+                List<String> coreFeatures,
+                List<String> technologyStack,
+                ProblemSolving problemSolving
+                ) {
         this.workspace = workspace;
         this.title = title;
         this.category = category;
         this.targetUsers = targetUsers;
-        this.mainPurpose = mainPurpose;
-        this.keyFeatures = keyFeatures;
-        this.coreTechnologies = coreTechnologies;
+        this.coreFeatures = coreFeatures;
+        this.technologyStack = technologyStack;
         this.problemSolving = problemSolving;
-        this.specialFeatures = specialFeatures;
-        this.businessModel = businessModel;
-        this.scalability = scalability;
-        this.developmentTimeline = developmentTimeline;
-        this.successMetrics = successMetrics;
-        this.challengesAndRisks = challengesAndRisks;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -123,29 +87,16 @@ public class Idea {
     public void update(String title,
                        String category,
                        List<String> targetUsers,
-                       String mainPurpose,
-                       List<KeyFeature> keyFeatures,
-                       List<CoreTechnology> coreTechnologies,
-                       ProblemSolving problemSolving,
-                       List<String> specialFeatures,
-                       BusinessModel businessModel,
-                       Map<String, Object> scalability,
-                       DevelopmentTimeline developmentTimeline,
-                       List<String> successMetrics,
-                       List<ChallengeAndRisk> challengesAndRisks) {
+                       List<String> coreFeatures,
+                       List<String> technologyStack,
+                       ProblemSolving problemSolving
+                       ) {
         this.title = title;
         this.category = category;
         this.targetUsers = targetUsers;
-        this.mainPurpose = mainPurpose;
-        this.keyFeatures = keyFeatures;
-        this.coreTechnologies = coreTechnologies;
+        this.coreFeatures = coreFeatures;
+        this.technologyStack = technologyStack;
         this.problemSolving = problemSolving;
-        this.specialFeatures = specialFeatures;
-        this.businessModel = businessModel;
-        this.scalability = scalability;
-        this.developmentTimeline = developmentTimeline;
-        this.successMetrics = successMetrics;
-        this.challengesAndRisks = challengesAndRisks;
         this.updatedAt = LocalDateTime.now();
     }
 }

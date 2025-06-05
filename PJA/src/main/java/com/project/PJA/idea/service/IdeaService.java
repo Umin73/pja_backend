@@ -4,7 +4,8 @@ import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.idea.dto.ProjectInfoRequest;
 import com.project.PJA.idea.dto.ProjectSummaryReponse;
-import com.project.PJA.idea.dto.ProjectSummaryDto;
+import com.project.PJA.idea.dto.AiProjectSummaryResponse;
+import com.project.PJA.idea.dto.ProjectSummaryRequest;
 import com.project.PJA.idea.entity.Idea;
 import com.project.PJA.idea.repository.IdeaRepository;
 import com.project.PJA.workspace.entity.Workspace;
@@ -36,7 +37,7 @@ public class IdeaService {
 
         // 비공개인데 멤버가 아니면 403 반환
         if (!foundWorkspace.getIsPublic()) {
-            boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUser_UserId(workspaceId, userId);
+            boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId);
             if(!isMember) {
                 throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
             }
@@ -50,21 +51,14 @@ public class IdeaService {
                 foundIdea.getTitle(),
                 foundIdea.getCategory(),
                 foundIdea.getTargetUsers(),
-                foundIdea.getMainPurpose(),
-                foundIdea.getKeyFeatures(),
-                foundIdea.getCoreTechnologies(),
-                foundIdea.getProblemSolving(),
-                foundIdea.getSpecialFeatures(),
-                foundIdea.getBusinessModel(),
-                foundIdea.getScalability(),
-                foundIdea.getDevelopmentTimeline(),
-                foundIdea.getSuccessMetrics(),
-                foundIdea.getChallengesAndRisks()
+                foundIdea.getCoreFeatures(),
+                foundIdea.getTechnologyStack(),
+                foundIdea.getProblemSolving()
         );
     }
 
     // 아이디어 ai 생성
-    public ProjectSummaryDto createIdea(Long userId, Long workspaceId, ProjectInfoRequest projectInfo) {
+    public ProjectSummaryRequest createIdea(Long userId, Long workspaceId, ProjectInfoRequest projectInfo) {
         // 워크스페이스 확인
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -78,12 +72,21 @@ public class IdeaService {
         String mlopsUrl = "http://{mlops-domain.com}/mlops/models/project-info/generate";
 
         try {
-            ResponseEntity<ProjectSummaryDto> response = restTemplate.postForEntity(
+            ResponseEntity<AiProjectSummaryResponse> response = restTemplate.postForEntity(
                     mlopsUrl,
                     projectInfo,
-                    ProjectSummaryDto.class);
+                    AiProjectSummaryResponse.class);
 
-            return response.getBody();
+            AiProjectSummaryResponse body = response.getBody();
+
+            return new ProjectSummaryRequest(
+                    body.getTitle(),
+                    body.getCategory(),
+                    body.getTargetUsers(),
+                    body.getCoreFeatures(),
+                    body.getTechnologyStack(),
+                    body.getProblemSolving()
+            );
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
@@ -92,7 +95,7 @@ public class IdeaService {
 
     // 아이디어 저장
     @Transactional
-    public ProjectSummaryReponse saveIdea(Long userId, Long workspaceId, ProjectSummaryDto projectSummaryDto) {
+    public ProjectSummaryReponse saveIdea(Long userId, Long workspaceId, ProjectSummaryRequest projectSummary) {
         // 워크스페이스 확인
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -105,19 +108,12 @@ public class IdeaService {
         // 레파지토리에 저장
         Idea newIdea = Idea.builder()
                 .workspace(foundWorkspace)
-                .title(projectSummaryDto.getTitle())
-                .category(projectSummaryDto.getCategory())
-                .targetUsers(projectSummaryDto.getTargetUsers())
-                .mainPurpose(projectSummaryDto.getMainPurpose())
-                .keyFeatures(projectSummaryDto.getKeyFeatures())
-                .coreTechnologies(projectSummaryDto.getCoreTechnologies())
-                .problemSolving(projectSummaryDto.getProblemSolving())
-                .specialFeatures(projectSummaryDto.getSpecialFeatures())
-                .businessModel(projectSummaryDto.getBusinessModel())
-                .scalability(projectSummaryDto.getScalability())
-                .developmentTimeline(projectSummaryDto.getDevelopmentTimeline())
-                .successMetrics(projectSummaryDto.getSuccessMetrics())
-                .challengesAndRisks(projectSummaryDto.getChallengesAndRisks())
+                .title(projectSummary.getTitle())
+                .category(projectSummary.getCategory())
+                .targetUsers(projectSummary.getTargetUsers())
+                .coreFeatures(projectSummary.getCoreFeatures())
+                .technologyStack(projectSummary.getTechnologyStack())
+                .problemSolving(projectSummary.getProblemSolving())
                 .build();
 
         return new ProjectSummaryReponse(
@@ -126,28 +122,21 @@ public class IdeaService {
                 newIdea.getTitle(),
                 newIdea.getCategory(),
                 newIdea.getTargetUsers(),
-                newIdea.getMainPurpose(),
-                newIdea.getKeyFeatures(),
-                newIdea.getCoreTechnologies(),
-                newIdea.getProblemSolving(),
-                newIdea.getSpecialFeatures(),
-                newIdea.getBusinessModel(),
-                newIdea.getScalability(),
-                newIdea.getDevelopmentTimeline(),
-                newIdea.getSuccessMetrics(),
-                newIdea.getChallengesAndRisks()
+                newIdea.getCoreFeatures(),
+                newIdea.getTechnologyStack(),
+                newIdea.getProblemSolving()
         );
     }
 
     // 아이디어 수정
     @Transactional
-    public ProjectSummaryReponse updateIdea(Long userId, Long workspaceId, Long ideaId, ProjectSummaryDto projectSummaryDto) {
+    public ProjectSummaryReponse updateIdea(Long userId, Long workspaceId, Long ideaId, ProjectSummaryRequest projectSummary) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 비공개인데 멤버가 아니면 403 반환
         if (!foundWorkspace.getIsPublic()) {
-            boolean isMember = workspaceMemberRepository.existsByWorkspaceIdAndUser_UserId(workspaceId, userId);
+            boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId);
             if(!isMember) {
                 throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
             }
@@ -166,37 +155,23 @@ public class IdeaService {
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 요약을 찾을 수 없습니다."));
 
         foundIdea.update(
-                projectSummaryDto.getTitle(),
-                projectSummaryDto.getCategory(),
-                projectSummaryDto.getTargetUsers(),
-                projectSummaryDto.getMainPurpose(),
-                projectSummaryDto.getKeyFeatures(),
-                projectSummaryDto.getCoreTechnologies(),
-                projectSummaryDto.getProblemSolving(),
-                projectSummaryDto.getSpecialFeatures(),
-                projectSummaryDto.getBusinessModel(),
-                projectSummaryDto.getScalability(),
-                projectSummaryDto.getDevelopmentTimeline(),
-                projectSummaryDto.getSuccessMetrics(),
-                projectSummaryDto.getChallengesAndRisks()
+                projectSummary.getTitle(),
+                projectSummary.getCategory(),
+                projectSummary.getTargetUsers(),
+                projectSummary.getCoreFeatures(),
+                projectSummary.getTechnologyStack(),
+                projectSummary.getProblemSolving()
                 );
 
         return new ProjectSummaryReponse(
                 ideaId,
                 workspaceId,
-                projectSummaryDto.getTitle(),
-                projectSummaryDto.getCategory(),
-                projectSummaryDto.getTargetUsers(),
-                projectSummaryDto.getMainPurpose(),
-                projectSummaryDto.getKeyFeatures(),
-                projectSummaryDto.getCoreTechnologies(),
-                projectSummaryDto.getProblemSolving(),
-                projectSummaryDto.getSpecialFeatures(),
-                projectSummaryDto.getBusinessModel(),
-                projectSummaryDto.getScalability(),
-                projectSummaryDto.getDevelopmentTimeline(),
-                projectSummaryDto.getSuccessMetrics(),
-                projectSummaryDto.getChallengesAndRisks()
+                projectSummary.getTitle(),
+                projectSummary.getCategory(),
+                projectSummary.getTargetUsers(),
+                projectSummary.getCoreFeatures(),
+                projectSummary.getTechnologyStack(),
+                projectSummary.getProblemSolving()
         );
     }
 }
