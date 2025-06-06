@@ -109,7 +109,7 @@ public class IdeaService {
         workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "아이디어 요약을 저장할 권한이 없습니다.");
 
         // 레파지토리에 저장
-        Idea newIdea = Idea.builder()
+        Idea savedIdea = ideaRepository.save(Idea.builder()
                 .workspace(foundWorkspace)
                 .title(projectSummary.getTitle())
                 .category(projectSummary.getCategory())
@@ -117,17 +117,17 @@ public class IdeaService {
                 .coreFeatures(projectSummary.getCoreFeatures())
                 .technologyStack(projectSummary.getTechnologyStack())
                 .problemSolving(projectSummary.getProblemSolving())
-                .build();
+                .build());
 
         return new ProjectSummaryReponse(
-                newIdea.getProjectSummaryId(),
+                savedIdea.getProjectSummaryId(),
                 workspaceId,
-                newIdea.getTitle(),
-                newIdea.getCategory(),
-                newIdea.getTargetUsers(),
-                newIdea.getCoreFeatures(),
-                newIdea.getTechnologyStack(),
-                newIdea.getProblemSolving()
+                savedIdea.getTitle(),
+                savedIdea.getCategory(),
+                savedIdea.getTargetUsers(),
+                savedIdea.getCoreFeatures(),
+                savedIdea.getTechnologyStack(),
+                savedIdea.getProblemSolving()
         );
     }
 
