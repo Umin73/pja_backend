@@ -77,13 +77,20 @@ public class IdeaService {
 
             AiProjectSummaryResponse body = response.getBody();
 
+            AiProblemSolving aiProblemSolving = body.getProblemSolving();
+            ProblemSolving converted = ProblemSolving.builder()
+                    .currentProblem(aiProblemSolving.getCurrentProblem())
+                    .solutionIdea(aiProblemSolving.getSolutionIdea())
+                    .expectedBenefits(aiProblemSolving.getExpectedBenefits())
+                    .build();
+
             return new ProjectSummaryRequest(
                     body.getTitle(),
                     body.getCategory(),
                     body.getTargetUsers(),
                     body.getCoreFeatures(),
                     body.getTechnologyStack(),
-                    (ProblemSolving) body.getProblemSolving()
+                    converted
             );
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
