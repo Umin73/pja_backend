@@ -44,11 +44,6 @@ public class Workspace {
     @Column(name = "progress_step", nullable = false, length = 10)
     private ProgressStep progressStep = ProgressStep.ZERO;
 
-    // @Column(name = "project_features", columnDefinition = "json", nullable = true)
-    //@JdbcTypeCode(SqlTypes.JSON)
-    //@Column(name = "project_features", nullable = true)
-    //private Map<String, Object> projectFeatures;
-
     @Builder
     public Workspace(Users user, String projectName, String teamName, Boolean isPublic) {
         this.user = user;

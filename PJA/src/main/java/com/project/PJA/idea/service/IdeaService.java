@@ -134,17 +134,6 @@ public class IdeaService {
     // 아이디어 수정
     @Transactional
     public ProjectSummaryReponse updateIdea(Long userId, Long workspaceId, Long ideaId, ProjectSummaryRequest projectSummary) {
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        // 비공개인데 멤버가 아니면 403 반환
-        if (!foundWorkspace.getIsPublic()) {
-            boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId);
-            if(!isMember) {
-                throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
-            }
-        }
-
         // 수정 권한 확인(멤버 or 오너)
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
