@@ -31,8 +31,8 @@ public class ErdTable {
     private List<ErdColumn> columns = new ArrayList<>(); // 해당 테이블의 컬럼 리스트
 
     @OneToMany(mappedBy = "fromTable")
-    private List<ErdRelationShips> fromRelationships = new ArrayList<>(); // 이 테이블이 from(출발지?)인 관계들
+    private List<ErdRelationships> fromRelationships = new ArrayList<>(); // 이 테이블이 from(출발지?)인 관계들
 
     @OneToMany(mappedBy = "toTable")
-    private List<ErdRelationShips> toRelationships = new ArrayList<>(); // 이 테이블이 to(도착지?)인 관계들
+    private List<ErdRelationships> toRelationships = new ArrayList<>(); // 이 테이블이 to(도착지?)인 관계들
 }
