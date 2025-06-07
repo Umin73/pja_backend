@@ -126,7 +126,7 @@ public class WorkspaceService {
                 foundWorkspace.getProgressStep());
     }
 
-    // 워크스페이스 진행도 완료 상태 수정
+    // 워크스페이스 진행도 상태 수정
     @Transactional
     public WorkspaceResponse updateCompletionStatus(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
         // 워크스페이스 찾기
@@ -171,6 +171,19 @@ public class WorkspaceService {
                 foundWorkspace.getTeamName(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
+    }
+
+    // 비공개 워크스페이스의 팀원이 아니면 403 반환
+    public void validateWorkspaceAccess(Long userId, Workspace workspace) {
+        Long workspaceId = workspace.getWorkspaceId();
+
+        if (!workspace.getIsPublic()) {
+            boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId);
+
+            if(!isMember) {
+                throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
+            }
+        }
     }
 
     // 사용자가 오너가 아니면 403 반환
