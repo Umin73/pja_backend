@@ -1,15 +1,15 @@
 package com.project.PJA.requirement.dto;
 
+import com.project.PJA.requirement.enumeration.RequirementType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequirementResponse {
-    private Long workspaceId;
-    private List<RequirementDto> requirements;
+    private Long requirementId;
+    private RequirementType requirementType;
+    private String content;
 }
