@@ -52,7 +52,7 @@ public class ErdColumnController {
         // 멤버 권한 로직 작성 완료 시 추가 필요
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 컬럼을 수정할 권한이 없습니다.");
 
-        ErdColumn updatedErdColumn = erdColumnService.updateErdColumn(workspaceId, erdId, tableId, columnId, dto);
+        ErdColumn updatedErdColumn = erdColumnService.updateErdColumn(user, workspaceId, erdId, tableId, columnId, dto);
         ErdColumnResponseDto data = erdColumnService.getErdColumnDto(updatedErdColumn);
         SuccessResponse<?> response = new SuccessResponse<>("success", "ERD 컬럼이 성공적으로 수정되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -68,7 +68,7 @@ public class ErdColumnController {
         // 멤버 권한 로직 작성 완료 시 추가 필요
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 컬럼을 삭제할 권한이 없습니다.");
 
-        erdColumnService.deleteErdColumn(workspaceId, erdId, tableId, columnId);
+        erdColumnService.deleteErdColumn(user, workspaceId, erdId, tableId, columnId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "ERD 테이블이 성공적으로 삭제되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

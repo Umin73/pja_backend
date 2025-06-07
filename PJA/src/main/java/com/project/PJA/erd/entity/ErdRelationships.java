@@ -10,8 +10,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "erd_relationships")
-public class ErdRelationShips {
+@Table(name = "erd_relationships",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"from_erd_table_id", "foreign_key"}))
+public class ErdRelationships {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,8 +24,12 @@ public class ErdRelationShips {
     @Column(nullable = false)
     private ErdRelation type; // 관계 유형
 
-    @Column(name = "foreign_key")
-    private String foreignKey; // 외래키 이름
+    @Column(name = "foreign_key", nullable = false)
+    private String foreignKeyName;
+
+    @ManyToOne
+    @JoinColumn(name = "foreign_column_id", nullable = false)
+    private ErdColumn foreignColumn;
 
     @Column(name = "constraint_name")
     private String constraintName; // DB 제약 조건

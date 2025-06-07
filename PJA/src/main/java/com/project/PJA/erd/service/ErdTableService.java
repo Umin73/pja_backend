@@ -30,15 +30,9 @@ public class ErdTableService {
 
     @Transactional
     public ErdTable createErdTable(Users user, Long workspaceId, Long erdId, String tableName) {
-        // GUEST는 생성X
-        // 멤버 권한 로직 작성 완료 시 추가 필요
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 테이블을 생성할 권한이 없습니다.");
 
-        Optional<Erd> optionalErd = erdRepository.findById(erdId);
-        if(optionalErd.isEmpty()) {
-            throw new NotFoundException("해당 ERD를 찾을 수 없습니다.");
-        }
-        Erd erd = optionalErd.get();
+        Erd erd = findErdOrThrow(erdId);
 
         ErdTable erdTable = new ErdTable();
 
@@ -50,56 +44,19 @@ public class ErdTableService {
 
     @Transactional
     public ErdTable updateErdTableName(Users user, Long workspaceId, Long erdId, Long erdTableId, ErdTableNameDto dto) {
-        // GUEST는 수정X
-        // 멤버 권한 로직 작성 완료 시 추가 필요
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 테이블을 수정할 권한이 없습니다.");
 
-
-        Optional<Erd> optionalErd = erdRepository.findById(erdId);
-        if(optionalErd.isEmpty()) {
-            throw new NotFoundException("수정하려는 ERD 테이블의 ERD를 찾을 수 없습니다.");
-        }
-        Erd erd = optionalErd.get();
-
-        Optional<ErdTable> optionalErdTable = erdTableRepository.findById(erdTableId);
-        if(optionalErdTable.isEmpty()) {
-            throw new NotFoundException("수정하려는 ERD 테이블을 찾을 수 없습니다.");
-        }
-        ErdTable erdTable = optionalErdTable.get();
-
-        // ERD 참조 무결성 체크
-        if(!erdTable.getErd().getErdId().equals(erd.getErdId())) {
-            throw new IllegalArgumentException("해당 ERD에 속하지 않은 테이블입니다.");
-        }
-
+        ErdTable erdTable = findTableAndValidateErd(erdId, erdTableId);
         erdTable.setName(dto.getNewTableName());
+
         return erdTableRepository.save(erdTable);
     }
 
     @Transactional
     public void deleteErdTable(Users user, Long workspaceId, Long erdId, Long erdTableId) {
-        // GUEST는 삭제X
-        // 멤버 권한 로직 작성 완료 시 추가 필요
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 테이블을 삭제할 권한이 없습니다.");
 
-
-        Optional<Erd> optionalErd = erdRepository.findById(erdId);
-        if(optionalErd.isEmpty()) {
-            throw new NotFoundException("삭제하려는 ERD 테이블의 ERD를 찾을 수 없습니다.");
-        }
-        Erd erd = optionalErd.get();
-
-        Optional<ErdTable> optionalErdTable = erdTableRepository.findById(erdTableId);
-        if(optionalErdTable.isEmpty()) {
-            throw new NotFoundException("삭제하려는 ERD 테이블을 찾을 수 없습니다.");
-        }
-        ErdTable erdTable = optionalErdTable.get();
-
-        // ERD 참조 무결성 체크
-        if(!erdTable.getErd().getErdId().equals(erd.getErdId())) {
-            throw new IllegalArgumentException("해당 ERD에 속하지 않은 테이블입니다.");
-        }
-
+        ErdTable erdTable = findTableAndValidateErd(erdId, erdTableId);
         erdTableRepository.delete(erdTable);
     }
 
@@ -110,5 +67,22 @@ public class ErdTableService {
         erdTableDto.setTableName(erdTable.getName());
 
         return erdTableDto;
+    }
+
+    private Erd findErdOrThrow(Long erdId) {
+        return erdRepository.findById(erdId)
+                .orElseThrow(() -> new NotFoundException("해당 ERD를 찾을 수 없습니다."));
+    }
+
+    private ErdTable findTableAndValidateErd(Long erdId, Long tableId) {
+        Erd erd = findErdOrThrow(erdId);
+        ErdTable table = erdTableRepository.findById(tableId)
+                .orElseThrow(() -> new NotFoundException("ERD 테이블을 찾을 수 없습니다."));
+
+        if (!table.getErd().getErdId().equals(erd.getErdId())) {
+            throw new IllegalArgumentException("해당 ERD에 속하지 않은 테이블입니다.");
+        }
+
+        return table;
     }
 }
