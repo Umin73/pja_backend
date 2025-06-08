@@ -1,6 +1,7 @@
 package com.project.PJA.project_progress.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

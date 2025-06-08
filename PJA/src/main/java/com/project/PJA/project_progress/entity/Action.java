@@ -4,9 +4,7 @@ import com.project.PJA.workspace.entity.WorkspaceMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -16,6 +14,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @Entity
+@Builder
+@AllArgsConstructor
 @Table(name = "action")
 public class Action {
 
@@ -46,6 +46,7 @@ public class Action {
     @Column(name = "has_test")
     private Boolean hasTest; // 테스트 여부
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "action_participant",
