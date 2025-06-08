@@ -2,7 +2,7 @@ package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.project_progress.dto.CategoryDto.CreateCategoryDto;
+import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
 import com.project.PJA.project_progress.entity.FeatureCategory;
 import com.project.PJA.project_progress.entity.Progress;
 import com.project.PJA.project_progress.repository.FeatureCategoryRepository;
@@ -32,8 +32,10 @@ public class FeatureCategoryService {
     private final FeatureCategoryRepository featureCategoryRepository;
     private final WorkspaceRepository workspaceRepository;
 
+    private static final String NO_PERMISSION = "프로젝트 진행 카테고리를 수정할 권한이 없습니다.";
+
     @Transactional
-    public Long createFeatureCategory(Users user, Long workspaceId, CreateCategoryDto dto) {
+    public Long createFeatureCategory(Users user, Long workspaceId, CreateCategoryAndFeatureDto dto) {
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(()->new NotFoundException("해당 워크스페이스가 존재하지 않습니다."));
 
@@ -64,7 +66,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateName(Users user, Long workspaceId, Long categoryId, String newName) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         category.setName(newName);
@@ -72,7 +74,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateStartDate(Users user, Long workspaceId, Long categoryId, LocalDateTime startDate) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         category.setStartDate(startDate);
@@ -80,7 +82,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateEndDate(Users user, Long workspaceId, Long categoryId, LocalDateTime endDate) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         category.setEndDate(endDate);
@@ -88,7 +90,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateState(Users user, Long workspaceId, Long categoryId, Progress state) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         category.setState(state);
@@ -96,7 +98,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateImportance(Users user, Long workspaceId, Long categoryId, Integer importance) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         category.setImportance(importance);
@@ -104,7 +106,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateOrderIndex(Users user, Long workspaceId, Long categoryId, Integer orderIndex) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         category.setOrderIndex(orderIndex);
@@ -112,7 +114,7 @@ public class FeatureCategoryService {
 
     @Transactional
     public void updateParticipants(Users user, Long workspaceId, Long categoryId, Set<Long> participantIds) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 카테고리를 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
 
         FeatureCategory category = getCategory(categoryId);
         Set<WorkspaceMember> members

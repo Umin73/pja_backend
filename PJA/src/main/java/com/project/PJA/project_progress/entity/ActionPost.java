@@ -27,6 +27,6 @@ public class ActionPost {
     @JoinColumn(name = "action_id", unique = true)
     private Action action;
 
-    @OneToMany(mappedBy = "actionPost", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "actionPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ActionComment> comments = new ArrayList<>();
 }

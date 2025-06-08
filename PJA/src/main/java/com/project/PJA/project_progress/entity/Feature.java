@@ -4,9 +4,7 @@ import com.project.PJA.workspace.entity.WorkspaceMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,6 +16,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @Entity
+@Builder
+@AllArgsConstructor
 @Table(name = "feature")
 public class Feature {
 
@@ -45,6 +45,7 @@ public class Feature {
     @Column(name = "order_index")
     private Integer orderIndex; // 순서(리스트 상의 순서)
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "feature_participant",
@@ -58,6 +59,7 @@ public class Feature {
     @JoinColumn(name = "category_id")
     private FeatureCategory category;
 
+    @Builder.Default
     @OneToMany(mappedBy = "feature", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Action> actions = new ArrayList<>();
 }

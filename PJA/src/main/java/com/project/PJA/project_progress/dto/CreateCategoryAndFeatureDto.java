@@ -1,4 +1,4 @@
-package com.project.PJA.project_progress.dto.CategoryDto;
+package com.project.PJA.project_progress.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-public class CreateCategoryDto {
+public class CreateCategoryAndFeatureDto {
 
     @NotBlank
     private String name;

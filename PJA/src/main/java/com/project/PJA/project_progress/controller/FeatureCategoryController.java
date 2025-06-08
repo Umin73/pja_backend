@@ -1,9 +1,8 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.project_progress.dto.CategoryDto.CreateCategoryDto;
-import com.project.PJA.project_progress.dto.CategoryDto.UpdateFeatureCategoryDto;
-import com.project.PJA.project_progress.entity.Progress;
+import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
+import com.project.PJA.project_progress.dto.UpdateFeatureAndCategoryDto;
 import com.project.PJA.project_progress.service.FeatureCategoryService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Slf4j
 @RestController
@@ -27,7 +23,7 @@ public class FeatureCategoryController {
     @PostMapping("{workspaceId}/project/category")
     ResponseEntity<SuccessResponse<?>> createCategory(@AuthenticationPrincipal Users user,
                                                       @PathVariable("workspaceId") Long workspaceId,
-                                                      @RequestBody CreateCategoryDto dto) {
+                                                      @RequestBody CreateCategoryAndFeatureDto dto) {
         log.info("== 기능 카테고리 생성 API 진입, {} ==", dto);
         Long data = featureCategoryService.createFeatureCategory(user, workspaceId, dto);
 
@@ -39,7 +35,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateName(@AuthenticationPrincipal Users user,
                                                   @PathVariable("workspaceId") Long workspaceId,
                                                   @PathVariable("categoryId") Long categoryId,
-                                                  @RequestBody UpdateFeatureCategoryDto dto) {
+                                                  @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateName(user, workspaceId, categoryId, dto.getName());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 이름이 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -49,7 +45,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateStartDate(@AuthenticationPrincipal Users user,
                                                   @PathVariable("workspaceId") Long workspaceId,
                                                   @PathVariable("categoryId") Long categoryId,
-                                                  @RequestBody UpdateFeatureCategoryDto dto) {
+                                                  @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateStartDate(user, workspaceId, categoryId, dto.getStartDate());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 시작일이 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -59,7 +55,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateEndDate(@AuthenticationPrincipal Users user,
                                                        @PathVariable("workspaceId") Long workspaceId,
                                                        @PathVariable("categoryId") Long categoryId,
-                                                       @RequestBody UpdateFeatureCategoryDto dto) {
+                                                       @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateEndDate(user, workspaceId, categoryId, dto.getEndDate());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 마감일이 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -69,7 +65,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateState(@AuthenticationPrincipal Users user,
                                                      @PathVariable("workspaceId") Long workspaceId,
                                                      @PathVariable("categoryId") Long categoryId,
-                                                     @RequestBody UpdateFeatureCategoryDto dto) {
+                                                     @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateState(user, workspaceId, categoryId, dto.getState());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 상태가 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -79,7 +75,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateImportance(@AuthenticationPrincipal Users user,
                                                    @PathVariable("workspaceId") Long workspaceId,
                                                    @PathVariable("categoryId") Long categoryId,
-                                                   @RequestBody UpdateFeatureCategoryDto dto) {
+                                                   @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateImportance(user, workspaceId, categoryId, dto.getImportance());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 중요도가 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -89,7 +85,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateOrder(@AuthenticationPrincipal Users user,
                                                         @PathVariable("workspaceId") Long workspaceId,
                                                         @PathVariable("categoryId") Long categoryId,
-                                                        @RequestBody UpdateFeatureCategoryDto dto) {
+                                                        @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateOrderIndex(user, workspaceId, categoryId, dto.getOrderIndex());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 순서가 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -99,7 +95,7 @@ public class FeatureCategoryController {
     ResponseEntity<SuccessResponse<?>> updateParticipants(@AuthenticationPrincipal Users user,
                                                           @PathVariable("workspaceId") Long workspaceId,
                                                           @PathVariable("categoryId") Long categoryId,
-                                                          @RequestBody UpdateFeatureCategoryDto dto) {
+                                                          @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateParticipants(user, workspaceId, categoryId, dto.getParticipantIds());
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리의 참여자가 수정되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
