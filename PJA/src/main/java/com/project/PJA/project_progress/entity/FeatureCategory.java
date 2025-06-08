@@ -1,0 +1,64 @@
+package com.project.PJA.project_progress.entity;
+
+import com.project.PJA.common.entity.BaseTimeEntity;
+import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.entity.WorkspaceMember;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "feature_category")
+public class FeatureCategory extends BaseTimeEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "feature_category_id")
+    public Long featureCategoryId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private Workspace workspace; // 워크스페이스
+
+    @ManyToMany
+    @JoinTable(
+            name = "feature_category_participant",
+            joinColumns = @JoinColumn(name = "feature_category_id"),
+            inverseJoinColumns = @JoinColumn(name = "workspace_member_id")
+    )
+    private Set<WorkspaceMember> participants = new HashSet<>(); // 참여자(워크스페이스 멤버로만 한정)
+
+    private String name; // 이름
+
+    @Column(name = "start_date")
+    private LocalDateTime startDate; // 시작일
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate; // 마감일
+
+    @Enumerated(EnumType.STRING)
+    private Progress state; //상태
+
+    @Min(1)
+    @Max(5)
+    @Column(nullable = false)
+    private Integer importance; // 중요도
+
+    private Integer order; // 순서(리스트 상의 순서)
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    private List<Feature> features = new ArrayList<>();
+
+}
