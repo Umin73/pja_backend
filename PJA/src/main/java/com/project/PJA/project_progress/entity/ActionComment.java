@@ -1,11 +1,12 @@
 package com.project.PJA.project_progress.entity;
 
-import com.project.PJA.common.entity.BaseTimeEntity;
 import com.project.PJA.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "action_comment")
-public class ActionComment extends BaseTimeEntity {
+public class ActionComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,5 +32,8 @@ public class ActionComment extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_post_id")
     private ActionPost actionPost;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
 }

@@ -1,6 +1,5 @@
 package com.project.PJA.project_progress.entity;
 
-import com.project.PJA.common.entity.BaseTimeEntity;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -18,7 +17,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "action")
-public class Action extends BaseTimeEntity {
+public class Action {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,7 +40,8 @@ public class Action extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer importance; // 중요도
 
-    private Integer order; // 순서(리스트 상의 순서)
+    @Column(name = "order_index")
+    private Integer orderIndex; // 순서(리스트 상의 순서)
 
     @Column(name = "has_test")
     private Boolean hasTest; // 테스트 여부

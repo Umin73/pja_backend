@@ -1,6 +1,5 @@
 package com.project.PJA.project_progress.entity;
 
-import com.project.PJA.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "action_post")
-public class ActionPost extends BaseTimeEntity {
+public class ActionPost {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
