@@ -51,6 +51,9 @@ public class FeatureCategory {
     @Enumerated(EnumType.STRING)
     private Progress state; //상태
 
+    @Column(name = "has_test")
+    private Boolean hasTest; // 테스트 여부
+
     @Min(1)
     @Max(5)
     @Column(nullable = false)

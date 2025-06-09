@@ -1,9 +1,8 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.project_progress.dto.CreateActionDto;
-import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
-import com.project.PJA.project_progress.dto.UpdateActionDto;
+import com.project.PJA.project_progress.dto.CreateProgressDto;
+import com.project.PJA.project_progress.dto.UpdateProgressDto;
 import com.project.PJA.project_progress.service.ActionService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ public class ActionController {
                                                      @PathVariable("workspaceId") Long workspaceId,
                                                      @PathVariable("categoryId") Long categoryId,
                                                      @PathVariable("featureId") Long featureId,
-                                                     @RequestBody CreateActionDto dto) {
+                                                     @RequestBody CreateProgressDto dto) {
         log.info("== 액션 생성 API 진입, {} ==", dto);
         Long data = actionService.createAction(user, workspaceId, categoryId, featureId, dto);
 
@@ -40,7 +39,7 @@ public class ActionController {
                                                            @PathVariable("categoryId") Long categoryId,
                                                            @PathVariable("featureId") Long featureId,
                                                            @PathVariable("actionId") Long actionId,
-                                                           @RequestBody UpdateActionDto dto) {
+                                                           @RequestBody UpdateProgressDto dto) {
         actionService.updateAction(user, workspaceId, categoryId, featureId, actionId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 수정되었습니다.", null);
