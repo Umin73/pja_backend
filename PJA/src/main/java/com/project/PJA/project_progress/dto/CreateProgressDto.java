@@ -7,10 +7,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 
 @Getter
-public class CreateActionDto {
+public class CreateProgressDto {
+
     @NotBlank
     private String name;
 
@@ -19,12 +20,12 @@ public class CreateActionDto {
     private LocalDateTime endDate;
 
     @NotNull
-    private String state; // "IN_PROGRESS" 같은 문자열
+    private String state; // 문자열로 받아서 enum으로 변환 (BEFORE, IN_PROGRESS, DONE)
+
+    private Boolean hasTest;
 
     @Min(1) @Max(5)
     private Integer importance;
 
-    private Boolean hasTest;
-
-    private Set<Long> participantsId;
+    private List<Long> participantsId; // worksapceMember의 id 목록
 }

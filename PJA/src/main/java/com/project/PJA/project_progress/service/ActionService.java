@@ -2,9 +2,8 @@ package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.project_progress.dto.CreateActionDto;
-import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
-import com.project.PJA.project_progress.dto.UpdateActionDto;
+import com.project.PJA.project_progress.dto.CreateProgressDto;
+import com.project.PJA.project_progress.dto.UpdateProgressDto;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.Feature;
 import com.project.PJA.project_progress.entity.FeatureCategory;
@@ -36,7 +35,7 @@ public class ActionService {
     private final ActionRepository actionRepository;
 
     @Transactional
-    public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateActionDto dto) {
+    public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateProgressDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 생성할 권한이 없습니다.");
 
         Feature feature = featureRepository.findById(featureId)
@@ -71,7 +70,7 @@ public class ActionService {
     }
 
     @Transactional
-    public void updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateActionDto dto) {
+    public void updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateProgressDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 수정할 권한이 없습니다.");
 
         Action action = actionRepository.findById(actionId)
