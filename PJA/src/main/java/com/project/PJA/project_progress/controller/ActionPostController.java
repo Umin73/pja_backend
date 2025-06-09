@@ -1,8 +1,7 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.project_progress.dto.UpdateActionPostDto;
-import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.ActionPostDto;
 import com.project.PJA.project_progress.service.ActionPostService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ public class ActionPostController {
                                                            @PathVariable("workspaceId") Long workspaceId,
                                                            @PathVariable("actionId") Long actionId,
                                                            @PathVariable("postId") Long postId,
-                                                           @RequestBody UpdateActionPostDto dto) {
+                                                           @RequestBody ActionPostDto dto) {
         actionPostService.updateActionPostContent(user, workspaceId, actionId, postId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 게시글이 수정되었습니다.", null);
