@@ -17,8 +17,8 @@ public class FileStorageService {
     @Value("${FILE_UPLOAD_DIR}")
     private String uploadDir;
 
-    public String storeFile(MultipartFile file, Long id) throws IOException {
-        String fileName = "user"+id+"_"+ UUID.randomUUID()+"_"+file.getOriginalFilename();
+    public String storeFile(MultipartFile file, String type, Long id) throws IOException {
+        String fileName = type+id+"_"+ UUID.randomUUID()+"_"+file.getOriginalFilename();
 
         Path dirPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(dirPath);
