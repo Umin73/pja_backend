@@ -3,6 +3,7 @@ package com.project.PJA.user.controller;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.user.dto.*;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.user.service.UserService;
 import com.project.PJA.workspace.dto.WorkspaceResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class UserController { // 로그인 하지 않고 접근 가능한 경우의 User Controller
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     // 회원가입
     @PostMapping("/signup")
@@ -104,6 +106,24 @@ public class UserController { // 로그인 하지 않고 접근 가능한 경우
         userService.changePassword2(changePw2RequestDto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "비밀번호 변경에 성공하였습니다.", null);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 아이디 중복 확인
+    @GetMapping("/check-uid")
+    public ResponseEntity<SuccessResponse<?>> checkUid(@RequestParam String uid) {
+        boolean isDuplicated = userRepository.existsByUid(uid);
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "아이디 중복 확인이 완료되었습니다.", Map.of("isDuplicated", isDuplicated));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 이메일 중복 확인
+    @GetMapping("/check-email")
+    public ResponseEntity<SuccessResponse<?>> checkEmail(@RequestParam String email) {
+        boolean isDuplicated = userRepository.existsByEmail(email);
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "이메일 중복 확인이 완료되었습니다.", Map.of("isDuplicated", isDuplicated));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
