@@ -2,8 +2,7 @@ package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.project_progress.dto.ActionCommentDto;
-import com.project.PJA.project_progress.entity.Action;
+import com.project.PJA.project_progress.dto.ActionContentDto;
 import com.project.PJA.project_progress.entity.ActionComment;
 import com.project.PJA.project_progress.entity.ActionPost;
 import com.project.PJA.project_progress.repository.ActionCommentRepository;
@@ -29,7 +28,7 @@ public class ActionCommentService {
     private final ActionCommentRepository actionCommentRepository;
 
     @Transactional
-    public Map<String, Object> createActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, ActionCommentDto dto) {
+    public Map<String, Object> createActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, ActionContentDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 댓글을 작성할 권한이 없습니다.");
 
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
@@ -56,7 +55,7 @@ public class ActionCommentService {
     }
 
     @Transactional
-    public Map<String, Object> updateActionComment(Users user, Long workspaceId, Long actionId, Long commentId, ActionCommentDto dto) {
+    public Map<String, Object> updateActionComment(Users user, Long workspaceId, Long actionId, Long commentId, ActionContentDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 댓글을 수정할 권한이 없습니다.");
 
         ActionComment comment = actionCommentRepository.findById(commentId)

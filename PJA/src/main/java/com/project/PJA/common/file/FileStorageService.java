@@ -36,4 +36,17 @@ public class FileStorageService {
     * 사용자는 다음 URL 경로로 접근
     *   : http://localhost:8080/images/profile/user1_abc1234_myprofile.png
     * */
+
+    public void deleteFile(String filePath) throws IOException {
+        if(filePath == null || filePath.isEmpty()) return;
+
+        // /images/profile/filename.png → filename.png
+        String fileName = Paths.get(filePath).getFileName().toString();
+
+        // 실제 저장 경로로 변환
+        Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
+
+        // 파일 삭제
+        Files.deleteIfExists(fullPath);
+    }
 }
