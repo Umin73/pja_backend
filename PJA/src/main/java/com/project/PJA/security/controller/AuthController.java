@@ -60,9 +60,9 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<SuccessResponse<?>> logout(HttpServletRequest request, @RequestBody String uid) {
-        log.info("== 로그아웃 API 진입 == uid: {}", uid);
-        if(authUserService.logout(request, uid)) {
+    public ResponseEntity<SuccessResponse<?>> logout(HttpServletRequest request, @AuthenticationPrincipal Users user) {
+        log.info("== 로그아웃 API 진입 == uid: {}", user.getUid());
+        if(authUserService.logout(request, user.getUid())) {
             SuccessResponse<?> response = new SuccessResponse<>("success", "로그아웃에 성공하였습니다.", null);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
