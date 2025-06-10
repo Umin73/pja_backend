@@ -82,7 +82,7 @@ public class IdeaService {
                 throw new RuntimeException("DTO JSON 변환 실패", e);
             }
 
-            redisTemplate.opsForValue().set(redisKey, json, Duration.ofMinutes(10));
+            redisTemplate.opsForValue().set(redisKey, json, Duration.ofMinutes(60));
         }
         // 예외 발생 여부와 무관하게 락을 반드시 해제
         finally {

@@ -1,14 +1,13 @@
 package com.project.PJA.workspace.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
-import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
-import com.project.PJA.workspace.dto.WorkspaceProgressStep;
-import com.project.PJA.workspace.dto.WorkspaceResponse;
-import com.project.PJA.workspace.dto.WorkspaceUpdateRequest;
+import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.enumeration.ProgressStep;
@@ -17,10 +16,12 @@ import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,8 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final RedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
@@ -209,4 +212,48 @@ public class WorkspaceService {
             throw new ForbiddenException(message);
         }
     }
+
+    // 권한 캐싱
+    public void cacheWorkspaceAuthIfNotExists(Long workspaceId) {
+        String key = "workspaceAuth:" + workspaceId;
+        //Boolean hasKey = redisTemplate.hasKey(key);
+        //if (Boolean.TRUE.equals(hasKey)) return;
+
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("워크스페이스를 찾을 수 없습니다."));
+
+        List<WorkspaceMember> members = workspaceMemberRepository.findAllByWorkspace_WorkspaceId(workspaceId);
+
+        List<WorkspaceAuthCache.MemberRoles> memberRoles = members.stream()
+                .map(member -> new WorkspaceAuthCache.MemberRoles(
+                        member.getUser().getUserId(),
+                        member.getWorkspaceRole()
+                )).collect(Collectors.toList());
+
+        WorkspaceAuthCache cacheValue = new WorkspaceAuthCache(
+                workspace.getIsPublic(),
+                memberRoles
+        );
+
+        try {
+            String json = objectMapper.writeValueAsString(cacheValue);
+            redisTemplate.opsForValue().set(key, json, Duration.ofHours(6)); // 6시간 TTL
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Redis 저장 실패", e);
+        }
+    }
+
+    // redis로 권한 확인
+    public void validateWorkspaceAccessFromCache(Long userId, Long workspaceId) {
+        String key = "workspaceAuth:" + workspaceId;
+        String data = redisTemplate.opsForValue().get(key);
+
+        if (data == null) {
+            cacheWorkspaceAuthIfNotExists(workspaceId);
+        }
+
+        try {
+            data.get
+        }
+    }*/
 }

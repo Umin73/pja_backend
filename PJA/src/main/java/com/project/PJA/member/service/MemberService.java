@@ -9,6 +9,7 @@ import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ public class MemberService {
     private final WorkspaceService workspaceService;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final RedisTemplate redisTemplate;
 
     @Transactional(readOnly = true)
     public List<MemberResponse> getMembers(Long userId, Long workspaceId) {
@@ -51,6 +53,8 @@ public class MemberService {
 
         foundWorkspaceMember.update(memberRequest.getWorkspaceRole());
 
+        invalidateWorkspaceAuthCache(workspaceId);
+
         return new MemberResponse(
                 foundWorkspaceMember.getUser().getUserId(),
                 foundWorkspaceMember.getUser().getName(),
@@ -70,6 +74,8 @@ public class MemberService {
 
         workspaceMemberRepository.delete(foundWorkspaceMember);
 
+        invalidateWorkspaceAuthCache(workspaceId);
+
         return new MemberResponse(
                 foundWorkspaceMember.getUser().getUserId(),
                 foundWorkspaceMember.getUser().getName(),
@@ -77,5 +83,9 @@ public class MemberService {
                 foundWorkspaceMember.getWorkspaceRole(),
                 foundWorkspaceMember.getJoinedAt()
         );
+    }
+
+    public void invalidateWorkspaceAuthCache(Long workspaceId) {
+        redisTemplate.delete("workspaceAuth:" + workspaceId);
     }
 }
