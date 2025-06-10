@@ -32,15 +32,10 @@ public class ActionCommentService {
     public Map<String, Object> createActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, ActionCommentDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 댓글을 작성할 권한이 없습니다.");
 
-
-
-        Action action = actionRepository.findById(actionId)
-                .orElseThrow(()->new NotFoundException("액션이 존재하지 않습니다."));
-
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
-                .orElseThrow(()->new NotFoundException("액션 포스트가 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException("액션 포스트가 존재하지 않습니다."));
 
-        if(!actionPost.getAction().getActionId().equals(action.getActionId())) {
+        if (!actionPost.getAction().getActionId().equals(actionId)) {
             throw new ForbiddenException("액션 포스트가 해당 액션에 속하지 않습니다.");
         }
 
@@ -61,34 +56,37 @@ public class ActionCommentService {
     }
 
     @Transactional
-    public Map<String, Object> updateActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, Long commentId, ActionCommentDto dto) {
+    public Map<String, Object> updateActionComment(Users user, Long workspaceId, Long actionId, Long commentId, ActionCommentDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 댓글을 수정할 권한이 없습니다.");
 
+        ActionComment comment = actionCommentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
 
-
-        Action action = actionRepository.findById(actionId)
-                .orElseThrow(()->new NotFoundException("액션이 존재하지 않습니다."));
-
-        ActionPost actionPost = actionPostRepository.findById(actionPostId)
-                .orElseThrow(()->new NotFoundException("액션 포스트가 존재하지 않습니다."));
-
-        if(!actionPost.getAction().getActionId().equals(action.getActionId())) {
-            throw new ForbiddenException("액션 포스트가 해당 액션에 속하지 않습니다.");
+        if (!comment.getActionPost().getAction().getActionId().equals(actionId)) {
+            throw new ForbiddenException("댓글이 해당 액션에 속하지 않습니다.");
         }
 
-        ActionComment actionComment = new ActionComment();
-        actionComment.setUser(user);
-        actionComment.setActionPost(actionPost);
-        actionComment.setContent(dto.getContent());
-        actionComment.setUpdatedAt(LocalDateTime.now());
-
-        actionCommentRepository.save(actionComment);
+        comment.setContent(dto.getContent());
+        comment.setUpdatedAt(LocalDateTime.now());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("username", actionComment.getUser().getName());
-        result.put("createdAt", actionComment.getUpdatedAt());
-        result.put("content", actionComment.getContent());
+        result.put("username", comment.getUser().getName());
+        result.put("createdAt", comment.getUpdatedAt());
+        result.put("content", comment.getContent());
 
         return result;
+    }
+
+    @Transactional
+    public void deleteActionComment(Users user, Long workspaceId, Long actionId, Long commentId) {
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 댓글을 삭제할 권한이 없습니다.");
+
+        ActionComment comment = actionCommentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("댓글이 존재하지 않습니다."));
+
+        if(!comment.getActionPost().getAction().getActionId().equals(actionId)) {
+            throw new ForbiddenException("댓글이 해당 액션에 속하지 않습니다.");
+        }
+        actionCommentRepository.delete(comment);
     }
 }

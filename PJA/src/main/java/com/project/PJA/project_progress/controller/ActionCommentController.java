@@ -32,15 +32,24 @@ public class ActionCommentController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-//    @PatchMapping("{workspaceId}/project/action/{actionId}/post/{postId}/comment/{commentId}")
-//    public ResponseEntity<SuccessResponse<?>> updateActionComment(@AuthenticationPrincipal Users user,
-//                                                                  @PathVariable("workspaceId") Long workspaceId,
-//                                                                  @PathVariable("actionId") Long actionId,
-//                                                                  @PathVariable("postId") Long postId,
-//                                                                  @PathVariable("commentId") Long commentId,
-//                                                                  @RequestBody ActionCommentDto dto) {
-//        Map<String, Object> data = actionCommentService.createActionComment(user, workspaceId, actionId, postId, dto);
-//        SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 생성했습니다.", data);
-//        return new ResponseEntity<>(response, HttpStatus.CREATED);
-//    }
+    @PatchMapping("{workspaceId}/project/action/{actionId}/comment/{commentId}")
+    public ResponseEntity<SuccessResponse<?>> updateActionComment(@AuthenticationPrincipal Users user,
+                                                                  @PathVariable("workspaceId") Long workspaceId,
+                                                                  @PathVariable("actionId") Long actionId,
+                                                                  @PathVariable("commentId") Long commentId,
+                                                                  @RequestBody ActionCommentDto dto) {
+        Map<String, Object> data = actionCommentService.updateActionComment(user, workspaceId, actionId, commentId, dto);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 수정했습니다.", data);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("{workspaceId}/project/action/{actionId}/comment/{commentId}")
+    public ResponseEntity<SuccessResponse<?>> deleteActionComment(@AuthenticationPrincipal Users user,
+                                                                  @PathVariable("workspaceId") Long workspaceId,
+                                                                  @PathVariable("actionId") Long actionId,
+                                                                  @PathVariable("commentId") Long commentId) {
+        actionCommentService.deleteActionComment(user, workspaceId, actionId, commentId);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 삭제했습니다.", null);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
