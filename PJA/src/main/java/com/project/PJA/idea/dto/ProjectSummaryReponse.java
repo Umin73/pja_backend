@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ProjectSummaryReponse {
     private Long ideaId;
-    private Long workspaceId;
     private String title;
     private String category;
     private List<String> targetUsers;
