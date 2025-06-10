@@ -1,5 +1,9 @@
 package com.project.PJA.idea.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.common.component.RedisLockManager;
+import com.project.PJA.exception.ConflictException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.idea.dto.*;
@@ -10,12 +14,16 @@ import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +33,62 @@ public class IdeaService {
     private final IdeaRepository ideaRepository;
     private final RestTemplate restTemplate;
     private final WorkspaceService workspaceService;
+    private final StringRedisTemplate redisTemplate;
+    private final RedisLockManager redisLockManager;
+
+    private final long LOCK_TIMEOUT = 60L;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // 실시간 조회를 위한 redis 아이디어 요약 조회
+    public ProjectSummaryRequest getRedisIdea(Long userId, Long workspaceId) {
+        // redis에서 권한 확인하게 바꾸기
+
+        String key = "projectSummaryData:" + workspaceId;
+        String data = redisTemplate.opsForValue().get(key);
+
+        if (data == null) {
+            throw new NotFoundException("Redis에 아이디어 요약 데이터가 없습니다.");
+        }
+
+        // JSON을 ProjectSummaryReponse로 변환
+        try {
+            return objectMapper.readValue(data, ProjectSummaryRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Redis 데이터 파싱 실패", e);
+        }
+    }
+
+    // 실시간 조회를 위한 redis 아이디어 요약 저장
+    public void updateRedisIdea(Long userId, Long workspaceId, ProjectSummaryRequest projectSummaryRequest) {
+        // redis에서 권한 확인하게 바꾸기
+
+        String lockKey = "lock:data:" + workspaceId;
+        String lockId = UUID.randomUUID().toString();
+
+        // 락 걸기
+        boolean lockAcquired = redisLockManager.acquireLock(lockKey, lockId, LOCK_TIMEOUT);
+        if (!lockAcquired) {
+            throw new ConflictException("현재 다른 사용자가 작업 중입니다. 잠시 후 다시 시도해주세요.");
+        }
+
+        try {
+            String redisKey = "projectSummaryData:" + workspaceId;
+
+            // DTO -> JSON
+            String json;
+            try {
+                json = objectMapper.writeValueAsString(projectSummaryRequest);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("DTO JSON 변환 실패", e);
+            }
+
+            redisTemplate.opsForValue().set(redisKey, json, Duration.ofMinutes(10));
+        }
+        // 예외 발생 여부와 무관하게 락을 반드시 해제
+        finally {
+            redisLockManager.releaseLock(lockKey, lockId);
+        }
+    }
 
     // 아이디어 조회
     @Transactional(readOnly = true)
@@ -45,7 +109,6 @@ public class IdeaService {
 
         return new ProjectSummaryReponse(
                 foundIdea.getProjectSummaryId(),
-                workspaceId,
                 foundIdea.getTitle(),
                 foundIdea.getCategory(),
                 foundIdea.getTargetUsers(),
@@ -121,7 +184,6 @@ public class IdeaService {
 
         return new ProjectSummaryReponse(
                 savedIdea.getProjectSummaryId(),
-                workspaceId,
                 savedIdea.getTitle(),
                 savedIdea.getCategory(),
                 savedIdea.getTargetUsers(),
@@ -152,7 +214,6 @@ public class IdeaService {
 
         return new ProjectSummaryReponse(
                 ideaId,
-                workspaceId,
                 projectSummary.getTitle(),
                 projectSummary.getCategory(),
                 projectSummary.getTargetUsers(),
