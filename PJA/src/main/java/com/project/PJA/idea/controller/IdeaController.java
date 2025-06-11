@@ -13,35 +13,35 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/workspace")
+@RequestMapping("/api/workspaces")
 @RequiredArgsConstructor
 public class IdeaController {
     private final IdeaService ideaService;
 
-    // 실시간 조회를 위한 redis 아이디어 요약 조회
-    @GetMapping("/{workspaceId}/project-info/redis")
-    public ResponseEntity<SuccessResponse<ProjectSummaryRequest>> getRedisIdea(@AuthenticationPrincipal Users user,
-                                                                               @PathVariable Long workspaceId) {
+    // 실시간 조회를 위한 캐시에서 아이디어 요약 조회
+    @GetMapping("/{workspaceId}/project-info/cache")
+    public ResponseEntity<SuccessResponse<ProjectSummaryRequest>> getIdeaFromCache(@AuthenticationPrincipal Users user,
+                                                                                   @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
-        ProjectSummaryRequest redisIdea = ideaService.getRedisIdea(userId, workspaceId);
+        ProjectSummaryRequest redisIdea = ideaService.getIdeaFromCache(userId, workspaceId);
 
         SuccessResponse<ProjectSummaryRequest> response = new SuccessResponse<>(
-                "success", "아이디어 요약을 조회합니다.", redisIdea
+                "success", "임시 저장된 아이디어 요약을 조회했습니다.", redisIdea
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 실시간 조회를 위한 redis 아이디어 요약 저장
-    @PutMapping("/{workspaceId}/project-info/redis")
-    public ResponseEntity<SuccessResponse<Void>> updateRedisIdea(@AuthenticationPrincipal Users user,
-                                                                 @PathVariable Long workspaceId,
-                                                                 @RequestBody ProjectSummaryRequest projectSummaryRequest) {
+    // 실시간 조회를 위한 캐시에서 아이디어 요약 저장
+    @PutMapping("/{workspaceId}/project-info/cache")
+    public ResponseEntity<SuccessResponse<Void>> updateIdeaFromCache(@AuthenticationPrincipal Users user,
+                                                                     @PathVariable Long workspaceId,
+                                                                     @RequestBody ProjectSummaryRequest projectSummaryRequest) {
         Long userId = user.getUserId();
-        ideaService.updateRedisIdea(userId, workspaceId, projectSummaryRequest);
+        ideaService.updateIdeaFromCache(userId, workspaceId, projectSummaryRequest);
 
         SuccessResponse<Void> response = new SuccessResponse<>(
-                "success", "아이디어 요약이 업데이트 되었습니다.", null
+                "success", "아이디어 요약이 임시 저장되었습니다.", null
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

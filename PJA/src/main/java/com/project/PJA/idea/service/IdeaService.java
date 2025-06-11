@@ -2,8 +2,6 @@ package com.project.PJA.idea.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.PJA.common.component.RedisLockManager;
-import com.project.PJA.exception.ConflictException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.idea.dto.*;
@@ -23,7 +21,6 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,14 +31,11 @@ public class IdeaService {
     private final RestTemplate restTemplate;
     private final WorkspaceService workspaceService;
     private final StringRedisTemplate redisTemplate;
-    private final RedisLockManager redisLockManager;
 
-    private final long LOCK_TIMEOUT = 60L;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // 실시간 조회를 위한 redis 아이디어 요약 조회
-    public ProjectSummaryRequest getRedisIdea(Long userId, Long workspaceId) {
-        // redis에서 권한 확인하게 바꾸기
+    public ProjectSummaryRequest getIdeaFromCache(Long userId, Long workspaceId) {
         workspaceService.validateWorkspaceAccessFromCache(userId, workspaceId);
 
         String key = "projectSummaryData:" + workspaceId;
@@ -51,7 +45,6 @@ public class IdeaService {
             throw new NotFoundException("Redis에 아이디어 요약 데이터가 없습니다.");
         }
 
-        // JSON을 ProjectSummaryReponse로 변환
         try {
             return objectMapper.readValue(data, ProjectSummaryRequest.class);
         } catch (JsonProcessingException e) {
@@ -60,36 +53,20 @@ public class IdeaService {
     }
 
     // 실시간 조회를 위한 redis 아이디어 요약 저장
-    public void updateRedisIdea(Long userId, Long workspaceId, ProjectSummaryRequest projectSummaryRequest) {
-        // redis에서 권한 확인하게 바꾸기
-        workspaceService.authorizeOwnerOrMemberOrThrowFromCache(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+    public void updateIdeaFromCache(Long userId, Long workspaceId, ProjectSummaryRequest projectSummaryRequest) {
+        workspaceService.authorizeOwnerOrMemberOrThrowFromCache(userId, workspaceId);
 
-        String lockKey = "lock:data:" + workspaceId;
-        String lockId = UUID.randomUUID().toString();
+        String redisKey = "projectSummaryData:" + workspaceId;
 
-        // 락 걸기
-        boolean lockAcquired = redisLockManager.acquireLock(lockKey, lockId, LOCK_TIMEOUT);
-        if (!lockAcquired) {
-            throw new ConflictException("현재 다른 사용자가 작업 중입니다. 잠시 후 다시 시도해주세요.");
-        }
-
+        // dto -> json
+        String json;
         try {
-            String redisKey = "projectSummaryData:" + workspaceId;
-
-            // DTO -> JSON
-            String json;
-            try {
-                json = objectMapper.writeValueAsString(projectSummaryRequest);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("DTO JSON 변환 실패", e);
-            }
-
-            redisTemplate.opsForValue().set(redisKey, json, Duration.ofMinutes(60));
+            json = objectMapper.writeValueAsString(projectSummaryRequest);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("DTO JSON 변환 실패", e);
         }
-        // 예외 발생 여부와 무관하게 락을 반드시 해제
-        finally {
-            redisLockManager.releaseLock(lockKey, lockId);
-        }
+
+        redisTemplate.opsForValue().set(redisKey, json, Duration.ofMinutes(60));
     }
 
     // 아이디어 조회

@@ -219,7 +219,7 @@ public class WorkspaceService {
         String key = "workspaceAuth:" + workspaceId;
 
         Workspace workspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("워크스페이스를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         List<WorkspaceMember> members = workspaceMemberRepository.findAllByWorkspace_WorkspaceId(workspaceId);
 
@@ -237,7 +237,7 @@ public class WorkspaceService {
         try {
             // dto -> json
             String json = objectMapper.writeValueAsString(cacheValue);
-            redisTemplate.opsForValue().set(key, json, Duration.ofHours(6)); // 6시간 TTL
+            redisTemplate.opsForValue().set(key, json, Duration.ofHours(9)); // 9시간 TTL
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Redis 저장 실패", e);
         }
@@ -281,7 +281,7 @@ public class WorkspaceService {
     }
     
     // redis로 사용자가 오너 or 멤버가 아니면 403 반환
-    public void authorizeOwnerOrMemberOrThrowFromCache(Long userId, Long workspaceId, String message) {
+    public void authorizeOwnerOrMemberOrThrowFromCache(Long userId, Long workspaceId) {
         String key = "workspaceAuth:" + workspaceId;
         String data = redisTemplate.opsForValue().get(key);
 
@@ -290,7 +290,7 @@ public class WorkspaceService {
             cacheWorkspaceAuth(workspaceId);
             data = redisTemplate.opsForValue().get(key);
             if (data == null) {
-                throw new RuntimeException("권한 캐시 생성 실패");
+                throw new RuntimeException("권한 캐시 생성에 실패했습니다.");
             }
         }
 
@@ -315,7 +315,7 @@ public class WorkspaceService {
             }
 
             if (!authorized) {
-                throw new ForbiddenException(message);
+                throw new ForbiddenException("이 워크스페이스에 수정할 권한이 없습니다.");
             }
         } catch (Exception e) {
             throw new RuntimeException("권한 캐시 파싱 실패", e);
