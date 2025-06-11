@@ -126,7 +126,7 @@ public class WorkspaceService {
                 foundWorkspace.getProgressStep());
     }
 
-    // 워크스페이스 진행도 완료 상태 수정
+    // 워크스페이스 진행도 상태 수정
     @Transactional
     public WorkspaceResponse updateCompletionStatus(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
         // 워크스페이스 찾기
@@ -171,5 +171,42 @@ public class WorkspaceService {
                 foundWorkspace.getTeamName(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
+    }
+
+    // 비공개 워크스페이스의 팀원이 아니면 403 반환
+    public void validateWorkspaceAccess(Long userId, Workspace workspace) {
+        Long workspaceId = workspace.getWorkspaceId();
+
+        if (!workspace.getIsPublic()) {
+            boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId);
+
+            if(!isMember) {
+                throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
+            }
+        }
+    }
+
+    // 사용자가 오너가 아니면 403 반환
+    public void authorizeOwnerOrThrow(Long userId, Long workspaceId, String message) {
+        // 워크스페이스 찾기
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+        
+        // 사용자가 해당 워크스페이스의 오너인지 확인
+        if (!foundWorkspace.getUser().getUserId().equals(userId)) {
+            throw new ForbiddenException(message);
+        }
+    }
+
+    // 사용자가 오너 or 멤버가 아니면 403 반환
+    public void authorizeOwnerOrMemberOrThrow(Long userId, Long workspaceId, String message) {
+        // 워크스페이스 멤버 찾기
+        WorkspaceMember member = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId)
+                .orElseThrow(() -> new NotFoundException("이 워크스페이스에 접근할 권한이 없습니다."));
+
+        // 사용자가 오너 or 멤버인지 확인
+        if (member.getWorkspaceRole() != WorkspaceRole.OWNER && member.getWorkspaceRole() != WorkspaceRole.MEMBER) {
+            throw new ForbiddenException(message);
+        }
     }
 }

@@ -40,20 +40,20 @@ public class UserController { // 로그인 하지 않고 접근 가능한 경우
     }
 
     // 회원가입 인증코드 이메일 보내기
-    @GetMapping("/send-email")
-    public ResponseEntity<SuccessResponse<?>> sendVerifyEmail(@RequestParam String email) {
-        log.info("== 이메일 보내기 API 진입 == UID: {}", email);
-        userService.sendVerificationEmail(email);
+    @PostMapping("/send-email")
+    public ResponseEntity<SuccessResponse<?>> sendVerifyEmail(@RequestBody SendVerifyEmailDto dto) {
+        log.info("== 이메일 보내기 API 진입 == UID: {}", dto.getEmail());
+        userService.sendVerificationEmail(dto.getEmail());
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "이메일 인증이 완료되었습니다.", null);
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
     // 회원가입 인증코드 인증
-    @GetMapping("/verify-email")
-    public ResponseEntity<SuccessResponse<?>> verifyEmail(@RequestParam String email, @RequestParam String token) {
-        log.info("== 회원가입 이메일 인증 API 진입 == UID: {}, token={}", email, token);
-        userService.verifyEmail(email, token);
+    @PostMapping("/verify-email")
+    public ResponseEntity<SuccessResponse<?>> verifyEmail(@RequestBody VerifyEmailDto dto) {
+        log.info("== 회원가입 이메일 인증 API 진입 == token={}", dto.getToken());
+        userService.verifyEmail(dto.getEmail(), dto.getToken());
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "이메일 인증이 완료되었습니다.", null);
         return new ResponseEntity<>(response,HttpStatus.OK);

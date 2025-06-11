@@ -7,13 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Entity
 @Table(name = "workspace")
@@ -46,20 +43,6 @@ public class Workspace {
     @Enumerated(EnumType.STRING)
     @Column(name = "progress_step", nullable = false, length = 10)
     private ProgressStep progressStep = ProgressStep.ZERO;
-
-    @Column(name = "project_target", nullable = true)
-    private String projectTarget;
-
-    @Column(name = "project_description", columnDefinition = "TEXT", nullable = true)
-    private String projectDescription;
-
-    @Column(name = "project_summary", columnDefinition = "TEXT", nullable = true)
-    private String projectSummary;
-
-    // @Column(name = "project_features", columnDefinition = "json", nullable = true)
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "project_features", nullable = true)
-    private Map<String, Object> projectFeatures;
 
     @Builder
     public Workspace(Users user, String projectName, String teamName, Boolean isPublic) {
