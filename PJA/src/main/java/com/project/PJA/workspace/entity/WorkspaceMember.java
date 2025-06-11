@@ -47,4 +47,8 @@ public class WorkspaceMember {
         this.workspaceRole = workspaceRole;
         this.joinedAt = LocalDateTime.now();
     }
+
+    public void update(WorkspaceRole workspaceRole) {
+        this.workspaceRole = workspaceRole;
+    }
 }
