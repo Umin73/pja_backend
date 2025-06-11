@@ -1,7 +1,9 @@
 package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.idea.entity.Idea;
 import com.project.PJA.idea.repository.IdeaRepository;
+import com.project.PJA.member.service.MemberService;
 import com.project.PJA.project_progress.dto.*;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.Feature;
@@ -32,6 +34,7 @@ public class ProjectProgressService {
     private final FeatureCategoryRepository featureCategoryRepository;
     private final FeatureRepository featureRepository;
     private final ActionRepository actionRepository;
+    private final MemberService memberService;
 
     public ProjectProgressResponseDto getProjectProcessInfo(Long userId, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
@@ -45,7 +48,7 @@ public class ProjectProgressService {
 
         // 참여자 Set
         Set<WorkspaceMemberDto> workspaceMembers = new HashSet<>();
-        responseDto.setParticipants(Collections.emptySet());
+        responseDto.setParticipants(memberService.getMemberWithoutGuest(workspaceId));
         log.info("참여자 Set 생성");
 
         // 프로젝트 주요 기능 List
@@ -60,22 +63,14 @@ public class ProjectProgressService {
         return responseDto;
     }
 
-
-//    List<WorkspaceMember> getWorkspaceMembers(Long workspaceId) {
-//        Set<WorkspaceMember> members = workspaceMemberRepository.findAllById(dto.getParticipantIds()).stream()
-//                .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-//                .collect(Collectors.toSet());
-//    }
-
     List<String> getCoreFeatures(Workspace workspace) {
-//        Optional<Idea> optionalIdea = ideaRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
-//        if(optionalIdea.isEmpty()) {
-//            throw new NotFoundException("아이디어가 존재하지 않습니다.");
-//        }
-//        Idea idea = optionalIdea.get();
-//
-//        return idea.getCoreFeatures();
-        return new ArrayList<>(); // 일단 임시로 빈 array list 반환
+        Optional<Idea> optionalIdea = ideaRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
+        if(optionalIdea.isEmpty()) {
+            throw new NotFoundException("아이디어가 존재하지 않습니다.");
+        }
+        Idea idea = optionalIdea.get();
+
+        return idea.getCoreFeatures();
     }
 
     List<FeatureCategoryResponseDto> getFeatureCategories(Workspace workspace) {
@@ -90,10 +85,6 @@ public class ProjectProgressService {
 
             dto.setFeatureCategoryId(featureCategory.getFeatureCategoryId());
             dto.setName(featureCategory.getName());
-            dto.setImportance(featureCategory.getImportance());
-            dto.setParticipants(Collections.emptySet());
-            dto.setStartDate(featureCategory.getStartDate());
-            dto.setEndDate(featureCategory.getEndDate());
             dto.setOrderIndex(featureCategory.getOrderIndex());
             dto.setState(featureCategory.getState());
             dto.setHasTest(featureCategory.getHasTest());
@@ -116,10 +107,6 @@ public class ProjectProgressService {
             FeatureResponseDto dto = new FeatureResponseDto();
             dto.setFeatureId(feature.getFeatureId());
             dto.setName(feature.getName());
-            dto.setImportance(feature.getImportance());
-            dto.setParticipants(Collections.emptySet());
-            dto.setStartDate(feature.getStartDate());
-            dto.setEndDate(feature.getEndDate());
             dto.setOrderIndex(feature.getOrderIndex());
             dto.setState(feature.getState());
             dto.setHasTest(feature.getHasTest());
@@ -143,7 +130,7 @@ public class ProjectProgressService {
             dto.setActionId(action.getActionId());
             dto.setName(action.getName());
             dto.setImportance(action.getImportance());
-            dto.setParticipants(Collections.emptySet());
+            dto.setParticipants(getWorkspaceMemberDto(action.getParticipants()));
             dto.setStartDate(action.getStartDate());
             dto.setEndDate(action.getEndDate());
             dto.setOrderIndex(action.getOrderIndex());
@@ -158,5 +145,19 @@ public class ProjectProgressService {
         }
         log.info("actionResponseDtoList: {}",actionResponseDtoList);
         return actionResponseDtoList;
+    }
+
+    private Set<WorkspaceMemberDto> getWorkspaceMemberDto(Set<WorkspaceMember> participants) {
+        Set<WorkspaceMemberDto> workspaceMemberDtos = new HashSet<>();
+        for(WorkspaceMember member: participants) {
+            WorkspaceMemberDto dto = new WorkspaceMemberDto();
+            dto.setMemberId(member.getWorkspaceMemberId());
+            dto.setUsername(member.getUser().getUsername());
+            dto.setProfileImage(member.getUser().getProfileImage());
+            dto.setRole(member.getWorkspaceRole());
+
+            workspaceMemberDtos.add(dto);
+        }
+        return workspaceMemberDtos;
     }
 }
