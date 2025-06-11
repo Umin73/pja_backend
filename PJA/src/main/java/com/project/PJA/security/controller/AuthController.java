@@ -40,7 +40,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-//                .secure(true) // HTTPS 환경에서만
+                .secure(true) // HTTPS 환경에서만
                 .path("/")    // 모든 경로에 대해 유효
                 .maxAge(Duration.ofDays(7))
                 .sameSite("Strict") // 또는 Lax
