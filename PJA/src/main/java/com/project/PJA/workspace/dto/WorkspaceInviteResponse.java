@@ -11,7 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkspaceInviteResponse {
-    private Long workspaceId;
     private List<String> invitedEmails;
     private WorkspaceRole workspaceRole;
 }

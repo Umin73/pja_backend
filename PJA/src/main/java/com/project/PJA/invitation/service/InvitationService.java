@@ -64,7 +64,7 @@ public class InvitationService {
             emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
         }
 
-        return new WorkspaceInviteResponse(workspaceId, request.getEmails(), request.getWorkspaceRole());
+        return new WorkspaceInviteResponse(request.getEmails(), request.getWorkspaceRole());
     }
 
     // 초대 링크 정보 조회
