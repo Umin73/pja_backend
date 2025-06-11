@@ -54,9 +54,9 @@ public class AuthController {
 
 
     @PostMapping("/reissue")
-    public ResponseEntity<SuccessResponse<?>> reissue(@RequestBody TokenRequestDto tokenRequestDto) {
-        log.info("== 토큰 재발급 API 진입 == RT: {}", tokenRequestDto.getRefreshToken());
-        String newAccessToken = authUserService.reissue(tokenRequestDto.getRefreshToken());
+    public ResponseEntity<SuccessResponse<?>> reissue(HttpServletRequest request) {
+        log.info("== 토큰 재발급 API 진입 ==");
+        String newAccessToken = authUserService.reissue(request);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "토큰 재발급에 성공하였습니다.", Map.of("accessToken", newAccessToken));
         return new ResponseEntity<>(response, HttpStatus.CREATED);

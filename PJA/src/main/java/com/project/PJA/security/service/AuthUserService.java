@@ -5,6 +5,7 @@ import com.project.PJA.security.dto.LoginDto;
 import com.project.PJA.security.jwt.JwtTokenProvider;
 import com.project.PJA.user.entity.UserStatus;
 import com.project.PJA.user.entity.Users;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -55,7 +58,15 @@ public class AuthUserService {
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
 
-    public String reissue(String rt) {
+    public String reissue(HttpServletRequest request) {
+
+        String rt = Arrays.stream(Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]))
+                .filter(c -> "refreshToken".equals(c.getName()))
+                .findFirst()
+                .map(Cookie::getValue)
+                .orElseThrow(() -> new UnauthorizedException("Refresh Token 쿠키가 없습니다."));
+        log.info("refresh token: {}", rt);
+        
         if(!jwtTokenProvider.validateToken(rt)) {
             log.info("RT 유효하지 않음 -- (1)");
             throw new UnauthorizedException("Refresh Token이 유효하지 않거나 만료되었습니다.");
