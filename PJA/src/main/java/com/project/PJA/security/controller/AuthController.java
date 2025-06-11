@@ -9,14 +9,17 @@ import com.project.PJA.security.service.AuthUserService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Slf4j
@@ -30,12 +33,23 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<SuccessResponse<?>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
         log.info("== 로그인 API 진입 == UID: {}", loginDto.getUid());
         Map<Object, Object> tokens = authUserService.login(loginDto);
+        String refreshToken = (String) tokens.get("refreshToken");
 
-        SuccessResponse<?> response = new SuccessResponse<>("success", "로그인에 성공하였습니다", tokens);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+//                .secure(true) // HTTPS 환경에서만
+                .path("/")    // 모든 경로에 대해 유효
+                .maxAge(Duration.ofDays(7))
+                .sameSite("Strict") // 또는 Lax
+                .build();
+
+        response.setHeader("Set-Cookie", cookie.toString());
+
+        SuccessResponse<?> successResponse = new SuccessResponse<>("success", "로그인에 성공하였습니다", Map.of("accessToken", tokens.get("accessToken")));
+        return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 
 
@@ -60,11 +74,19 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<SuccessResponse<?>> logout(HttpServletRequest request, @RequestBody String uid) {
-        log.info("== 로그아웃 API 진입 == uid: {}", uid);
-        if(authUserService.logout(request, uid)) {
-            SuccessResponse<?> response = new SuccessResponse<>("success", "로그아웃에 성공하였습니다.", null);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+    public ResponseEntity<SuccessResponse<?>> logout(HttpServletRequest request, HttpServletResponse response, @AuthenticationPrincipal Users user) {
+        log.info("== 로그아웃 API 진입 == uid: {}", user.getUid());
+        if(authUserService.logout(request, user.getUid())) {
+            ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(0) // 즉시 만료
+                    .sameSite("Strict")
+                    .build();
+            response.setHeader("Set-Cookie", deleteCookie.toString());
+
+            SuccessResponse<?> successResponse = new SuccessResponse<>("success", "로그아웃에 성공하였습니다.", null);
+            return new ResponseEntity<>(successResponse, HttpStatus.OK);
         } else {
             throw new RuntimeException("로그아웃에 실패하였습니다.");
         }
