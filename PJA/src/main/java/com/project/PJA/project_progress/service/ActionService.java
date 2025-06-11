@@ -33,6 +33,7 @@ public class ActionService {
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final FeatureRepository featureRepository;
     private final ActionRepository actionRepository;
+    private final ActionPostService actionPostService;
 
     @Transactional
     public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateProgressDto dto) {
@@ -66,7 +67,11 @@ public class ActionService {
                 .participants(participants)
                 .build();
 
-        return actionRepository.save(action).getActionId();
+        actionRepository.save(action);
+
+        actionPostService.createActionPost(action);
+
+        return action.getActionId();
     }
 
     @Transactional

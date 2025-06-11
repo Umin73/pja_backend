@@ -34,20 +34,12 @@ public class FeatureService {
     private final FeatureRepository featureRepository;
     private final FeatureCategoryRepository featureCategoryRepository;
 
-    private static final String NO_PERMISSION = "프로젝트 진행 기능을 수정할 권한이 없습니다.";
-
-
     @Transactional
     public Long createFeature(Users user, Long workspaceId, Long categoryId, CreateProgressDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 기능을 생성할 권한이 없습니다.");
 
         FeatureCategory category = featureCategoryRepository.findById(categoryId)
                 .orElseThrow(()->new NotFoundException("기능 카테고리를 찾을 수 없습니다."));
-
-        Set<WorkspaceMember> participants = workspaceMemberRepository.findAllById(dto.getParticipantsId())
-                .stream()
-                .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-                .collect(Collectors.toSet());
 
         Integer nextOrder = featureRepository
                 .findTopByCategoryOrderByOrderIndexDesc(category)
@@ -56,14 +48,10 @@ public class FeatureService {
 
         Feature feature = Feature.builder()
                 .name(dto.getName())
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
                 .state(Progress.valueOf(dto.getState().toUpperCase()))
-                .importance(dto.getImportance())
                 .hasTest(false)
                 .orderIndex(nextOrder)
                 .category(category)
-                .participants(participants)
                 .build();
 
         return featureRepository.save(feature).getFeatureId();
@@ -77,81 +65,11 @@ public class FeatureService {
         validateFeatureHierarchy(workspaceId, categoryId, featureId, feature);
 
         if (dto.getName() != null) feature.setName(dto.getName());
-        if (dto.getStartDate() != null) feature.setStartDate(dto.getStartDate());
-        if (dto.getEndDate() != null) feature.setEndDate(dto.getEndDate());
         if (dto.getState() != null) feature.setState(Progress.valueOf(dto.getState().toUpperCase()));
-        if (dto.getImportance() != null) feature.setImportance(dto.getImportance());
         if (dto.getOrderIndex() != null) feature.setOrderIndex(dto.getOrderIndex());
         if (dto.getHasTest() != null) feature.setHasTest(dto.getHasTest());
-        if (dto.getParticipantIds() != null) {
-            Set<WorkspaceMember> members = workspaceMemberRepository.findAllById(dto.getParticipantIds()).stream()
-                    .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-                    .collect(Collectors.toSet());
-            feature.setParticipants(members);
-        }
     }
 
-//    @Transactional
-//    public void updateName(Users user, Long workspaceId, Long featureId, String newName) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//        feature.setName(newName);
-//    }
-//
-//    @Transactional
-//    public void updateStartDate(Users user, Long workspaceId, Long featureId, LocalDateTime startDate) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//        feature.setStartDate(startDate);
-//    }
-//
-//    @Transactional
-//    public void updateEndDate(Users user, Long workspaceId, Long featureId, LocalDateTime endDate) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//        feature.setEndDate(endDate);
-//    }
-//
-//    @Transactional
-//    public void updateState(Users user, Long workspaceId, Long featureId, String state) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//        feature.setState(Progress.valueOf(state.toUpperCase()));
-//    }
-//
-//    @Transactional
-//    public void updateImportance(Users user, Long workspaceId, Long featureId, Integer importance) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//        feature.setImportance(importance);
-//    }
-//
-//    @Transactional
-//    public void updateOrderIndex(Users user, Long workspaceId, Long featureId, Integer orderIndex) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//        feature.setOrderIndex(orderIndex);
-//    }
-//
-//    @Transactional
-//    public void updateParticipants(Users user, Long workspaceId, Long featureId, Set<Long> participantIds) {
-//        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, NO_PERMISSION);
-//
-//        Feature feature = getFeature(featureId);
-//
-//        Set<WorkspaceMember> members = workspaceMemberRepository.findAllById(participantIds)
-//                .stream()
-//                .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-//                .collect(Collectors.toSet());
-//
-//        feature.setParticipants(members);
-//    }
 
     @Transactional
     public void deleteFeature(Users user, Long workspaceId, Long featureCategoryId, Long featureId) {

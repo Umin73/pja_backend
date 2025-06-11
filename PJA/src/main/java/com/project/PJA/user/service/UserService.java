@@ -290,7 +290,7 @@ public class UserService {
             Files.deleteIfExists(fullPath);
         }
 
-        String newImagePath = fileStorageService.storeFile(file, user.getUserId());
+        String newImagePath = fileStorageService.storeFile(file, "user",user.getUserId());
         user.setProfileImage(newImagePath);
     }
 

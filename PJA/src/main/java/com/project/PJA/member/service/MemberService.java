@@ -3,8 +3,10 @@ package com.project.PJA.member.service;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.member.dto.MemberRequest;
 import com.project.PJA.member.dto.MemberResponse;
+import com.project.PJA.project_progress.dto.WorkspaceMemberDto;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -12,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,5 +81,22 @@ public class MemberService {
                 foundWorkspaceMember.getWorkspaceRole(),
                 foundWorkspaceMember.getJoinedAt()
         );
+    }
+
+    // GUEST 제외한 멤버 리스트 가져오기
+    public Set<WorkspaceMemberDto> getMemberWithoutGuest(Long workspaceId) {
+        Set<WorkspaceMemberDto> dtoSet = new HashSet<>();
+        Set<WorkspaceMember> memberSet = workspaceMemberRepository.findAllByWorkspace_WorkspaceIdAndWorkspaceRoleNot(workspaceId, WorkspaceRole.GUEST);
+
+        for(WorkspaceMember member : memberSet) {
+            WorkspaceMemberDto dto = new WorkspaceMemberDto();
+            dto.setMemberId(member.getWorkspaceMemberId());
+            dto.setUsername(member.getUser().getName());
+            dto.setProfileImage(member.getUser().getProfileImage());
+            dto.setRole(member.getWorkspaceRole());
+
+            dtoSet.add(dto);
+        }
+        return dtoSet;
     }
 }
