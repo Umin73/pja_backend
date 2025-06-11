@@ -1,6 +1,7 @@
 package com.project.PJA.workspace.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.ForbiddenException;
@@ -32,7 +33,7 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // 사용자의 전체 워크스페이스 조회
@@ -213,11 +214,9 @@ public class WorkspaceService {
         }
     }
 
-    // 권한 캐싱
-    public void cacheWorkspaceAuthIfNotExists(Long workspaceId) {
+    // redis에 해당 워크스페이스의 팀원 저장
+    public void cacheWorkspaceAuth(Long workspaceId) {
         String key = "workspaceAuth:" + workspaceId;
-        //Boolean hasKey = redisTemplate.hasKey(key);
-        //if (Boolean.TRUE.equals(hasKey)) return;
 
         Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("워크스페이스를 찾을 수 없습니다."));
@@ -236,6 +235,7 @@ public class WorkspaceService {
         );
 
         try {
+            // dto -> json
             String json = objectMapper.writeValueAsString(cacheValue);
             redisTemplate.opsForValue().set(key, json, Duration.ofHours(6)); // 6시간 TTL
         } catch (JsonProcessingException e) {
@@ -243,17 +243,82 @@ public class WorkspaceService {
         }
     }
 
-    // redis로 권한 확인
+    // redis로 비공개인데 팀원이 아니면 403 반환
     public void validateWorkspaceAccessFromCache(Long userId, Long workspaceId) {
         String key = "workspaceAuth:" + workspaceId;
         String data = redisTemplate.opsForValue().get(key);
 
+        // 캐시 없으면 생성
         if (data == null) {
-            cacheWorkspaceAuthIfNotExists(workspaceId);
+            cacheWorkspaceAuth(workspaceId);
+            data = redisTemplate.opsForValue().get(key);
         }
 
         try {
-            data.get
+            // json -> JsonNode
+            JsonNode node = objectMapper.readTree(data);
+            boolean isPublic = node.get("isPublic").asBoolean();
+
+            if (!isPublic) {
+                JsonNode memberRoles = node.get("memberRoles");
+
+                boolean isMember = false;
+                for (JsonNode member : memberRoles) {
+                    long memberId = member.get("userId").asLong();
+                    if (memberId == userId) {
+                        isMember = true;
+                        break;
+                    }
+                }
+
+                if (!isMember) {
+                    throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("권한 캐시 파싱 실패", e);
         }
-    }*/
+    }
+    
+    // redis로 사용자가 오너 or 멤버가 아니면 403 반환
+    public void authorizeOwnerOrMemberOrThrowFromCache(Long userId, Long workspaceId, String message) {
+        String key = "workspaceAuth:" + workspaceId;
+        String data = redisTemplate.opsForValue().get(key);
+
+        // 캐시 없으면 생성
+        if (data == null) {
+            cacheWorkspaceAuth(workspaceId);
+            data = redisTemplate.opsForValue().get(key);
+            if (data == null) {
+                throw new RuntimeException("권한 캐시 생성 실패");
+            }
+        }
+
+        try {
+            // json -> JsonNode
+            JsonNode node = objectMapper.readTree(data);
+            JsonNode memberRoles = node.get("memberRoles");
+
+            boolean authorized = false;
+
+            for (JsonNode member: memberRoles) {
+                long memberId = member.get("userId").asLong();
+                String roleText = member.get("workspaceRole").asText();
+
+                if (memberId == userId) {
+                    WorkspaceRole role = WorkspaceRole.valueOf(roleText);
+                    if (role.isOwnerOrMember()) {
+                        authorized = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!authorized) {
+                throw new ForbiddenException(message);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("권한 캐시 파싱 실패", e);
+        }
+    }
 }

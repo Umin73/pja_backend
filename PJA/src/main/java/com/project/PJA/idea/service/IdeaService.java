@@ -42,6 +42,7 @@ public class IdeaService {
     // 실시간 조회를 위한 redis 아이디어 요약 조회
     public ProjectSummaryRequest getRedisIdea(Long userId, Long workspaceId) {
         // redis에서 권한 확인하게 바꾸기
+        workspaceService.validateWorkspaceAccessFromCache(userId, workspaceId);
 
         String key = "projectSummaryData:" + workspaceId;
         String data = redisTemplate.opsForValue().get(key);
@@ -61,6 +62,7 @@ public class IdeaService {
     // 실시간 조회를 위한 redis 아이디어 요약 저장
     public void updateRedisIdea(Long userId, Long workspaceId, ProjectSummaryRequest projectSummaryRequest) {
         // redis에서 권한 확인하게 바꾸기
+        workspaceService.authorizeOwnerOrMemberOrThrowFromCache(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         String lockKey = "lock:data:" + workspaceId;
         String lockId = UUID.randomUUID().toString();
