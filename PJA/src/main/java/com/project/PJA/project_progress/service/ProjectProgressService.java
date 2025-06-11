@@ -1,12 +1,8 @@
 package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.idea.entity.Idea;
 import com.project.PJA.idea.repository.IdeaRepository;
-import com.project.PJA.project_progress.dto.ActionResponseDto;
-import com.project.PJA.project_progress.dto.FeatureCategoryResponseDto;
-import com.project.PJA.project_progress.dto.FeatureResponseDto;
-import com.project.PJA.project_progress.dto.ProjectProgressResponseDto;
+import com.project.PJA.project_progress.dto.*;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.Feature;
 import com.project.PJA.project_progress.entity.FeatureCategory;
@@ -48,8 +44,8 @@ public class ProjectProgressService {
         log.info("ProjectProgressResponseDto 객체 생성");
 
         // 참여자 Set
-        Set<WorkspaceMember> workspaceMembers = new HashSet<>();
-        responseDto.setParticipants(workspaceMembers);
+        Set<WorkspaceMemberDto> workspaceMembers = new HashSet<>();
+        responseDto.setParticipants(Collections.emptySet());
         log.info("참여자 Set 생성");
 
         // 프로젝트 주요 기능 List
@@ -60,6 +56,7 @@ public class ProjectProgressService {
         List<FeatureCategoryResponseDto> featureCategories = getFeatureCategories(foundWorkspace);
         responseDto.setFeatureCategories(featureCategories);
 
+        log.info("최종 응답 DTO: {}", responseDto);
         return responseDto;
     }
 
@@ -94,7 +91,7 @@ public class ProjectProgressService {
             dto.setFeatureCategoryId(featureCategory.getFeatureCategoryId());
             dto.setName(featureCategory.getName());
             dto.setImportance(featureCategory.getImportance());
-            dto.setParticipants(featureCategory.getParticipants() != null ? featureCategory.getParticipants() : new HashSet<>());
+            dto.setParticipants(Collections.emptySet());
             dto.setStartDate(featureCategory.getStartDate());
             dto.setEndDate(featureCategory.getEndDate());
             dto.setOrderIndex(featureCategory.getOrderIndex());
@@ -120,7 +117,7 @@ public class ProjectProgressService {
             dto.setFeatureId(feature.getFeatureId());
             dto.setName(feature.getName());
             dto.setImportance(feature.getImportance());
-            dto.setParticipants(feature.getParticipants() != null ? feature.getParticipants() : new HashSet<>());
+            dto.setParticipants(Collections.emptySet());
             dto.setStartDate(feature.getStartDate());
             dto.setEndDate(feature.getEndDate());
             dto.setOrderIndex(feature.getOrderIndex());
@@ -146,7 +143,7 @@ public class ProjectProgressService {
             dto.setActionId(action.getActionId());
             dto.setName(action.getName());
             dto.setImportance(action.getImportance());
-            dto.setParticipants(action.getParticipants() != null ? action.getParticipants() : new HashSet<>());
+            dto.setParticipants(Collections.emptySet());
             dto.setStartDate(action.getStartDate());
             dto.setEndDate(action.getEndDate());
             dto.setOrderIndex(action.getOrderIndex());

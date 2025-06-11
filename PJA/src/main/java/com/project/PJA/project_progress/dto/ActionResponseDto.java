@@ -17,7 +17,7 @@ import java.util.Set;
 public class ActionResponseDto {
 
     private Long actionId; // 액션 아이디
-    private Set<WorkspaceMember> participants = new HashSet<>(); // 해당 액션의 참여자
+    private Set<WorkspaceMemberDto> participants = new HashSet<>(); // 해당 액션의 참여자
     private String name; // 액션의 이름
     private LocalDateTime startDate; // 시작일
     private LocalDateTime endDate; // 마감일

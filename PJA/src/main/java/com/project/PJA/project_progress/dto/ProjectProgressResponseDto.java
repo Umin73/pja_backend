@@ -19,7 +19,7 @@ public class ProjectProgressResponseDto {
     private List<String> coreFeatures = new ArrayList<>();
 
     //참여자 Set
-    private Set<WorkspaceMember> participants = new HashSet<>();
+    private Set<WorkspaceMemberDto> participants = new HashSet<>();
 
     // 카테고리 리스트
     private List<FeatureCategoryResponseDto> featureCategories = new ArrayList<>();
