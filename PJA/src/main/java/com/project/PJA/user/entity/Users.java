@@ -59,7 +59,7 @@ public class Users implements UserDetails {
     // 로그인 할 때 식별자로 사용할 필드: uid
     @Override
     public String getUsername() {
-        return this.uid;
+        return this.name;
     }
 
     @Override
