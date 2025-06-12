@@ -53,7 +53,7 @@ public class AuthUserService {
 
         log.info("access token: {}", accessToken);
 
-        redisTemplate.opsForValue().set("RT:" + uid, refreshToken, 7, TimeUnit.DAYS);
+        redisTemplate.opsForValue().set("RT:" + uid, refreshToken, 30, TimeUnit.DAYS);
 
         return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
     }
