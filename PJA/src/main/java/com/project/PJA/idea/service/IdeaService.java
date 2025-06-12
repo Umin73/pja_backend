@@ -83,8 +83,8 @@ public class IdeaService {
             }
         }
 
-        Idea foundIdea = ideaRepository.findByWorkspace_WorkspaceId(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 아이디어를 찾을 수 없습니다."));
+        Idea foundIdea = ideaRepository.findByWorkspace_WorkspaceId(workspaceId);
+                //.orElseThrow(() -> new NotFoundException("요청하신 아이디어를 찾을 수 없습니다."));
 
         return new ProjectSummaryReponse(
                 foundIdea.getProjectSummaryId(),
@@ -112,26 +112,27 @@ public class IdeaService {
         String mlopsUrl = "http://{mlops-domain.com}/mlops/models/project-info/generate";
 
         try {
-            ResponseEntity<AiProjectSummaryResponse> response = restTemplate.postForEntity(
+            ResponseEntity<AiProjectSummary> response = restTemplate.postForEntity(
                     mlopsUrl,
                     projectInfo,
-                    AiProjectSummaryResponse.class);
+                    AiProjectSummary.class);
 
-            AiProjectSummaryResponse body = response.getBody();
-
-            AiProblemSolving aiProblemSolving = body.getProblemSolving();
+            AiProjectSummary body = response.getBody();
+            AiProjectSummaryData data = body.getAiProjectSummaryData();
+            AiProblemSolving aiProblemSolving = data.getProblemSolving();
             ProblemSolving converted = ProblemSolving.builder()
                     .currentProblem(aiProblemSolving.getCurrentProblem())
                     .solutionIdea(aiProblemSolving.getSolutionIdea())
                     .expectedBenefits(aiProblemSolving.getExpectedBenefits())
                     .build();
 
+
             return new ProjectSummaryRequest(
-                    body.getTitle(),
-                    body.getCategory(),
-                    body.getTargetUsers(),
-                    body.getCoreFeatures(),
-                    body.getTechnologyStack(),
+                    data.getTitle(),
+                    data.getCategory(),
+                    data.getTargetUsers(),
+                    data.getCoreFeatures(),
+                    data.getTechnologyStack(),
                     converted
             );
         }
