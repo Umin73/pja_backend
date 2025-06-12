@@ -13,6 +13,7 @@ import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class RequirementService {
     private final RequirementRepository requirementRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceService workspaceService;
+    private final RestTemplate restTemplate;
 
     // 요구사항 명세서 조회
     @Transactional(readOnly = true)
@@ -47,6 +49,48 @@ public class RequirementService {
     }
 
     // 요구사항 명세서 ai 생성 요청
+    /*public RequirementResponse generateRequirement(Long userId, Long workspaceId, List<RequirementRequest> requirement) {
+        // 워크스페이스 확인
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자 확인
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
+            throw new ForbiddenException("아이디어 요약을 요청할 권한이 없습니다.");
+        }
+
+        // MLOps URL 설정
+        String mlopsUrl = "http://{mlops-domain.com}/mlops/models/requirement/generate";
+
+        try {
+            ResponseEntity<RequirementRequest> response = restTemplate.postForEntity(
+                    mlopsUrl,
+                    projectInfo,
+                    RequirementRequest.class);
+
+            AiProjectSummary body = response.getBody();
+            AiProjectSummaryData data = body.getAiProjectSummaryData();
+            AiProblemSolving aiProblemSolving = data.getProblemSolving();
+            ProblemSolving converted = ProblemSolving.builder()
+                    .currentProblem(aiProblemSolving.getCurrentProblem())
+                    .solutionIdea(aiProblemSolving.getSolutionIdea())
+                    .expectedBenefits(aiProblemSolving.getExpectedBenefits())
+                    .build();
+
+
+            return new ProjectSummaryRequest(
+                    data.getTitle(),
+                    data.getCategory(),
+                    data.getTargetUsers(),
+                    data.getCoreFeatures(),
+                    data.getTechnologyStack(),
+                    converted
+            );
+        }
+        catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+        }
+    }*/
 
     // 요구사항 명세서 저장
     @Transactional
