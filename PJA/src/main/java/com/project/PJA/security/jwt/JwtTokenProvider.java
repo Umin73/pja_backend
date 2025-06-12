@@ -22,7 +22,7 @@ public class JwtTokenProvider {
 
     private Key key;
 
-    private final long accessTokenValidity = 1000L * 60 * 1; // 1분
+    private final long accessTokenValidity = 1000L * 60 * 60 * 2; // 2시간
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 30; // 30일
 
     @PostConstruct
