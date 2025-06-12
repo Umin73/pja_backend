@@ -7,10 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class EditingResponse {
+public class EditingUser {
     private Long userId;
     private String userName;
-    private String page;
     private String field;
     private Long fieldId;
 }
