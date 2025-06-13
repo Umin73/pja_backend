@@ -48,10 +48,13 @@ public class MemberService {
 
     @Transactional
     public MemberResponse updateMember(Long userId, Long workspaceId, MemberRequest memberRequest) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
         WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, memberRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "멤버 역할을 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버 역할을 수정할 권한이 없습니다.");
 
         foundWorkspaceMember.update(memberRequest.getWorkspaceRole());
 
@@ -67,10 +70,13 @@ public class MemberService {
     // 팀원 삭제
     @Transactional
     public MemberResponse deleteMember(Long userId, Long workspaceId, Long memberId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
         WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, memberId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "멤버를 삭제할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버를 삭제할 권한이 없습니다.");
 
         workspaceMemberRepository.delete(foundWorkspaceMember);
 
