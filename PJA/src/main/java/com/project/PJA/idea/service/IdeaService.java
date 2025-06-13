@@ -106,7 +106,7 @@ public class IdeaService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 오너가 아니면 403 반환
-        workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "아이디어 요약을 저장할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "아이디어 요약을 저장할 권한이 없습니다.");
 
         // 레파지토리에 저장
         Idea savedIdea = ideaRepository.save(Idea.builder()
