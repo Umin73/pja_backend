@@ -50,3 +50,6 @@ postgres_data/
 
 ### User uploads
 uploads/
+
+### elasticsearch data
+esdata/
