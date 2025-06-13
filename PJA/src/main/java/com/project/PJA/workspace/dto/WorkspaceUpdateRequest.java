@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class WorkspaceUpdateRequest {
     private String projectName;
     private String teamName;
+    private Boolean isPublic;
 }

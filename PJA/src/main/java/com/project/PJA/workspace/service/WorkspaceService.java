@@ -111,17 +111,17 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
             throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
         }
 
         // 해당 워크스페이스의 오너이면 수정
-        foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName());
+        foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName(), workspaceUpdateRequest.getIsPublic());
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
-                foundWorkspace.getProjectName(),
-                foundWorkspace.getTeamName(),
+                workspaceUpdateRequest.getProjectName(),
+                workspaceUpdateRequest.getTeamName(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
@@ -134,7 +134,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
             throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
         }
 
