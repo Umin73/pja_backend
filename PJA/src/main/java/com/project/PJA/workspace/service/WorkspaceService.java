@@ -52,11 +52,31 @@ public class WorkspaceService {
                         workspace.getWorkspaceId(),
                         workspace.getProjectName(),
                         workspace.getTeamName(),
+                        workspace.getIsPublic(),
                         workspace.getUser().getUserId(),
                         workspace.getProgressStep()))
                 .collect(Collectors.toList());
 
         return userWorkspaceList;
+    }
+
+    // 워크스페이스의 단일 조회
+    @Transactional(readOnly = true)
+    public WorkspaceResponse getWorkspace(Long userId, Long workspaceId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자 확인
+        validateWorkspaceAccess(userId, foundWorkspace);
+
+        return new WorkspaceResponse(
+                foundWorkspace.getWorkspaceId(),
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
+                foundWorkspace.getUser().getUserId(),
+                foundWorkspace.getProgressStep()
+        );
     }
 
     // 워크스페이스 생성
@@ -99,6 +119,7 @@ public class WorkspaceService {
                 savedWorkspace.getWorkspaceId(),
                 savedWorkspace.getProjectName(),
                 savedWorkspace.getTeamName(),
+                savedWorkspace.getIsPublic(),
                 savedWorkspace.getUser().getUserId(),
                 savedWorkspace.getProgressStep());
     }
@@ -122,6 +143,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 workspaceUpdateRequest.getProjectName(),
                 workspaceUpdateRequest.getTeamName(),
+                workspaceUpdateRequest.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
@@ -146,6 +168,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
@@ -169,6 +192,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
