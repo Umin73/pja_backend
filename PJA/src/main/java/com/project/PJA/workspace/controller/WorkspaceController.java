@@ -36,6 +36,20 @@ public class WorkspaceController {
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
+    // 워크스페이스 단일 조회
+    @GetMapping("/{workspaceId}")
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> getWorkspace(@AuthenticationPrincipal Users user,
+                                                                           @PathVariable Long workspaceId) {
+        Long userId = user.getUserId();
+        WorkspaceResponse workspace = workspaceService.getWorkspace(userId, workspaceId);
+
+        SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
+                "success","워크스페이스 정보를 성공적으로 조회했습니다.", workspace
+        );
+
+        return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+
     // 워크스페이스 생성
     @PostMapping({ "", "/" })
     public ResponseEntity<SuccessResponse<WorkspaceResponse>> createWorkspace(@AuthenticationPrincipal Users user,
