@@ -54,8 +54,7 @@ public class RequirementService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 오너인지 확인(이거 id로 안 받고 workspace로 받아야 겠다)
-        workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "이 워크스페이스에 저장할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스에 저장할 권한이 없습니다.");
 
         List<RequirementResponse> requirementResponses = new ArrayList<>();
 

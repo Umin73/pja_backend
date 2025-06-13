@@ -53,3 +53,6 @@ uploads/
 
 ### elasticsearch data
 esdata/
+
+### shared_logs
+shared_logs/

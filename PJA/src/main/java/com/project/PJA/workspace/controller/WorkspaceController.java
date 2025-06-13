@@ -73,22 +73,34 @@ public class WorkspaceController {
         WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
-                "success", "워크스페이스가 성공적으로 수정되었습니다.", updatedWorkspace
+                "success", "요청하신 워크스페이스가 성공적으로 수정되었습니다.", updatedWorkspace
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     // 워크스페이스 진행도 상태 수정
-    @PatchMapping("/{workspaceId}/complete")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateCompletionStatus(@AuthenticationPrincipal Users user,
-                                                                                     @PathVariable Long workspaceId,
-                                                                                     @RequestBody WorkspaceProgressStep workspaceProgressStep) {
-        Long userId = user.getUserId();
-        WorkspaceResponse updatedWorkspace = workspaceService.updateCompletionStatus(userId, workspaceId, workspaceProgressStep);
+    @PatchMapping("/{workspaceId}/progress")
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspaceProgressStep(@PathVariable Long workspaceId,
+                                                                                          @RequestBody WorkspaceProgressStep workspaceProgressStep) {
+        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspaceProgressStep(workspaceId, workspaceProgressStep);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
-                "success", "프로젝트가 성공적으로 수정되었습니다.", updatedWorkspace
+                "success", "요청하신 워크스페이스의 진행도가 성공적으로 수정되었습니다.", updatedWorkspace
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 워크스페이스 진행도 상태 완료 수정
+    @PatchMapping("/{workspaceId}/progress/complete")
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateCompletionStatus(@AuthenticationPrincipal Users user,
+                                                                                     @PathVariable Long workspaceId) {
+        Long userId = user.getUserId();
+        WorkspaceResponse updatedWorkspace = workspaceService.updateCompletionStatus(userId, workspaceId);
+
+        SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
+                "success", "요청하신 워크스페이스를 성공적으로 완료했습니다.", updatedWorkspace
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -102,7 +114,7 @@ public class WorkspaceController {
         WorkspaceResponse deletedWorkspace = workspaceService.deleteWorkspace(userId, workspaceId);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
-                "success", "워크스페이스가 성공적으로 삭제되었습니다.", deletedWorkspace
+                "success", "요청하신 워크스페이스가 성공적으로 삭제되었습니다.", deletedWorkspace
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
