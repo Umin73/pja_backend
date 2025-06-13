@@ -53,8 +53,8 @@ public class WorkspaceController {
     // 워크스페이스 수정
     @PutMapping("/{workspaceId}")
     public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspace(@AuthenticationPrincipal Users user,
-                                @PathVariable Long workspaceId,
-                                @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
+                                                                              @PathVariable Long workspaceId,
+                                                                              @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
         Long userId = user.getUserId();
         WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
 
@@ -65,7 +65,7 @@ public class WorkspaceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 워크스페이스 진행도 완료 수정
+    // 워크스페이스 진행도 상태 수정
     @PatchMapping("/{workspaceId}/complete")
     public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateCompletionStatus(@AuthenticationPrincipal Users user,
                                                                                      @PathVariable Long workspaceId,
@@ -97,8 +97,8 @@ public class WorkspaceController {
     // 워크스페이스 팀원 초대 메일 전송
     @PostMapping("/{workspaceId}/invite")
     public ResponseEntity<SuccessResponse<WorkspaceInviteResponse>> inviteUserToWorkspace(@AuthenticationPrincipal Users user,
-                                                                       @PathVariable Long workspaceId,
-                                                                       @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
+                                                                                          @PathVariable Long workspaceId,
+                                                                                          @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
         Long userId = user.getUserId();
         WorkspaceInviteResponse workspaceInviteResponse = invitationService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
 
