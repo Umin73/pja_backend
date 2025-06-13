@@ -44,7 +44,7 @@ public class IdeaInputController {
                 "success", "아이디어 입력을 성공적으로 생성했습니다.", ideaInputResponse
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
     
     // 메인 기능 생성
@@ -59,7 +59,7 @@ public class IdeaInputController {
                 "success", "메인 기능을 성공적으로 생성했습니다.", mainFunction
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
     
     // 기술 스택 생성
@@ -71,10 +71,10 @@ public class IdeaInputController {
         TechStackData techStack = ideaInputService.createTechStack(userId, workspaceId, ideaInputId);
 
         SuccessResponse<TechStackData> response = new SuccessResponse<>(
-                "success", "메인 기능을 성공적으로 생성했습니다.", techStack
+                "success", "기술 스택을 성공적으로 생성했습니다.", techStack
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     // 아이디어 입력 수정
