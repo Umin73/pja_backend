@@ -1,7 +1,6 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.project_progress.dto.ActionContentDto;
 import com.project.PJA.project_progress.service.ActionPostService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/workspace/")
+@RequestMapping("/api/workspaces/")
 @RequiredArgsConstructor
 public class ActionPostController {
 

@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/workspace/")
+@RequestMapping("/api/workspaces/")
 @RequiredArgsConstructor
 public class ActionCommentController {
 

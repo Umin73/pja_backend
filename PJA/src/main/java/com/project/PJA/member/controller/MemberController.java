@@ -15,12 +15,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/workspace")
+@RequestMapping("/api/workspaces")
 public class MemberController {
     private final MemberService memberService;
     
     // 팀원 전체 조회
-    @GetMapping("/{workspaceId}/member")
+    @GetMapping("/{workspaceId}/members")
     public ResponseEntity<SuccessResponse<List<MemberResponse>>> getMembers(@AuthenticationPrincipal Users user,
                                                                             @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
@@ -34,7 +34,7 @@ public class MemberController {
     }
     
     // 팀원 역할 변경
-    @PutMapping("/{workspaceId}/member")
+    @PutMapping("/{workspaceId}/members")
     public ResponseEntity<SuccessResponse<MemberResponse>> updateMember(@AuthenticationPrincipal Users user,
                                                                         @PathVariable Long workspaceId,
                                                                         @RequestBody MemberRequest memberRequest) {
@@ -49,7 +49,7 @@ public class MemberController {
     }
 
     // 팀원 삭제
-    @DeleteMapping("/{workspaceId}/member/{memberId}")
+    @DeleteMapping("/{workspaceId}/members/{memberId}")
     public ResponseEntity<SuccessResponse<MemberResponse>> deleteMember(@AuthenticationPrincipal Users user,
                                                                         @PathVariable Long workspaceId,
                                                                         @PathVariable Long memberId) {
