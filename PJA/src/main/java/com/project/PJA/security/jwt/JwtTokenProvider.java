@@ -22,7 +22,8 @@ public class JwtTokenProvider {
 
     private Key key;
 
-    private final long accessTokenValidity = 1000L * 60 * 30; // 30분
+    private final long accessTokenValidity = 1000L * 60 * 60 * 2; // 2시간
+    private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 30; // 30일
 
     @PostConstruct
     public void init() {
@@ -32,7 +33,7 @@ public class JwtTokenProvider {
 
     public String createToken(String uid, String role) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + accessTokenValidity);
+        Date expiry = new Date(now.getTime() + (role.equals("REFRESH")? refreshTokenValidity : accessTokenValidity));
 
         return Jwts.builder()
                 .setSubject(uid)
