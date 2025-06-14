@@ -60,7 +60,7 @@ public class InvitationService {
         invitationRepository.saveAll(invitations);
 
         for (Invitation invitation : invitations) {
-            String inviteUrl = "http://{front-domain.com}/invite?token=" + invitation.getToken();
+            String inviteUrl = "https://localhost:5173/invite?token=" + invitation.getToken();
             emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
         }
 

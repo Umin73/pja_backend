@@ -1,6 +1,6 @@
-package com.project.PJA.idea.entity;
+package com.project.PJA.projectinfo.entity;
 
-import com.project.PJA.idea.dto.ProblemSolving;
+import com.project.PJA.projectinfo.dto.ProblemSolving;
 import com.project.PJA.workspace.entity.Workspace;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
@@ -21,12 +21,12 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "project_summary")
-public class Idea {
+@Table(name = "project_info")
+public class ProjectInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "project_summary_id")
-    private Long projectSummaryId;
+    @Column(name = "project_info_id")
+    private Long projectInfoId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id", nullable = false, foreignKey = @ForeignKey(name = "FK_IDEA_WORKSPACE"))
@@ -62,14 +62,14 @@ public class Idea {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Idea(Workspace workspace,
-                String title,
-                String category,
-                List<String> targetUsers,
-                List<String> coreFeatures,
-                List<String> technologyStack,
-                ProblemSolving problemSolving
-                ) {
+    public ProjectInfo(Workspace workspace,
+                       String title,
+                       String category,
+                       List<String> targetUsers,
+                       List<String> coreFeatures,
+                       List<String> technologyStack,
+                       ProblemSolving problemSolving
+    ) {
         this.workspace = workspace;
         this.title = title;
         this.category = category;
@@ -87,7 +87,7 @@ public class Idea {
                        List<String> coreFeatures,
                        List<String> technologyStack,
                        ProblemSolving problemSolving
-                       ) {
+    ) {
         this.title = title;
         this.category = category;
         this.targetUsers = targetUsers;

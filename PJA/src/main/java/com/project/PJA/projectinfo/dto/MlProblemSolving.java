@@ -1,4 +1,4 @@
-package com.project.PJA.idea.dto;
+package com.project.PJA.projectinfo.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AiProblemSolving {
+public class MlProblemSolving {
     @JsonProperty("current_problem")
     private String currentProblem;
 
