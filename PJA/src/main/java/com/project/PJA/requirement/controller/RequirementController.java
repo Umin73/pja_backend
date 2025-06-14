@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -40,19 +41,26 @@ public class RequirementController {
 
     // 요구사항 명세서 AI 추천 요청
     @PostMapping("/{workspaceId}/requirements/recommendations")
-    public ResponseEntity<SuccessResponse<List<RequirementRequest>>> recommendRequirement(@AuthenticationPrincipal Users user,
+    public Mono<ResponseEntity<SuccessResponse<List<RequirementRequest>>>> recommendRequirement(@AuthenticationPrincipal Users user,
                                                                                            @PathVariable Long workspaceId,
                                                                                            @RequestBody List<RequirementRequest> requirementRequests) {
         Long userId = user.getUserId();
         log.info("=== 요구사항 명세서  AI 추천 요청 API 진입 == userId: {}", userId);
 
-        List<RequirementRequest> recommendRequirements = requirementService.recommendRequirement(userId, workspaceId, requirementRequests);
+        /*Mono<List<RequirementRequest>> recommendRequirements = requirementService.recommendRequirement(userId, workspaceId, requirementRequests);
 
-        SuccessResponse<List<RequirementRequest>> response = new SuccessResponse<>(
+        SuccessResponse<Mono<List<RequirementRequest>>> response = new SuccessResponse<>(
                 "success", "AI로부터 요구사항 추천을 성공적으로 받았습니다.", recommendRequirements
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);*/
+        return requirementService.recommendRequirement(userId, workspaceId, requirementRequests)
+                .map(recommendations -> {
+                    SuccessResponse<List<RequirementRequest>> response = new SuccessResponse<>(
+                            "success", "AI로부터 요구사항 추천을 성공적으로 받았습니다.", recommendations
+                    );
+                    return ResponseEntity.ok(response);
+                });
     }
 
     // 요구사항 명세서 저장 -> 삭제
