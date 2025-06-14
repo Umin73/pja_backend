@@ -1,4 +1,4 @@
-package com.project.PJA.idea.dto;
+package com.project.PJA.projectinfo.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AiProjectSummaryResponse {
+public class MlProjectInfoResponse {
     @JsonProperty("title")
     private String title;
 
@@ -27,5 +27,5 @@ public class AiProjectSummaryResponse {
     private List<String> technologyStack;
 
     @JsonProperty("problem_solving")
-    private AiProblemSolving problemSolving;
+    private MlProblemSolving problemSolving;
 }
