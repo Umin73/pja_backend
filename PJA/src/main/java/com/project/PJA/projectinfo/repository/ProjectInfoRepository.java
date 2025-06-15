@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ProjectInfoRepository extends JpaRepository<ProjectInfo, Long> {
     Optional<ProjectInfo> findByWorkspace_WorkspaceId(Long workspaceId);
+    boolean existsByWorkspace_WorkspaceId(Long workspaceId);
 }

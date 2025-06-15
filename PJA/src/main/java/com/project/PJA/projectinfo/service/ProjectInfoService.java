@@ -1,9 +1,22 @@
 package com.project.PJA.projectinfo.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.ideainput.dto.IdeaInputRequest;
+import com.project.PJA.ideainput.dto.MainFunctionData;
+import com.project.PJA.ideainput.dto.TechStackData;
+import com.project.PJA.ideainput.entity.IdeaInput;
+import com.project.PJA.ideainput.entity.MainFunction;
+import com.project.PJA.ideainput.entity.TechStack;
+import com.project.PJA.ideainput.repository.IdeaInputRepository;
+import com.project.PJA.ideainput.repository.MainFunctionRepository;
+import com.project.PJA.ideainput.repository.TechStackRepository;
 import com.project.PJA.projectinfo.dto.*;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
+import com.project.PJA.requirement.dto.RequirementRequest;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -15,13 +28,20 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ProjectInfoService {
     private final WorkspaceRepository workspaceRepository;
     private final ProjectInfoRepository projectInfoRepository;
+    private final IdeaInputRepository ideaInputRepository;
+    private final MainFunctionRepository mainFunctionRepository;
+    private final TechStackRepository techStackRepository;
     private final RestTemplate restTemplate;
     private final WorkspaceService workspaceService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // 프로젝트 정보 조회
     @Transactional(readOnly = true)
@@ -45,75 +65,103 @@ public class ProjectInfoService {
         );
     }
 
-    // 프로젝트 정보 AI 생성 -> ML에서 주는 데이터에 맞게 수정 / 프론트한테 받는 값 없고 db에서 가져와서 보내기
-    public ProjectInfoRequest createProjectInfo(Long userId, Long workspaceId, ProjectInfoRequest request) {
+    // 프로젝트 정보 AI 생성
+    public ProjectInfoResponse createProjectInfo(Long userId, Long workspaceId, List<RequirementRequest> requests) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
-        //
-        // MLOps URL 설정
-        String mlopsUrl = "http://{mlops-domain.com}/mlops/models/project-info/generate";
+        if (projectInfoRepository.existsByWorkspace_WorkspaceId(workspaceId)) {
+            throw new BadRequestException("이미 해당 워크스페이스에 프로젝트 정보가 존재합니다.");
+        }
+
+        // 아이디어 입력 정보 찾기
+        IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+        List<MainFunction> foundMainFunctions = mainFunctionRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
+        List<TechStack> foundTechStacks = techStackRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
+
+        List<MainFunctionData> mainFunctionDataList = foundMainFunctions.stream()
+                .map(mainFunction -> new MainFunctionData(
+                        mainFunction.getMainFunctionId(),
+                        mainFunction.getContent()
+                ))
+                .collect(Collectors.toList());
+
+        List<TechStackData> techStackDataList = foundTechStacks.stream()
+                .map(techStack -> new TechStackData(
+                        techStack.getTechStackId(),
+                        techStack.getContent()
+                ))
+                .collect(Collectors.toList());
+
+        IdeaInputRequest ideaInputRequest = new IdeaInputRequest(
+                foundIdeaInput.getProjectName(),
+                foundIdeaInput.getProjectTarget(),
+                mainFunctionDataList,
+                techStackDataList,
+                foundIdeaInput.getProjectDescription()
+        );
+
+        String projectOverviewJson;
+        String requirements;
 
         try {
-            ResponseEntity<MlProjectInfoResponse> response = restTemplate.postForEntity(
+            projectOverviewJson = objectMapper.writeValueAsString(ideaInputRequest);
+            requirements = objectMapper.writeValueAsString(requests);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        // MLOps URL 설정
+        String mlopsUrl = "http://13.209.5.218:8000/api/PJA/json_Summury/generate";
+
+        ProjectInfoCreateRequest projectInfoCreateRequest = ProjectInfoCreateRequest.builder()
+                .projectOverview(projectOverviewJson)
+                .requirements(requirements)
+                .build();
+
+        try {
+            ResponseEntity<ProjectInfoCreateResponse> response = restTemplate.postForEntity(
                     mlopsUrl,
-                    request,
-                    MlProjectInfoResponse.class);
+                    projectInfoCreateRequest,
+                    ProjectInfoCreateResponse.class);
 
-            MlProjectInfoResponse body = response.getBody();
-
-            MlProblemSolving mlProblemSolving = body.getProblemSolving();
+            ProjectInfoCreateResponse body = response.getBody();
+            ProjectInfoData projectInfoData = body.getJson().getProjectInfo();
+            ProblemSolvingData problemSolvingData = projectInfoData.getProblemSolving();
             ProblemSolving converted = ProblemSolving.builder()
-                    .currentProblem(mlProblemSolving.getCurrentProblem())
-                    .solutionIdea(mlProblemSolving.getSolutionIdea())
-                    .expectedBenefits(mlProblemSolving.getExpectedBenefits())
+                    .currentProblem(problemSolvingData.getCurrentProblem())
+                    .solutionIdea(problemSolvingData.getSolutionIdea())
+                    .expectedBenefits(problemSolvingData.getExpectedBenefits())
                     .build();
-            
-            // DB에 바로 저장하게 코드 추가
 
-            return new ProjectInfoRequest(
-                    body.getTitle(),
-                    body.getCategory(),
-                    body.getTargetUsers(),
-                    body.getCoreFeatures(),
-                    body.getTechnologyStack(),
+            ProjectInfo savedProjectInfo = projectInfoRepository.save(
+                    ProjectInfo.builder()
+                            .workspace(foundWorkspace)
+                            .title(projectInfoData.getTitle())
+                            .category(projectInfoData.getCategory())
+                            .targetUsers(projectInfoData.getTargetUsers())
+                            .coreFeatures(projectInfoData.getCoreFeatures())
+                            .technologyStack(projectInfoData.getTechnologyStack())
+                            .problemSolving(converted)
+                            .build()
+            );
+
+            return new ProjectInfoResponse(
+                    savedProjectInfo.getProjectInfoId(),
+                    projectInfoData.getTitle(),
+                    projectInfoData.getCategory(),
+                    projectInfoData.getTargetUsers(),
+                    projectInfoData.getCoreFeatures(),
+                    projectInfoData.getTechnologyStack(),
                     converted
             );
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
-    }
-
-    // 프로젝트 정보 저장 -> 삭제 예정(필요없음)
-    @Transactional
-    public ProjectInfoResponse saveProjectInfo(Long userId, Long workspaceId, ProjectInfoRequest request) {
-        // 워크스페이스 확인
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        // 사용자가 오너가 아니면 403 반환
-        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "아이디어 요약을 저장할 권한이 없습니다.");
-
-        // 레파지토리에 저장
-        ProjectInfo savedProjectInfo = projectInfoRepository.save(ProjectInfo.builder()
-                .workspace(foundWorkspace)
-                .title(request.getTitle())
-                .category(request.getCategory())
-                .targetUsers(request.getTargetUsers())
-                .coreFeatures(request.getCoreFeatures())
-                .technologyStack(request.getTechnologyStack())
-                .problemSolving(request.getProblemSolving())
-                .build());
-
-        return new ProjectInfoResponse(
-                savedProjectInfo.getProjectInfoId(),
-                savedProjectInfo.getTitle(),
-                savedProjectInfo.getCategory(),
-                savedProjectInfo.getTargetUsers(),
-                savedProjectInfo.getCoreFeatures(),
-                savedProjectInfo.getTechnologyStack(),
-                savedProjectInfo.getProblemSolving()
-        );
     }
 
     // 프로젝트 정보 수정
