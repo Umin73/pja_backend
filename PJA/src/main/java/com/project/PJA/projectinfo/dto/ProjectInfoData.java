@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MlProjectInfoResponse {
+public class ProjectInfoData {
     @JsonProperty("title")
     private String title;
 
@@ -27,5 +27,5 @@ public class MlProjectInfoResponse {
     private List<String> technologyStack;
 
     @JsonProperty("problem_solving")
-    private MlProblemSolving problemSolving;
+    private ProblemSolvingData problemSolving;
 }

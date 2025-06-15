@@ -18,6 +18,7 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
+import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ public class InvitationService {
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final InvitationRepository invitationRepository;
     private final EmailService emailService;
+    private final WorkspaceService workspaceService;
 
     // 워크스페이스 팀원 초대 메일 전송
     @Transactional
@@ -43,16 +45,13 @@ public class InvitationService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
-            throw new ForbiddenException("워크스페이스에 팀원을 초대할 권한이 없습니다.");
-        }
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "워크스페이스에 팀원을 초대할 권한이 없습니다.");
 
         List<Invitation> invitations = request.getEmails().stream()
                 .map(email -> Invitation.builder()
                         .workspace(foundWorkspace)
                         .invitedEmail(email)
-                        .workspaceRole(request.getWorkspaceRole())
+                        .workspaceRole(request.getRole())
                         .token(UUID.randomUUID().toString())
                         .build())
                 .collect(Collectors.toList());
@@ -64,7 +63,7 @@ public class InvitationService {
             emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
         }
 
-        return new WorkspaceInviteResponse(workspaceId, request.getEmails(), request.getWorkspaceRole());
+        return new WorkspaceInviteResponse(request.getEmails(), request.getRole());
     }
 
     // 초대 링크 정보 조회

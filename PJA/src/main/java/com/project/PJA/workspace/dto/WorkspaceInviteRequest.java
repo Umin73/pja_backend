@@ -12,5 +12,5 @@ import java.util.List;
 @AllArgsConstructor
 public class WorkspaceInviteRequest {
     private List<String> emails;
-    private WorkspaceRole workspaceRole;
+    private WorkspaceRole role;
 }

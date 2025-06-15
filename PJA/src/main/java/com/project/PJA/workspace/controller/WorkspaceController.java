@@ -132,6 +132,6 @@ public class WorkspaceController {
                 "success", "팀원 초대 이메일이 성공적으로 전송됐습니다.", workspaceInviteResponse
         );
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

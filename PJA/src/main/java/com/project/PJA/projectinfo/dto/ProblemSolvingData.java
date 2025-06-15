@@ -6,11 +6,9 @@ import lombok.*;
 import java.util.List;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class MlProblemSolving {
+public class ProblemSolvingData {
     @JsonProperty("current_problem")
     private String currentProblem;
 
