@@ -1,23 +1,20 @@
 package com.project.PJA.requirement.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.project.PJA.ideainput.dto.IdeaInputRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequirementRecommendationRequest {
     @JsonProperty("project_overview")
-    private IdeaInputRequest projectOverview;
+    private String projectOverview;
 
     @JsonProperty("existing_requirements")
-    private List<RequirementRequest> existingRequirements;
+    private String existingRequirements;
 
     @JsonProperty("additional_count")
     private int additionalCount;
@@ -32,7 +29,7 @@ public class RequirementRecommendationRequest {
     private String model;
 
     @Builder
-    public RequirementRecommendationRequest(IdeaInputRequest projectOverview, List<RequirementRequest> existingRequirements) {
+    public RequirementRecommendationRequest(String projectOverview, String existingRequirements) {
         this.projectOverview = projectOverview;
         this.existingRequirements = existingRequirements;
         this.additionalCount = 5;

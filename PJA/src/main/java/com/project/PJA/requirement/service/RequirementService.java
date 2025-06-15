@@ -1,6 +1,7 @@
 package com.project.PJA.requirement.service;
 
-import com.project.PJA.exception.BadRequestException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.ideainput.dto.IdeaInputRequest;
 import com.project.PJA.ideainput.dto.MainFunctionData;
@@ -18,16 +19,18 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RequirementService {
@@ -38,7 +41,7 @@ public class RequirementService {
     private final TechStackRepository techStackRepository;
     private final WorkspaceService workspaceService;
     private final RestTemplate restTemplate;
-    private final WebClient webClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // 요구사항 명세서 조회
     @Transactional(readOnly = true)
@@ -62,7 +65,7 @@ public class RequirementService {
     }
 
     // 요구사항 명세서 AI 생성 요청
-    public Mono<List<RequirementRequest>> recommendRequirement(Long userId, Long workspaceId, List<RequirementRequest> requests) {
+    public List<RequirementRequest> recommendRequirement(Long userId, Long workspaceId, List<RequirementRequest> requests) {
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
         // 아이디어 입력 정보 찾기
@@ -93,14 +96,24 @@ public class RequirementService {
                 foundIdeaInput.getProjectDescription()
         );
 
-        //String mlopsUrl = "http://13.209.5.218:8000/api/PJA/requirements/generate";
+        String projectOverviewJson;
+        String existingRequirementsJson;
+
+        try {
+            projectOverviewJson = objectMapper.writeValueAsString(ideaInputRequest);
+            existingRequirementsJson = objectMapper.writeValueAsString(requests);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        String mlopsUrl = "http://13.209.5.218:8000/api/PJA/requirements/generate";
 
         RequirementRecommendationRequest recommendationRequest = RequirementRecommendationRequest.builder()
-                .projectOverview(ideaInputRequest)
-                .existingRequirements(requests)
+                .projectOverview(projectOverviewJson)
+                .existingRequirements(existingRequirementsJson)
                 .build();
 
-        /*try {
+        try {
             ResponseEntity<RequirementRecommendationResponse> response = restTemplate.postForEntity(
                     mlopsUrl,
                     recommendationRequest,
@@ -112,50 +125,7 @@ public class RequirementService {
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
-        }*/
-
-        // WebClient 비동기 호출
-        return webClient.post()
-                .uri("http://13.209.5.218:8000/api/PJA/requirements/generate")
-                .bodyValue(recommendationRequest)
-                .retrieve()
-                .bodyToMono(RequirementRecommendationResponse.class)
-                .map(RequirementRecommendationResponse::getRequirements) // Mono< List<RequirementRequest> >
-                .onErrorMap(e -> new RuntimeException("MLOps API 호출 실패: " + e.getMessage(), e));
-    }
-
-    // 요구사항 명세서 저장
-    @Transactional
-    public List<RequirementResponse> saveRequirement(Long userId, Long workspaceId, List<RequirementRequest> requirementRequests) {
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스에 저장할 권한이 없습니다.");
-
-        List<RequirementResponse> requirementResponses = new ArrayList<>();
-
-        for (RequirementRequest request : requirementRequests) {
-            if (request.getRequirementType() == null) {
-                throw new BadRequestException("요구사항 타입이 비어있습니다.");
-            }
-            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-                throw new BadRequestException("요구사항 내용이 비어있습니다.");
-            }
-
-            Requirement savedRequirement = requirementRepository.save(Requirement.builder()
-                    .workspace(foundWorkspace)
-                    .requirementType(request.getRequirementType())
-                    .content(request.getContent())
-                    .build());
-
-            requirementResponses.add(new RequirementResponse(
-                    savedRequirement.getRequirementId(),
-                    savedRequirement.getRequirementType(),
-                    savedRequirement.getContent()
-            ));
         }
-
-        return requirementResponses;
     }
 
     // 요구사항 명세서 생성

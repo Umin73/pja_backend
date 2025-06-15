@@ -13,4 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 public class RequirementRecommendationResponse {
     private List<RequirementRequest> requirements;
+    private String model;
+    private int total_tokens;
+    private int prompt_tokens;
+    private int completion_tokens;
 }

@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -41,38 +40,16 @@ public class RequirementController {
 
     // 요구사항 명세서 AI 추천 요청
     @PostMapping("/{workspaceId}/requirements/recommendations")
-    public Mono<ResponseEntity<SuccessResponse<List<RequirementRequest>>>> recommendRequirement(@AuthenticationPrincipal Users user,
-                                                                                           @PathVariable Long workspaceId,
-                                                                                           @RequestBody List<RequirementRequest> requirementRequests) {
+    public ResponseEntity<SuccessResponse<List<RequirementRequest>>> recommendRequirement(@AuthenticationPrincipal Users user,
+                                                                                          @PathVariable Long workspaceId,
+                                                                                          @RequestBody List<RequirementRequest> requirementRequests) {
         Long userId = user.getUserId();
         log.info("=== 요구사항 명세서  AI 추천 요청 API 진입 == userId: {}", userId);
 
-        /*Mono<List<RequirementRequest>> recommendRequirements = requirementService.recommendRequirement(userId, workspaceId, requirementRequests);
+        List<RequirementRequest> recommendRequirements = requirementService.recommendRequirement(userId, workspaceId, requirementRequests);
 
-        SuccessResponse<Mono<List<RequirementRequest>>> response = new SuccessResponse<>(
+        SuccessResponse<List<RequirementRequest>> response = new SuccessResponse<>(
                 "success", "AI로부터 요구사항 추천을 성공적으로 받았습니다.", recommendRequirements
-        );
-
-        return new ResponseEntity<>(response, HttpStatus.OK);*/
-        return requirementService.recommendRequirement(userId, workspaceId, requirementRequests)
-                .map(recommendations -> {
-                    SuccessResponse<List<RequirementRequest>> response = new SuccessResponse<>(
-                            "success", "AI로부터 요구사항 추천을 성공적으로 받았습니다.", recommendations
-                    );
-                    return ResponseEntity.ok(response);
-                });
-    }
-
-    // 요구사항 명세서 저장 -> 삭제
-    @PostMapping("/{workspaceId}/requirements/confirm")
-    public ResponseEntity<SuccessResponse<List<RequirementResponse>>> saveRequirement(@AuthenticationPrincipal Users user,
-                                                                                @PathVariable Long workspaceId,
-                                                                                @RequestBody List<RequirementRequest> requirementRequests) {
-        Long userId = user.getUserId();
-        List<RequirementResponse> requirementResponse = requirementService.saveRequirement(userId, workspaceId, requirementRequests);
-
-        SuccessResponse<List<RequirementResponse>> response = new SuccessResponse<>(
-                "success", "요구사항이 성공적으로 저장되었습니다.", requirementResponse
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
