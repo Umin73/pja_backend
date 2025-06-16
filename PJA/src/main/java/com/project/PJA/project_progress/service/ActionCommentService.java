@@ -2,13 +2,16 @@ package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.notification.service.NotificationService;
 import com.project.PJA.project_progress.dto.ActionContentDto;
+import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.ActionComment;
 import com.project.PJA.project_progress.entity.ActionPost;
 import com.project.PJA.project_progress.repository.ActionCommentRepository;
 import com.project.PJA.project_progress.repository.ActionPostRepository;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +32,7 @@ public class ActionCommentService {
     private final ActionRepository actionRepository;
     private final ActionPostRepository actionPostRepository;
     private final ActionCommentRepository actionCommentRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public Map<String, Object> createActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, ActionContentDto dto) {
@@ -34,7 +41,8 @@ public class ActionCommentService {
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
                 .orElseThrow(() -> new NotFoundException("액션 포스트가 존재하지 않습니다."));
 
-        if (!actionPost.getAction().getActionId().equals(actionId)) {
+        Action action = actionPost.getAction();
+        if (!action.getActionId().equals(actionId)) {
             throw new ForbiddenException("액션 포스트가 해당 액션에 속하지 않습니다.");
         }
 
@@ -45,6 +53,15 @@ public class ActionCommentService {
         actionComment.setUpdatedAt(LocalDateTime.now());
 
         actionCommentRepository.save(actionComment);
+
+        // 해당 Action의 참여자에게 알림 보내기
+        List<Users> receivers = action.getParticipants().stream()
+                .map(WorkspaceMember::getUser)
+                .filter(u -> !u.getUserId().equals(user.getUserId())) // 본인 제외
+                .toList();
+
+        String notiMessage = user.getUsername() + "님이 " + action.getName() + "에 댓글을 달았습니다.";
+        notificationService.createNotification(receivers, notiMessage, actionPost, workspaceId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("username", actionComment.getUser().getName());
