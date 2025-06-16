@@ -1,6 +1,8 @@
 package com.project.PJA.requirement.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.requirement.dto.RequirementContentRequest;
 import com.project.PJA.requirement.dto.RequirementRequest;
 import com.project.PJA.requirement.dto.RequirementResponse;
@@ -14,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -21,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/workspaces")
 public class RequirementController {
     private final RequirementService requirementService;
+    private final UserActionLogService userActionLogService;
 
     // 요구사항 명세서 조회
     @GetMapping("/{workspaceId}/requirements")
@@ -69,6 +73,17 @@ public class RequirementController {
                 "success", "요구사항이 성공적으로 저장되었습니다.", requirementResponse
         );
 
+        userActionLogService.log(
+                UserActionType.CREATE_REQUIREMENT,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "requirementType", requirementRequest.getRequirementType(),
+                        "content", requirementRequest.getContent()
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -87,6 +102,18 @@ public class RequirementController {
                 "success", "요구사항이 성공적으로 수정되었습니다.", requirementResponse
         );
 
+        userActionLogService.log(
+                UserActionType.UPDATE_REQUIREMENT,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "requirementId", response.getData().getRequirementId(),
+                        "requirementType", response.getData().getRequirementType(),
+                        "content", response.getData().getContent()
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -102,6 +129,18 @@ public class RequirementController {
 
         SuccessResponse<RequirementResponse> response = new SuccessResponse<>(
                 "success", "요구사항이 성공적으로 삭제되었습니다.", requirementResponse
+        );
+
+        userActionLogService.log(
+                UserActionType.DELETE_REQUIREMENT,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "requirementId", response.getData().getRequirementId(),
+                        "requirementType", response.getData().getRequirementType(),
+                        "content", response.getData().getContent()
+                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

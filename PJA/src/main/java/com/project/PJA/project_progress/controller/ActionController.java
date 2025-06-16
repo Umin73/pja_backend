@@ -1,6 +1,8 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.project_progress.dto.CreateProgressDto;
 import com.project.PJA.project_progress.dto.UpdateProgressDto;
 import com.project.PJA.project_progress.service.ActionService;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/workspaces/")
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class ActionController {
 
     private final ActionService actionService;
+    private final UserActionLogService userActionLogService;
 
     @PostMapping("{workspaceId}/project/category/{categoryId}/feature/{featureId}/action")
     ResponseEntity<SuccessResponse<?>> createAction(@AuthenticationPrincipal Users user,
@@ -30,6 +35,22 @@ public class ActionController {
         Long data = actionService.createAction(user, workspaceId, categoryId, featureId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 생성되었습니다.", data);
+
+        userActionLogService.log(
+                UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "name", dto.getName(),
+                        "startDate", dto.getStartDate(),
+                        "endDate", dto.getEndDate(),
+                        "state", dto.getState(),
+                        "hasTest", dto.getHasTest(),
+                        "importance", dto.getImportance()
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -43,6 +64,22 @@ public class ActionController {
         actionService.updateAction(user, workspaceId, categoryId, featureId, actionId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 수정되었습니다.", null);
+
+        userActionLogService.log(
+                UserActionType.UPDATE_PROJECT_PROGRESS_ACTION,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "name", dto.getName(),
+                        "startDate", dto.getStartDate(),
+                        "endDate", dto.getEndDate(),
+                        "state", dto.getState(),
+                        "hasTest", dto.getHasTest(),
+                        "importance", dto.getImportance()
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -55,6 +92,15 @@ public class ActionController {
         actionService.deleteAction(user, workspaceId, categoryId, featureId, actionId);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 삭제되었습니다.", null);
+
+        userActionLogService.log(
+                UserActionType.DELETE_PROJECT_PROGRESS_ACTION,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                Map.of()
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

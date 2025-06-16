@@ -1,6 +1,8 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.project_progress.service.ActionPostService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class ActionPostController {
 
     private final ActionPostService actionPostService;
+    private final UserActionLogService userActionLogService;
 
     @GetMapping("{workspaceId}/project/action/{actionId}/post/{postId}")
     public ResponseEntity<SuccessResponse<?>> readActionPost(@PathVariable("actionId") Long actionId,
@@ -43,6 +46,18 @@ public class ActionPostController {
         Map<String, Object> data = actionPostService.updateActionPostContent(user, workspaceId, actionId, postId, content, fileList);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 게시글이 수정되었습니다.", data);
+
+        userActionLogService.log(
+                UserActionType.UPDATE_PROJECT_PROGRESS_ACTION_POST,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "actionName", data.get("actionName"),
+                        "content", data.get("content")
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

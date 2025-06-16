@@ -1,6 +1,8 @@
 package com.project.PJA.projectinfo.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.projectinfo.dto.ProjectInfoResponse;
 import com.project.PJA.projectinfo.dto.ProjectInfoRequest;
 import com.project.PJA.projectinfo.service.ProjectInfoService;
@@ -14,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -21,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProjectInfoController {
     private final ProjectInfoService projectInfoService;
+    private final UserActionLogService userActionLogService;
     
     // 프로젝트 정보 조회
     @GetMapping("/{workspaceId}/project-info")
@@ -68,6 +72,16 @@ public class ProjectInfoController {
 
         SuccessResponse<ProjectInfoResponse> response = new SuccessResponse<>(
                 "success", "프로젝트 정보가 성공적으로 수정되었습니다.", projectInfo
+        );
+
+        userActionLogService.log(
+                UserActionType.UPDATE_PROJECT_INFO,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "projectInfo",projectInfo
+                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
