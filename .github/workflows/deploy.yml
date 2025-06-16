@@ -62,4 +62,12 @@ jobs:
             docker stop pja-server || true
             docker rm pja-server || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
-            docker run -d --name pja-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
+            echo "${{ secrets.DOT_ENV }}" | base64 -d > /home/ubuntu/.env
+            echo "${{ secrets.APPLICATION_DEV_PROPERTIES }}" > /home/ubuntu/application-dev.properties
+          #docker run -d --name pja-server -p 8080:8080 ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
+            docker run -d --name pja-server -p 8080:8080 \
+              --env-file /home/ubuntu/.env \
+              -v /home/ubuntu/application-dev.properties:/app/application-dev.properties \
+              ${{ steps.login-ecr.outputs.registry }}/pja-server:latest \
+              --spring.config.location=file:/app/application-dev.properties || docker logs pja-server
+            #--spring.config.location=classpath:/application-dev.properties,file:/app/application-dev.properties
