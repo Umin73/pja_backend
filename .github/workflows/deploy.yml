@@ -24,6 +24,9 @@ jobs:
       - name: application-dev.properties 파일 만들기
         run: echo "${{ secrets.APPLICATION_DEV_PROPERTIES }}" > PJA/src/main/resources/application-dev.properties
 
+      - name: Gradlew 실행 권한 주기
+        run: cd PJA && chmod +x ./gradlew
+
       - name: 테스트 및 빌드하기
         run: cd PJA && ./gradlew clean build -x test
 
