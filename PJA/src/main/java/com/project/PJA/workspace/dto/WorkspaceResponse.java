@@ -12,6 +12,7 @@ public class WorkspaceResponse {
     private Long workspaceId;
     private String projectName;
     private String teamName;
+    private Boolean isPublic;
     private Long ownerId;
     private ProgressStep progressStep;
 

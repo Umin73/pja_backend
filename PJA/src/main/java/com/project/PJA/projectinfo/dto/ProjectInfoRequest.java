@@ -1,4 +1,4 @@
-package com.project.PJA.idea.dto;
+package com.project.PJA.projectinfo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProjectSummaryRequest {
+public class ProjectInfoRequest {
     private String title;
     private String category;
     private List<String> targetUsers;

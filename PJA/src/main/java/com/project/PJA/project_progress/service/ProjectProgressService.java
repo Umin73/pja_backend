@@ -1,8 +1,8 @@
 package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.idea.entity.Idea;
-import com.project.PJA.idea.repository.IdeaRepository;
+import com.project.PJA.projectinfo.entity.ProjectInfo;
+import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.member.service.MemberService;
 import com.project.PJA.project_progress.dto.*;
 import com.project.PJA.project_progress.entity.Action;
@@ -30,7 +30,7 @@ public class ProjectProgressService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceService workspaceService;
     private final WorkspaceMemberRepository workspaceMemberRepository;
-    private final IdeaRepository ideaRepository;
+    private final ProjectInfoRepository projectInfoRepository;
     private final FeatureCategoryRepository featureCategoryRepository;
     private final FeatureRepository featureRepository;
     private final ActionRepository actionRepository;
@@ -64,11 +64,11 @@ public class ProjectProgressService {
     }
 
     List<String> getCoreFeatures(Workspace workspace) {
-        Optional<Idea> optionalIdea = ideaRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
+        Optional<ProjectInfo> optionalIdea = projectInfoRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
         if(optionalIdea.isEmpty()) {
             throw new NotFoundException("아이디어가 존재하지 않습니다.");
         }
-        Idea idea = optionalIdea.get();
+        ProjectInfo idea = optionalIdea.get();
 
         return idea.getCoreFeatures();
     }

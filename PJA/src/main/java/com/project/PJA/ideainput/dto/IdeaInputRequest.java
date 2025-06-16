@@ -1,4 +1,4 @@
-package com.project.PJA.idea.dto;
+package com.project.PJA.ideainput.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,10 +9,10 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProjectInfoRequest {
+public class IdeaInputRequest {
     private String projectName;
     private String projectTarget;
-    private List<String> mainFunction;
-    private List<String> techStack;
-    private List<String> projectDescription;
+    private List<MainFunctionData> mainFunction;
+    private List<TechStackData> techStack;
+    private String projectDescription;
 }

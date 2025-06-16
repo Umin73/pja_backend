@@ -59,7 +59,7 @@ public class Workspace {
         this.isPublic = isPublic;
     }
 
-    public void updateIsCompleted(ProgressStep progressStep) {
+    public void updateProgressStep(ProgressStep progressStep) {
         this.progressStep = progressStep;
     }
 }

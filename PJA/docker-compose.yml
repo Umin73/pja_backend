@@ -8,14 +8,15 @@ services:
         condition: service_healthy
       my-cache-server:
         condition: service_healthy
-      my-elasticsearch:
-        condition: service_healthy
-      my-logstash:
-        condition: service_healthy
+#      my-elasticsearch:
+#        condition: service_healthy
+#      my-logstash:
+#        condition: service_healthy
     env_file:
       - .env
     volumes:
       - ./uploads:/app/uploads
+      - ./shared_logs:/logs
 
   my-db:
     image: postgres:15
@@ -41,35 +42,49 @@ services:
       interval: 5s
       retries: 10
 
-  my-elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
-    container_name: my-elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - xpack.security.http.ssl.enabled=false
-    ports:
-      - 9200:9200
-    volumes:
-      - ./esdata:/usr/share/elasticsearch/data
-    healthcheck:
-      test: curl --silent --fail http://localhost:9200/_cluster/health || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  my-logstash:
-    image: docker.elastic.co/logstash/logstash:8.10.0
-    container_name: my-logstash
-    volumes:
-      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-      - ./shared_logs:/logs #  ML팀과 공유할 로그 폴더
-    ports:
-      - 5044:5044
-    depends_on:
-      - my-elasticsearch
-    healthcheck:
-      test: curl --silent --fail http://localhost:9600/_node/pipelines || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#
+#  my-elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+#    container_name: my-elasticsearch
+#    environment:
+#      - discovery.type=single-node
+#      - xpack.security.enabled=false
+#      - xpack.security.http.ssl.enabled=false
+#    ports:
+#      - 9200:9200
+#    volumes:
+#      - ./esdata:/usr/share/elasticsearch/data
+#    healthcheck:
+#      test: curl --silent --fail http://localhost:9200/_cluster/health || exit 1
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  my-logstash:
+#    image: docker.elastic.co/logstash/logstash:8.10.0
+#    container_name: my-logstash
+#    volumes:
+#      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+#      - ./shared_logs:/logs #  ML팀과 공유할 로그 폴더
+#    ports:
+#      - 5044:5044
+#    depends_on:
+#      - my-elasticsearch
+#    healthcheck:
+#      test: curl --silent --fail http://localhost:9600/_node/pipelines || exit 1
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#
+#  my-kibana:
+#    image: docker.elastic.co/kibana/kibana:8.10.2
+#    container_name: my-kibana
+#    ports:
+#      - 5601:5601
+#    environment:
+#      ELASTICSEARCH_HOSTS: '["http://my-elasticsearch:9200"]'
+#      SERVER_NAME: "kibana"
+#      TELEMETRY_ENABLED: "false"
+#    depends_on:
+#      my-elasticsearch:
+#        condition: service_healthy

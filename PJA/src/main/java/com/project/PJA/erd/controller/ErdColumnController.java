@@ -3,7 +3,6 @@ package com.project.PJA.erd.controller;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.erd.dto.ErdColumnRequestDto;
 import com.project.PJA.erd.dto.ErdColumnResponseDto;
-import com.project.PJA.erd.dto.ErdTableNameDto;
 import com.project.PJA.erd.entity.ErdColumn;
 import com.project.PJA.erd.service.ErdColumnService;
 import com.project.PJA.user.entity.Users;
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/workspace/")
+@RequestMapping("/api/workspaces/")
 @RequiredArgsConstructor
 public class ErdColumnController {
 
