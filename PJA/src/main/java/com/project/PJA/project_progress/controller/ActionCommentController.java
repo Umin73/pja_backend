@@ -1,6 +1,8 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.project_progress.dto.ActionContentDto;
 import com.project.PJA.project_progress.service.ActionCommentService;
 import com.project.PJA.user.entity.Users;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class ActionCommentController {
 
     private final ActionCommentService actionCommentService;
+    private final UserActionLogService userActionLogService;
 
     @PostMapping("{workspaceId}/project/action/{actionId}/post/{postId}/comment")
     public ResponseEntity<SuccessResponse<?>> createActionComment(@AuthenticationPrincipal Users user,
@@ -29,6 +32,15 @@ public class ActionCommentController {
                                                                   @RequestBody ActionContentDto dto) {
         Map<String, Object> data = actionCommentService.createActionComment(user, workspaceId, actionId, postId, dto);
         SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 생성했습니다.", data);
+
+        userActionLogService.log(
+                UserActionType.CREATE_PROJECT_PROGRESS_ACTION_COMMENT,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                data
+        );
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -40,6 +52,15 @@ public class ActionCommentController {
                                                                   @RequestBody ActionContentDto dto) {
         Map<String, Object> data = actionCommentService.updateActionComment(user, workspaceId, actionId, commentId, dto);
         SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 수정했습니다.", data);
+
+        userActionLogService.log(
+                UserActionType.UPDATE_PROJECT_PROGRESS_ACTION_COMMENT,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                data
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -50,6 +71,17 @@ public class ActionCommentController {
                                                                   @PathVariable("commentId") Long commentId) {
         actionCommentService.deleteActionComment(user, workspaceId, actionId, commentId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 삭제했습니다.", null);
+
+        userActionLogService.log(
+                UserActionType.DELETE_PROJECT_PROGRESS_ACTION_COMMENT,
+                String.valueOf(user.getUserId()),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "commentId", commentId
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
