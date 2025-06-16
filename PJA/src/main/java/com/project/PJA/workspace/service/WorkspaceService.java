@@ -52,11 +52,31 @@ public class WorkspaceService {
                         workspace.getWorkspaceId(),
                         workspace.getProjectName(),
                         workspace.getTeamName(),
+                        workspace.getIsPublic(),
                         workspace.getUser().getUserId(),
                         workspace.getProgressStep()))
                 .collect(Collectors.toList());
 
         return userWorkspaceList;
+    }
+
+    // 워크스페이스의 단일 조회
+    @Transactional(readOnly = true)
+    public WorkspaceResponse getWorkspace(Long userId, Long workspaceId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자 확인
+        validateWorkspaceAccess(userId, foundWorkspace);
+
+        return new WorkspaceResponse(
+                foundWorkspace.getWorkspaceId(),
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
+                foundWorkspace.getUser().getUserId(),
+                foundWorkspace.getProgressStep()
+        );
     }
 
     // 워크스페이스 생성
@@ -99,6 +119,7 @@ public class WorkspaceService {
                 savedWorkspace.getWorkspaceId(),
                 savedWorkspace.getProjectName(),
                 savedWorkspace.getTeamName(),
+                savedWorkspace.getIsPublic(),
                 savedWorkspace.getUser().getUserId(),
                 savedWorkspace.getProgressStep());
     }
@@ -111,41 +132,66 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
             throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
         }
 
         // 해당 워크스페이스의 오너이면 수정
-        foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName());
+        foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName(), workspaceUpdateRequest.getIsPublic());
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
-                foundWorkspace.getProjectName(),
-                foundWorkspace.getTeamName(),
+                workspaceUpdateRequest.getProjectName(),
+                workspaceUpdateRequest.getTeamName(),
+                workspaceUpdateRequest.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
 
     // 워크스페이스 진행도 상태 수정
     @Transactional
-    public WorkspaceResponse updateCompletionStatus(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
-        // 워크스페이스 찾기
+    public WorkspaceResponse updateWorkspaceProgressStep(Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
-            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
-        }
-
-        // 해당 워크스페이스의 오너이면 수정
         ProgressStep stepEnum = ProgressStep.fromValue(workspaceProgressStep.getProgressStep());
-        foundWorkspace.updateIsCompleted(stepEnum);
+        if (stepEnum == ProgressStep.SIX) {
+            throw new BadRequestException("진행도를 '완료' 단계로 변경할 수 없습니다.");
+        }
+        foundWorkspace.updateProgressStep(stepEnum);
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
+                foundWorkspace.getUser().getUserId(),
+                foundWorkspace.getProgressStep());
+    }
+
+    // 워크스페이스 진행도 상태 완료 수정
+    @Transactional
+    public WorkspaceResponse updateCompletionStatus(Long userId, Long workspaceId) {
+        // 워크스페이스 찾기
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
+        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
+            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
+        }
+
+        // 해당 워크스페이스의 오너이면 수정
+        if (foundWorkspace.getProgressStep() != ProgressStep.FIVE) {
+            throw new BadRequestException("해당 워크스페이스를 완료하지 않았습니다.");
+        }
+        foundWorkspace.updateProgressStep(ProgressStep.SIX);
+
+        return new WorkspaceResponse(
+                foundWorkspace.getWorkspaceId(),
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
@@ -169,6 +215,7 @@ public class WorkspaceService {
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
+                foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
     }
@@ -187,13 +234,8 @@ public class WorkspaceService {
     }
 
     // 사용자가 오너가 아니면 403 반환
-    public void authorizeOwnerOrThrow(Long userId, Long workspaceId, String message) {
-        // 워크스페이스 찾기
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-        
-        // 사용자가 해당 워크스페이스의 오너인지 확인
-        if (!foundWorkspace.getUser().getUserId().equals(userId)) {
+    public void authorizeOwnerOrThrow(Long userId, Workspace workspace, String message) {
+        if (!workspace.getUser().getUserId().equals(userId)) {
             throw new ForbiddenException(message);
         }
     }

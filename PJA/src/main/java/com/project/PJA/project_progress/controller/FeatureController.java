@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/workspace/")
+@RequestMapping("/api/workspaces/")
 @RequiredArgsConstructor
 public class FeatureController {
 

@@ -9,7 +9,6 @@ import com.project.PJA.erd.service.ReactFlowConverter;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/workspace/")
+@RequestMapping("/api/workspaces/")
 @RequiredArgsConstructor
 public class ErdController {
 

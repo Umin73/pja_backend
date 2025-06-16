@@ -18,9 +18,9 @@ public class InvitationController {
     private final InvitationService invitationService;
 
     // 초대 링크 정보 조회
-    @GetMapping("/{token}")
+    @GetMapping
     public ResponseEntity<SuccessResponse<InvitationInfoResponse>> getInvitationInfo(@AuthenticationPrincipal Users user,
-                                            @PathVariable String token) {
+                                                                                     @RequestParam String token) {
         Long userId = user.getUserId();
         InvitationInfoResponse invitationInfo = invitationService.getInvitationInfo(userId, token);
 

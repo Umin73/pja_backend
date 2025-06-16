@@ -53,12 +53,13 @@ public class Workspace {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void update(String projectName, String teamName) {
+    public void update(String projectName, String teamName, Boolean isPublic) {
         this.projectName = projectName;
         this.teamName = teamName;
+        this.isPublic = isPublic;
     }
 
-    public void updateIsCompleted(ProgressStep progressStep) {
+    public void updateProgressStep(ProgressStep progressStep) {
         this.progressStep = progressStep;
     }
 }

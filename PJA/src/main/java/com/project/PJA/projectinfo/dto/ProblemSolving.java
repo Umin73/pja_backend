@@ -1,4 +1,4 @@
-package com.project.PJA.idea.dto;
+package com.project.PJA.projectinfo.dto;
 
 import lombok.*;
 
