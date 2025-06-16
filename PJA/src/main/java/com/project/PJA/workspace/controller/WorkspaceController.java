@@ -1,18 +1,23 @@
 package com.project.PJA.workspace.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.common.user_act_log.UserActionLog;
+import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.invitation.service.InvitationService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -21,6 +26,7 @@ import java.util.List;
 public class WorkspaceController {
     private final WorkspaceService workspaceService;
     private final InvitationService invitationService;
+    private final UserActionLogService userActionLogService;
 
     // 사용자의 워크스페이스 전체 조회
     @GetMapping({ "", "/" })
@@ -47,6 +53,17 @@ public class WorkspaceController {
                 "success", "워크스페이스가 생성되었습니다.", savedWorkspace
         );
 
+        userActionLogService.log(
+                UserActionType.CREATE_WORKSPACE,
+                String.valueOf(userId),
+                user.getUsername(),
+                savedWorkspace.getWorkspaceId(),
+                Map.of(
+                        "workspaceName", savedWorkspace.getProjectName(),
+                        "teamName", savedWorkspace.getTeamName()
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
     
@@ -60,6 +77,17 @@ public class WorkspaceController {
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "워크스페이스가 성공적으로 수정되었습니다.", updatedWorkspace
+        );
+
+        userActionLogService.log(
+                UserActionType.UPDATE_WORKSPACE,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "workspaceName", updatedWorkspace.getProjectName(),
+                        "teamName", updatedWorkspace.getTeamName()
+                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -77,6 +105,16 @@ public class WorkspaceController {
                 "success", "프로젝트가 성공적으로 수정되었습니다.", updatedWorkspace
         );
 
+        userActionLogService.log(
+                UserActionType.UPDATE_WORKSPACE,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "progressStep", updatedWorkspace.getProgressStep()
+                )
+        );
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -89,6 +127,16 @@ public class WorkspaceController {
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "워크스페이스가 성공적으로 삭제되었습니다.", deletedWorkspace
+        );
+
+        userActionLogService.log(
+                UserActionType.DELETE_WORKSPACE,
+                String.valueOf(userId),
+                user.getUsername(),
+                workspaceId,
+                Map.of(
+                        "workspaceName", deletedWorkspace.getProjectName()
+                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
