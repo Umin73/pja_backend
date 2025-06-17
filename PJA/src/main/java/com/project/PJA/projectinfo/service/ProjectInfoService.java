@@ -43,6 +43,7 @@ public class ProjectInfoService {
     private final WorkspaceService workspaceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    //
     // 프로젝트 정보 조회
     @Transactional(readOnly = true)
     public ProjectInfoResponse getProjectInfo(Long userId, Long workspaceId) {
