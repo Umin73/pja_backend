@@ -150,7 +150,11 @@ public class ErdService {
                 .temperature(0.3)
                 .model("ft:gpt-4o-mini-2024-07-18:test::BebIPMSD")
                 .build();
+
         log.info("erd ai 요청 로그(8)");
+        log.info("erdCreateRequest.getProject_summury(): {}", erdCreateRequest.getProject_summury());
+        log.info("erdCreateRequest.getProject_overview(): {}", erdCreateRequest.getProject_overview());
+        log.info("erdCreateRequest.getRequirements(): {}", erdCreateRequest.getRequirements());
 
         String mlopsUrl = "http://3.34.185.3:8000/api/PJA/json_ERD/generate";
 
@@ -163,7 +167,7 @@ public class ErdService {
             log.info("erd ai 요청 로그(9)");
 
             ErdAiCreateResponse body = response.getBody();
-            log.info("body: {}", body);
+            log.info("body: {}", body.getJson().getErdSpecifications().size());
             List<ErdSpecificationsData> erdSpecificationsDataList = body.getJson().getErdSpecifications();
             log.info("erd ai 요청 로그(10), {}", erdSpecificationsDataList.size());
 
