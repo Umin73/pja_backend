@@ -24,12 +24,6 @@ jobs:
       - name: .env 파일 만들기
         run: printf "%s" "${{ secrets.DOT_ENV }}" > PJA/.env
 
-      - name: .env 파일 확인
-        run: |
-          ls -l PJA/.env
-          file PJA/.env
-          cat PJA/.env
-
       - name: Gradlew 실행 권한 주기
         run: cd PJA && chmod +x ./gradlew
 
@@ -54,7 +48,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: "PJA/.env"
-          target: "/home/${{ secrets.EC2_USERNAME }}/pja.env"
+          target: "/home/${{ secrets.EC2_USERNAME }}/"
 
       - name: Docker 이미지 생성
         run: docker build -t pja-server ./PJA
