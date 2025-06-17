@@ -50,6 +50,15 @@ jobs:
           source: "PJA/.env"
           target: "/home/${{ secrets.EC2_USERNAME }}/"
 
+      - name: docker-compose.yml EC2에 업로드
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/${{ secrets.EC2_USERNAME }}/"
+
       - name: Docker 이미지 생성
         run: docker build -t pja-server ./PJA
 
@@ -68,7 +77,7 @@ jobs:
           script_stop: true
           script: |
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-            docker stop pja-server || true
-            docker rm pja-server || true
-            docker pull ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
-            docker run -d --name pja-server -p 8080:8080 --env-file /home/${{ secrets.EC2_USERNAME }}/PJA/.env ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
+            cd /home/${{ secrets.EC2_USERNAME }}
+            docker-compose down || true
+            docker-compose pull
+            docker-compose up -d --build
