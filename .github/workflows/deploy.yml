@@ -22,7 +22,13 @@ jobs:
         run: rm -rf PJA/.env
 
       - name: .env 파일 만들기
-        run: echo "${{ secrets.DOT_ENV }}" > PJA/.env
+        run: printf "%s" "${{ secrets.DOT_ENV }}" > PJA/.env
+
+      - name: .env 파일 확인
+        run: |
+          ls -l PJA/.env
+          file PJA/.env
+          cat PJA/.env
 
       - name: Gradlew 실행 권한 주기
         run: cd PJA && chmod +x ./gradlew
@@ -67,6 +73,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
+            rm -rf /home/${{ secrets.EC2_USERNAME }}/pja.env
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             docker stop pja-server || true
             docker rm pja-server || true
