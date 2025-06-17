@@ -13,13 +13,15 @@ services:
 #      my-logstash:
 #        condition: service_healthy
     env_file:
-      - .env
+      - /home/ubuntu/PJA/.env
     volumes:
       - ./uploads:/app/uploads
       - ./shared_logs:/logs
 
   my-db:
     image: postgres:15
+    env_file:
+      - /home/ubuntu/PJA/.env
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
