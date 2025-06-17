@@ -13,7 +13,7 @@ services:
 #      my-logstash:
 #        condition: service_healthy
     env_file:
-      - ./PJA/.env
+      - ./.env
     volumes:
       - ./uploads:/app/uploads
       - ./shared_logs:/logs
