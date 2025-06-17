@@ -24,7 +24,7 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final NotificationRepository notifiactionRepository;
 
-    // 알림 조회 (읽지 않은 알림만)
+    // 알림 조회 (삭제되지 않은)
     @GetMapping("{workspaceId}/noti")
     ResponseEntity<SuccessResponse<?>> getNotification(@AuthenticationPrincipal Users user,
                                                @PathVariable("workspaceId") Long workspaceId) {
@@ -38,6 +38,7 @@ public class NotificationController {
     ResponseEntity<SuccessResponse<?>> getNotificationNotRead(@AuthenticationPrincipal Users user,
                                                               @PathVariable("workspaceId") Long workspaceId) {
         boolean data = notificationService.getNotReadNotification(user, workspaceId);
+        // 읽지 않은 알림 존재하면 true 반환
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "읽지 않은 알림 조회에 성공하였습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);
