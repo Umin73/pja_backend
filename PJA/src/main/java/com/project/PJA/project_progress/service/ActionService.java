@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -113,24 +114,28 @@ public class ActionService {
         if (dto.getState() != null) {
             action.setState(Progress.valueOf(dto.getState().toUpperCase()));
 
-            // 상태 수정 시 -> 유저 행동 로그 데이터 남김
-            userActionLogService.log(
-                    UserActionType.UPDATE_PROJECT_PROGRESS_ACTION_STATE,
-                    String.valueOf(user.getUserId()),
-                    user.getUsername(),
-                    workspaceId,
-                    Map.of(
-                            "name", action.getName(),
-                            "state", action.getState().name(),
-                            "importance", action.getImportance(),
-                            "participants", action.getParticipants().stream()
-                                    .map(pm -> Map.of(
-                                            "userId", pm.getUser().getUserId(),
-                                            "username", pm.getUser().getUsername()
-                                    ))
-                                    .collect(Collectors.toList())
-                    )
-            );
+            if(Progress.valueOf(dto.getState().toUpperCase()).equals(Progress.DONE)) {
+                // 상태가 완료로 변경될 시 -> 유저 행동 로그 데이터 남김
+                userActionLogService.log(
+                        UserActionType.DONE_PROJECT_PROGRESS_ACTION,
+                        String.valueOf(user.getUserId()),
+                        user.getUsername(),
+                        workspaceId,
+                        Map.of(
+                                "name", action.getName(),
+                                "state", action.getState().name(),
+                                "importance", action.getImportance(),
+                                "startDate", action.getStartDate(),
+                                "endDate", LocalDateTime.now(),
+                                "participants", action.getParticipants().stream()
+                                        .map(pm -> Map.of(
+                                                "userId", pm.getUser().getUserId(),
+                                                "username", pm.getUser().getUsername()
+                                        ))
+                                        .collect(Collectors.toList())
+                        )
+                );
+            }
         }
         if (dto.getImportance() != null) action.setImportance(dto.getImportance());
         if (dto.getOrderIndex() != null) action.setOrderIndex(dto.getOrderIndex());
