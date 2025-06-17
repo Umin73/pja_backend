@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface ErdColumnRepository extends JpaRepository<ErdColumn, Long> {
 
     Optional<ErdColumn> findByErdColumnIdAndErdTable(Long erdColumnId, ErdTable erdTable);
-
+    ErdColumn findByName(String name);
 }

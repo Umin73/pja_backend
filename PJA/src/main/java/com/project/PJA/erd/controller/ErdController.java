@@ -26,6 +26,7 @@ public class ErdController {
     private final ErdService erdService;
     private final ReactFlowConverter reactFlowConverter;
 
+    // ERD 사용자가 추가(생성)
     @PostMapping("{workspaceId}/erd")
     public ResponseEntity<SuccessResponse<?>> createErd(@AuthenticationPrincipal Users user,
                                                         @PathVariable Long workspaceId) {
@@ -41,6 +42,17 @@ public class ErdController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    // ERD AI 추천 요청
+    @PostMapping("{workspaceId}/erds/recommendations")
+    public ResponseEntity<SuccessResponse<?>> recommendErd(@AuthenticationPrincipal Users user,
+                                                           @PathVariable("workspaceId")Long workspaceId) {
+        log.info("== ERD AI 추천 요청 API 진입 ==");
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "AI로부터 ERD 추천을 성공적으로 받았습니다.", null);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // ERD 조회하기
     @GetMapping("{workspaceId}/erd/{erdId}/flow")
     public ResponseEntity<SuccessResponse<?>> getFlow(@AuthenticationPrincipal Users user,
                                                       @PathVariable Long workspaceId,
