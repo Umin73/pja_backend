@@ -6,8 +6,10 @@ import com.project.PJA.notification.entity.Notification;
 import com.project.PJA.notification.entity.UserNotification;
 import com.project.PJA.notification.repository.NotificationRepository;
 import com.project.PJA.notification.repository.UserNotificationRepository;
+import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.ActionPost;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +81,9 @@ public class NotificationService {
                 .build();
 
         Notification savedNotification = notificationRepository.save(notification);
+
+        Action action = actionPost.getAction();
+        Set<WorkspaceMember> participants = action.getParticipants();
 
         List<UserNotification> userNotifications = receivers.stream()
                 .map(user -> UserNotification.builder()

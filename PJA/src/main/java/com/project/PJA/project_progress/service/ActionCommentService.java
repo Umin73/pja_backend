@@ -14,6 +14,7 @@ import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ActionCommentService {
@@ -55,10 +57,16 @@ public class ActionCommentService {
         actionCommentRepository.save(actionComment);
 
         // 해당 Action의 참여자에게 알림 보내기
-        List<Users> receivers = action.getParticipants().stream()
+        Set<WorkspaceMember> participants = action.getParticipants(); // Lazy 로딩
+
+        List<Users> receivers = participants.stream()
                 .map(WorkspaceMember::getUser)
-                .filter(u -> !u.getUserId().equals(user.getUserId())) // 본인 제외
-                .toList();
+                .collect(Collectors.toList());
+
+        log.info("receiver: {}", receivers.size());
+        for (Users receiver : receivers) {
+            log.info("receiver: {}", receiver);
+        }
 
         String notiMessage = user.getUsername() + "님이 " + action.getName() + "에 댓글을 달았습니다.";
         notificationService.createNotification(receivers, notiMessage, actionPost, workspaceId);
