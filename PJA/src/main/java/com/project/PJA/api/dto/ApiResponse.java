@@ -16,5 +16,5 @@ public class ApiResponse {
     private String path;
     private String httpMethod;
     private List<Data> request;
-    private List<Response> response;
+    private List<ResponseData> response;
 }

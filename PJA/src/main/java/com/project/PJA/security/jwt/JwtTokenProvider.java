@@ -1,6 +1,9 @@
 package com.project.PJA.security.jwt;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -23,7 +25,7 @@ public class JwtTokenProvider {
 
     private Key key;
 
-    private final long accessTokenValidity = 1000L * 60 * 1; // 1분
+    private final long accessTokenValidity = 1000L * 60 * 60; // 1분
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 30; // 30일
 
     @PostConstruct

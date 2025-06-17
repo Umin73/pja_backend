@@ -66,6 +66,7 @@ public class ProjectInfoService {
     }
 
     // 프로젝트 정보 AI 생성
+    @Transactional
     public ProjectInfoResponse createProjectInfo(Long userId, Long workspaceId, List<RequirementRequest> requests) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
