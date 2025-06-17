@@ -9,6 +9,7 @@ import com.project.PJA.project_progress.service.ActionService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +36,15 @@ public class ActionController {
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 생성되었습니다.", data);
 
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{workspaceId}/action/{actionId}/generation")
+    public ResponseEntity<SuccessResponse<?>> generateAiAction(@AuthenticationPrincipal Users user,
+                                                               @PathVariable("workspaceId") Long workspaceId,
+                                                               @PathVariable("actionId") Long actionId) {
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
