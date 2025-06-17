@@ -18,6 +18,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: .env 디렉토리 삭제 (기존에 있던 디렉토리 제거)
+        run: rm -rf PJA/.env
+
       - name: .env 파일 만들기
         run: echo "${{ secrets.DOT_ENV }}" > PJA/.env
 
