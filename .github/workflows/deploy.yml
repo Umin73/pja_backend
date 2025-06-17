@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: "PJA/.env"
-          target: "/home/${{ secrets.EC2_USERNAME }}/.env"
+          target: "/home/${{ secrets.EC2_USERNAME }}/pja.env"
 
       - name: Docker 이미지 생성
         run: docker build -t pja-server ./PJA
@@ -68,4 +68,4 @@ jobs:
             docker stop pja-server || true
             docker rm pja-server || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
-            docker run -d --name pja-server -p 8080:8080 --env-file /home/${{ secrets.EC2_USERNAME }}/.env ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
+            docker run -d --name pja-server -p 8080:8080 --env-file /home/${{ secrets.EC2_USERNAME }}/pja.env ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
