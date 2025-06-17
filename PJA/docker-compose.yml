@@ -12,16 +12,14 @@ services:
 #        condition: service_healthy
 #      my-logstash:
 #        condition: service_healthy
-    env_file:
-      - /home/ubuntu/PJA/.env
+    #env_file:
+      #- env
     volumes:
       - ./uploads:/app/uploads
       - ./shared_logs:/logs
 
   my-db:
     image: postgres:15
-    env_file:
-      - /home/ubuntu/PJA/.env
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -31,7 +29,7 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 5432"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 5s
       retries: 10
 
