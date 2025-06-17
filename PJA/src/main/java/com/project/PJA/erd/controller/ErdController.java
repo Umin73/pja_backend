@@ -2,6 +2,7 @@ package com.project.PJA.erd.controller;
 
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.erd.dto.ErdAiCreateResponse;
 import com.project.PJA.erd.dto.reactFlowtDto.ERDFlowResponseDto;
 import com.project.PJA.erd.entity.Erd;
 import com.project.PJA.erd.service.ErdService;
@@ -15,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -48,7 +50,9 @@ public class ErdController {
                                                            @PathVariable("workspaceId")Long workspaceId) {
         log.info("== ERD AI 추천 요청 API 진입 ==");
 
-        SuccessResponse<?> response = new SuccessResponse<>("success", "AI로부터 ERD 추천을 성공적으로 받았습니다.", null);
+        List<ErdAiCreateResponse> data = erdService.recommendErd(user, workspaceId);
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "AI로부터 ERD 추천을 성공적으로 받았습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

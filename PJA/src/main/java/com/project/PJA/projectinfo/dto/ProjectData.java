@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,6 +20,6 @@ public class ProjectData {
     private List<String> coreFeatures;
     private List<String> technologyStack;
     private ProblemSolving problemSolving;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private String createdAt;
+    private String updatedAt;
 }

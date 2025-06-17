@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface ErdRepository extends JpaRepository<Erd, Long> {
-    List<Erd> findByWorkspaceId_WorkspaceId(Long workspaceId);
-    boolean existsByWorkspaceId_WorkspaceId(Long workspaceId);
+    List<Erd> findByWorkspaceId(Long workspaceId);
+    boolean existsByWorkspaceId(Long workspaceId);
 }
