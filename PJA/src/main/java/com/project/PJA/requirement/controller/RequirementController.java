@@ -73,17 +73,6 @@ public class RequirementController {
                 "success", "요구사항이 성공적으로 저장되었습니다.", requirementResponse
         );
 
-        userActionLogService.log(
-                UserActionType.CREATE_REQUIREMENT,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "requirementType", requirementRequest.getRequirementType(),
-                        "content", requirementRequest.getContent()
-                )
-        );
-
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -100,18 +89,6 @@ public class RequirementController {
 
         SuccessResponse<RequirementResponse> response = new SuccessResponse<>(
                 "success", "요구사항이 성공적으로 수정되었습니다.", requirementResponse
-        );
-
-        userActionLogService.log(
-                UserActionType.UPDATE_REQUIREMENT,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "requirementId", response.getData().getRequirementId(),
-                        "requirementType", response.getData().getRequirementType(),
-                        "content", response.getData().getContent()
-                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -131,17 +108,6 @@ public class RequirementController {
                 "success", "요구사항이 성공적으로 삭제되었습니다.", requirementResponse
         );
 
-        userActionLogService.log(
-                UserActionType.DELETE_REQUIREMENT,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "requirementId", response.getData().getRequirementId(),
-                        "requirementType", response.getData().getRequirementType(),
-                        "content", response.getData().getContent()
-                )
-        );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

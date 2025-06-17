@@ -47,17 +47,6 @@ public class ActionPostController {
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 게시글이 수정되었습니다.", data);
 
-        userActionLogService.log(
-                UserActionType.UPDATE_PROJECT_PROGRESS_ACTION_POST,
-                String.valueOf(user.getUserId()),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "actionName", data.get("actionName"),
-                        "content", data.get("content")
-                )
-        );
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

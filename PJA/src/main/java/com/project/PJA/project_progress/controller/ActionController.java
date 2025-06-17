@@ -23,7 +23,6 @@ import java.util.Map;
 public class ActionController {
 
     private final ActionService actionService;
-    private final UserActionLogService userActionLogService;
 
     @PostMapping("{workspaceId}/project/category/{categoryId}/feature/{featureId}/action")
     ResponseEntity<SuccessResponse<?>> createAction(@AuthenticationPrincipal Users user,
@@ -35,21 +34,6 @@ public class ActionController {
         Long data = actionService.createAction(user, workspaceId, categoryId, featureId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 생성되었습니다.", data);
-
-        userActionLogService.log(
-                UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
-                String.valueOf(user.getUserId()),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "name", dto.getName(),
-                        "startDate", dto.getStartDate(),
-                        "endDate", dto.getEndDate(),
-                        "state", dto.getState(),
-                        "hasTest", dto.getHasTest(),
-                        "importance", dto.getImportance()
-                )
-        );
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -65,21 +49,6 @@ public class ActionController {
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 수정되었습니다.", null);
 
-        userActionLogService.log(
-                UserActionType.UPDATE_PROJECT_PROGRESS_ACTION,
-                String.valueOf(user.getUserId()),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "name", dto.getName(),
-                        "startDate", dto.getStartDate(),
-                        "endDate", dto.getEndDate(),
-                        "state", dto.getState(),
-                        "hasTest", dto.getHasTest(),
-                        "importance", dto.getImportance()
-                )
-        );
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -92,14 +61,6 @@ public class ActionController {
         actionService.deleteAction(user, workspaceId, categoryId, featureId, actionId);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 삭제되었습니다.", null);
-
-        userActionLogService.log(
-                UserActionType.DELETE_PROJECT_PROGRESS_ACTION,
-                String.valueOf(user.getUserId()),
-                user.getUsername(),
-                workspaceId,
-                Map.of()
-        );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

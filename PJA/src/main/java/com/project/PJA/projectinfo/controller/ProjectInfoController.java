@@ -74,16 +74,6 @@ public class ProjectInfoController {
                 "success", "프로젝트 정보가 성공적으로 수정되었습니다.", projectInfo
         );
 
-        userActionLogService.log(
-                UserActionType.UPDATE_PROJECT_INFO,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "projectInfo",projectInfo
-                )
-        );
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

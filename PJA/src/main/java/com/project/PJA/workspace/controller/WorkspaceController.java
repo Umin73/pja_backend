@@ -64,19 +64,7 @@ public class WorkspaceController {
         WorkspaceResponse savedWorkspace = workspaceService.createWorkspace(userId, workspaceCreateRequest);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
-                "success", "워크스페이스가 생성되었습니다.", savedWorkspace
-        );
-
-        userActionLogService.log(
-                UserActionType.CREATE_WORKSPACE,
-                String.valueOf(userId),
-                user.getUsername(),
-                savedWorkspace.getWorkspaceId(),
-                Map.of(
-                        "workspaceName", savedWorkspace.getProjectName(),
-                        "teamName", savedWorkspace.getTeamName()
-                )
-        );
+                "success", "워크스페이스가 생성되었습니다.", savedWorkspace);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -91,17 +79,6 @@ public class WorkspaceController {
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "요청하신 워크스페이스가 성공적으로 수정되었습니다.", updatedWorkspace
-        );
-
-        userActionLogService.log(
-                UserActionType.UPDATE_WORKSPACE,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "workspaceName", updatedWorkspace.getProjectName(),
-                        "teamName", updatedWorkspace.getTeamName()
-                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -131,16 +108,6 @@ public class WorkspaceController {
                 "success", "요청하신 워크스페이스를 성공적으로 완료했습니다.", updatedWorkspace
         );
 
-        userActionLogService.log(
-                UserActionType.UPDATE_WORKSPACE,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "progressStep", updatedWorkspace.getProgressStep()
-                )
-        );
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -153,16 +120,6 @@ public class WorkspaceController {
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "요청하신 워크스페이스가 성공적으로 삭제되었습니다.", deletedWorkspace
-        );
-
-        userActionLogService.log(
-                UserActionType.DELETE_WORKSPACE,
-                String.valueOf(userId),
-                user.getUsername(),
-                workspaceId,
-                Map.of(
-                        "workspaceName", deletedWorkspace.getProjectName()
-                )
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
