@@ -28,6 +28,7 @@ public class UserController { // 로그인 하지 않고 접근 가능한 경우
     // 회원가입
     @PostMapping("/signup")
     public ResponseEntity<SuccessResponse<?>> signup(@RequestBody SignupDto signupDto) {
+        log.info("== 회원가입 API 진입 ==");
         boolean success =userService.signup(signupDto);
 
         if (success) {
