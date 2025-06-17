@@ -67,9 +67,9 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
-            rm -rf /home/${{ secrets.EC2_USERNAME }}/pja.env
+            rm -rf /home/${{ secrets.EC2_USERNAME }}/PJA/.env
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             docker stop pja-server || true
             docker rm pja-server || true
             docker pull ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
-            docker run -d --name pja-server -p 8080:8080 --env-file /home/${{ secrets.EC2_USERNAME }}/pja.env ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
+            docker run -d --name pja-server -p 8080:8080 --env-file /home/${{ secrets.EC2_USERNAME }}/PJA/.env ${{ steps.login-ecr.outputs.registry }}/pja-server:latest
