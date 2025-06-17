@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Response {
+public class ResponseData {
     private String statusCode;
     private String message;
     private List<Data> data;
