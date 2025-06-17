@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ApiRepository extends JpaRepository<Api, Long> {
     List<Api> findByWorkspace_WorkspaceId(Long workspaceId);
+    boolean existsByWorkspace_WorkspaceId(Long workspaceId);
 }

@@ -106,7 +106,7 @@ public class RequirementService {
             throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
         }
 
-        String mlopsUrl = "http://13.209.5.218:8000/api/PJA/requirements/generate";
+        String mlopsUrl = "http://3.34.185.3:8000/api/PJA/requirements/generate";
 
         RequirementRecommendationRequest recommendationRequest = RequirementRecommendationRequest.builder()
                 .projectOverview(projectOverviewJson)

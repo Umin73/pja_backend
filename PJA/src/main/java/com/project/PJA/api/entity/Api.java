@@ -1,7 +1,7 @@
 package com.project.PJA.api.entity;
 
 import com.project.PJA.api.dto.Data;
-import com.project.PJA.api.dto.Response;
+import com.project.PJA.api.dto.ResponseData;
 import com.project.PJA.workspace.entity.Workspace;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -49,10 +49,10 @@ public class Api {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "response", columnDefinition = "jsonb")
-    private List<Response> response;
+    private List<ResponseData> response;
 
     @Builder
-    public Api(Workspace workspace, String title, String tag, String path, String httpMethod, List<Data> request, List<Response> response) {
+    public Api(Workspace workspace, String title, String tag, String path, String httpMethod, List<Data> request, List<ResponseData> response) {
         this.workspace = workspace;
         this.title = title;
         this.tag = tag;
@@ -62,7 +62,7 @@ public class Api {
         this.response = response;
     }
 
-    public void update(String title, String tag, String path, String httpMethod, List<Data> request, List<Response> response) {
+    public void update(String title, String tag, String path, String httpMethod, List<Data> request, List<ResponseData> response) {
         this.title = title;
         this.tag = tag;
         this.path = path;
