@@ -16,14 +16,17 @@ import com.project.PJA.ideainput.entity.TechStack;
 import com.project.PJA.ideainput.repository.IdeaInputRepository;
 import com.project.PJA.ideainput.repository.MainFunctionRepository;
 import com.project.PJA.ideainput.repository.TechStackRepository;
+import com.project.PJA.projectinfo.dto.ProjectInfoResponse;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
+import com.project.PJA.requirement.dto.RequirementResponse;
 import com.project.PJA.requirement.entity.Requirement;
 import com.project.PJA.requirement.repository.RequirementRepository;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApiService {
@@ -114,9 +118,27 @@ public class ApiService {
         // 요구사항 명세서 찾기
         List<Requirement> foundRequirements = requirementRepository.findByWorkspace_WorkspaceId(workspaceId);
 
+        List<RequirementResponse> requirementResponses = foundRequirements.stream()
+                .map(req -> new RequirementResponse(
+                        req.getRequirementId(),
+                        req.getRequirementType(),
+                        req.getContent()
+                ))
+                .collect(Collectors.toList());
+
         // 프로젝트 정보 찾기
         ProjectInfo foundProjectInfo = projectInfoRepository.findByWorkspace_WorkspaceId(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 프로젝트 정보를 찾을 수 없습니다."));
+
+        ProjectInfoResponse projectInfoResponse = new ProjectInfoResponse(
+                foundProjectInfo.getProjectInfoId(),
+                foundProjectInfo.getTitle(),
+                foundProjectInfo.getCategory(),
+                foundProjectInfo.getTargetUsers(),
+                foundProjectInfo.getCoreFeatures(),
+                foundProjectInfo.getTechnologyStack(),
+                foundProjectInfo.getProblemSolving()
+        );
 
         String projectOverviewJson;
         String requirementsJson;
@@ -124,14 +146,14 @@ public class ApiService {
 
         try {
             projectOverviewJson = objectMapper.writeValueAsString(ideaInputRequest);
-            requirementsJson = objectMapper.writeValueAsString(foundRequirements);
-            projectSummuryJson = objectMapper.writeValueAsString(foundProjectInfo);
+            requirementsJson = objectMapper.writeValueAsString(requirementResponses);
+            projectSummuryJson = objectMapper.writeValueAsString(projectInfoResponse);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
         }
 
         // MLOps URL 설정
-        String mlopsUrl = "http://13.209.5.218:8000/api/PJA/json_API/generate";
+        String mlopsUrl = "http://3.34.185.3:8000/api/PJA/json_API/generate";
 
         ApiCreateRequest apiCreateRequest = ApiCreateRequest.builder()
                 .projectOverview(projectOverviewJson)

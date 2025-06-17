@@ -21,6 +21,7 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProjectInfoService {
@@ -117,7 +119,7 @@ public class ProjectInfoService {
         }
 
         // MLOps URL 설정
-        String mlopsUrl = "http://13.209.5.218:8000/api/PJA/json_Summury/generate";
+        String mlopsUrl = "http://3.34.185.3:8000/api/PJA/json_Summury/generate";
 
         ProjectInfoCreateRequest projectInfoCreateRequest = ProjectInfoCreateRequest.builder()
                 .projectOverview(projectOverviewJson)
@@ -132,6 +134,7 @@ public class ProjectInfoService {
 
             ProjectInfoCreateResponse body = response.getBody();
             ProjectInfoData projectInfoData = body.getJson().getProjectInfo();
+            log.info("=== 프로젝트 정보 ml에서 받은거 : {}", projectInfoData);
             ProblemSolvingData problemSolvingData = projectInfoData.getProblemSolving();
             ProblemSolving converted = ProblemSolving.builder()
                     .currentProblem(problemSolvingData.getCurrentProblem())

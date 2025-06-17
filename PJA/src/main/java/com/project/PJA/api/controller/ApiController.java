@@ -50,7 +50,7 @@ public class ApiController {
                 "success", "API 명세서를 성공적으로 생성했습니다.", apiResponses
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
     
     // API 생성
@@ -67,7 +67,7 @@ public class ApiController {
                 "success", "API를 성공적으로 생성했습니다.", apiResponse
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
     
     // API 수정
