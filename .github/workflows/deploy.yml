@@ -78,6 +78,6 @@ jobs:
           script: |
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
             cd /home/${{ secrets.EC2_USERNAME }}
-            docker-compose down || true
-            docker-compose pull
-            docker-compose up --build -d
+            docker compose down || true
+            docker compose pull
+            docker compose up --build -d
