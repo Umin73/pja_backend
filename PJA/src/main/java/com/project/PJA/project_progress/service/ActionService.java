@@ -1,30 +1,48 @@
 package com.project.PJA.project_progress.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.common.user_act_log.UserActionLogService;
 import com.project.PJA.common.user_act_log.UserActionType;
+import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.ideainput.dto.IdeaInputRequest;
+import com.project.PJA.ideainput.dto.MainFunctionData;
+import com.project.PJA.ideainput.dto.TechStackData;
+import com.project.PJA.ideainput.entity.IdeaInput;
+import com.project.PJA.ideainput.entity.MainFunction;
+import com.project.PJA.ideainput.entity.TechStack;
 import com.project.PJA.project_progress.dto.CreateProgressDto;
 import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.aiDto.*;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.Feature;
 import com.project.PJA.project_progress.entity.FeatureCategory;
 import com.project.PJA.project_progress.entity.Progress;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
+import com.project.PJA.projectinfo.dto.*;
+import com.project.PJA.projectinfo.entity.ProjectInfo;
+import com.project.PJA.requirement.dto.RequirementRequest;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Set;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,6 +57,8 @@ public class ActionService {
     private final ActionRepository actionRepository;
     private final ActionPostService actionPostService;
     private final UserActionLogService userActionLogService;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateProgressDto dto) {
@@ -96,6 +116,83 @@ public class ActionService {
         );
 
         return action.getActionId();
+    }
+
+    // 프로젝트 액션 AI 추천
+    @Transactional(readOnly = true)
+    public List<RecommendedAction> recommendedActions(Users user, Long workspaceId, Long actionId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 추천받을 권한이 없습니다.");
+
+        Action action = actionRepository.findById(actionId)
+                .orElseThrow(() -> new NotFoundException("해당 액션을 찾을 수 없습니다."));
+
+        Feature feature = action.getFeature();
+        FeatureCategory category = feature.getCategory();
+        List<Action> actionList = actionRepository.findActionsByFeature(feature);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        List<ActionData> actionDataList = actionList.stream().map(
+                ac -> new ActionData(
+                        ac.getName(),
+                        ac.getImportance(),
+                        ac.getStartDate().format(formatter),
+                        ac.getEndDate().format(formatter)
+                )
+        ).toList();
+
+        FeatureData featureData = new FeatureData(
+                feature.getFeatureId(),
+                feature.getName(),
+                actionDataList
+        );
+
+        CategoryData categoryData = new CategoryData(
+                category.getFeatureCategoryId(),
+                category.getName(),
+                featureData
+        );
+
+        // 직렬화용 객체로 변환
+        String projectDataJson;
+
+        try {
+            projectDataJson = objectMapper.writeValueAsString(categoryData);
+        } catch (Exception e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        ActionAiRequestDto aiRequestDto = ActionAiRequestDto.builder()
+                .project_list(projectDataJson)
+                .max_tokens(3000L)
+                .temperature(0.3)
+                .model("gpt-4o-mini")
+                .build();
+
+        String mlopsUrl = "http://3.34.185.3:8000/api/PJA/recommend/generate";
+
+        try {
+            ResponseEntity<ActionAiRecommendedResponse> response = restTemplate.postForEntity(
+                    mlopsUrl,
+                    aiRequestDto,
+                    ActionAiRecommendedResponse.class
+            );
+
+            ActionAiRecommendedResponse body = response.getBody();
+
+            if (body == null || body.getJson() == null) {
+                throw new RuntimeException("추천 결과가 비어 있습니다.");
+            }
+
+            log.info("body: {}", body.toString());
+
+            return body.getJson().getRecommendedActions();
+
+        }  catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+        }
     }
 
     @Transactional

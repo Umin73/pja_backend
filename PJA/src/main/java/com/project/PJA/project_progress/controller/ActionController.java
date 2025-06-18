@@ -5,15 +5,18 @@ import com.project.PJA.common.user_act_log.UserActionLogService;
 import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.project_progress.dto.CreateProgressDto;
 import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.aiDto.RecommendedAction;
 import com.project.PJA.project_progress.service.ActionService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -38,6 +41,16 @@ public class ActionController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PostMapping("/{workspaceId}/action/{actionId}/generation")
+    public ResponseEntity<SuccessResponse<?>> generateAiAction(@AuthenticationPrincipal Users user,
+                                                               @PathVariable("workspaceId") Long workspaceId,
+                                                               @PathVariable("actionId") Long actionId) {
+        log.info("== Action 추천받기 API 진입 ==");
+        List<RecommendedAction> data = actionService.recommendedActions(user, workspaceId, actionId);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", data);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     @PatchMapping("{workspaceId}/project/category/{categoryId}/feature/{featureId}/action/{actionId}")
     public ResponseEntity<SuccessResponse<?>> updateAction(@AuthenticationPrincipal Users user,
                                                            @PathVariable("workspaceId") Long workspaceId,
@@ -48,7 +61,6 @@ public class ActionController {
         actionService.updateAction(user, workspaceId, categoryId, featureId, actionId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 수정되었습니다.", null);
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
