@@ -170,7 +170,9 @@ public class ApiService {
             );
 
             ApiCreateResponse body = response.getBody();
+            log.info("body: {}", body);
             List<ApiSpecificationsData> apiSpecificationsDataList = body.getJson().getApiSpecifications();
+            log.info("apiSpecificationsDataList: {}", apiSpecificationsDataList.size());
 
             // DB 저장
             List<Api> apiEntities = apiSpecificationsDataList.stream()

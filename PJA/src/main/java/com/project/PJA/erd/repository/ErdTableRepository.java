@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ErdTableRepository extends JpaRepository<ErdTable, Long> {
+    ErdTable findByName(String name);
 }
