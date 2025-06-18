@@ -141,6 +141,21 @@ public class IdeaInputService {
                 savedMainFunction.getContent()
         );
     }
+
+    // 메인 기능 삭제
+    public MainFunctionData deleteMainFunction(Long userId, Long workspaceId, Long mainFunctionId) {
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
+
+        MainFunction foundMainFunction = mainFunctionRepository.findById(mainFunctionId)
+                .orElseThrow(() -> new NotFoundException("요청하신 메인 기능을 찾을 수 없습니다."));
+
+        mainFunctionRepository.delete(foundMainFunction);
+
+        return new MainFunctionData(
+                mainFunctionId,
+                foundMainFunction.getContent()
+        );
+    }
     
     // 기술 스택 생성
     public TechStackData createTechStack(Long userId, Long workspaceId, Long ideaInputId) {
@@ -159,6 +174,21 @@ public class IdeaInputService {
         );
     }
 
+    // 기술 스택 삭제
+    public TechStackData deleteTechStack(Long userId, Long workspaceId, Long techStackId) {
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
+
+        TechStack foundTechStack = techStackRepository.findById(techStackId)
+                .orElseThrow(() -> new NotFoundException("요청하신 기술 스택을 찾을 수 없습니다."));
+
+        techStackRepository.delete(foundTechStack);
+
+        return new TechStackData(
+                techStackId,
+                foundTechStack.getContent()
+        );
+    }
+
     // 아이디어 입력 수정
     @Transactional
     public IdeaInputResponse updateIdeaInput(Long userId, Long workspaceId, Long ideaInputId, IdeaInputRequest ideaInputRequest) {
@@ -166,6 +196,14 @@ public class IdeaInputService {
 
         IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+
+        if (ideaInputRequest.getMainFunction() == null || ideaInputRequest.getMainFunction().size() < 2) {
+            throw new BadRequestException("메인 기능은 최소 2개 이상 입력해야 합니다.");
+        }
+
+        if (ideaInputRequest.getTechStack() == null || ideaInputRequest.getTechStack().size() < 2) {
+            throw new BadRequestException("기술 스택은 최소 2개 이상 입력해야 합니다.");
+        }
 
         foundIdeaInput.update(ideaInputRequest.getProjectName(), ideaInputRequest.getProjectTarget(), ideaInputRequest.getProjectDescription());
 

@@ -132,9 +132,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
-            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
-        }
+        authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
 
         // 해당 워크스페이스의 오너이면 수정
         foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName(), workspaceUpdateRequest.getIsPublic());
@@ -150,9 +148,11 @@ public class WorkspaceService {
 
     // 워크스페이스 진행도 상태 수정
     @Transactional
-    public WorkspaceResponse updateWorkspaceProgressStep(Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
+    public WorkspaceResponse updateWorkspaceProgressStep(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         ProgressStep stepEnum = ProgressStep.fromValue(workspaceProgressStep.getProgressStep());
         if (stepEnum == ProgressStep.SIX) {
@@ -177,9 +177,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
-            throw new ForbiddenException("이 워크스페이스를 수정할 권한이 없습니다.");
-        }
+        authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
 
         // 해당 워크스페이스의 오너이면 수정
         if (foundWorkspace.getProgressStep() != ProgressStep.FIVE) {
@@ -204,9 +202,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
-            throw new ForbiddenException("이 워크스페이스를 삭제할 권한이 없습니다.");
-        }
+        authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 삭제할 권한이 없습니다.");
 
         // 해당 워크스페이스의 오너이면 삭제
         workspaceRepository.delete(foundWorkspace);
