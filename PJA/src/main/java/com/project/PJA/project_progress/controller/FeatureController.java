@@ -1,8 +1,9 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.project_progress.dto.CreateProgressDto;
-import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
+import com.project.PJA.project_progress.dto.UpdateActionDto;
+import com.project.PJA.project_progress.dto.UpdateFeatureAndCategoryDto;
 import com.project.PJA.project_progress.service.FeatureService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class FeatureController {
     ResponseEntity<SuccessResponse<?>> createFeature(@AuthenticationPrincipal Users user,
                                                       @PathVariable("workspaceId") Long workspaceId,
                                                       @PathVariable("categoryId") Long categoryId,
-                                                      @RequestBody CreateProgressDto dto) {
+                                                      @RequestBody CreateCategoryAndFeatureDto dto) {
         log.info("== 기능 생성 API 진입, {} ==", dto);
         Long data = featureService.createFeature(user, workspaceId, categoryId, dto);
 
@@ -33,11 +34,11 @@ public class FeatureController {
     }
 
     @PatchMapping("{workspaceId}/project/category/{categoryId}/feature/{featureId}")
-    public ResponseEntity<SuccessResponse<?>> updateAction(@AuthenticationPrincipal Users user,
-                                                           @PathVariable("workspaceId") Long workspaceId,
-                                                           @PathVariable("categoryId") Long categoryId,
-                                                           @PathVariable("featureId") Long featureId,
-                                                           @RequestBody UpdateProgressDto dto) {
+    public ResponseEntity<SuccessResponse<?>> updateFeature(@AuthenticationPrincipal Users user,
+                                                            @PathVariable("workspaceId") Long workspaceId,
+                                                            @PathVariable("categoryId") Long categoryId,
+                                                            @PathVariable("featureId") Long featureId,
+                                                            @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureService.updateFeature(user, workspaceId, categoryId, featureId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "기능이 수정되었습니다.", null);

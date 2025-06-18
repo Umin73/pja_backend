@@ -27,8 +27,9 @@ public class Feature {
     private Long featureId;
 
     private String name; // 이름
-    @Enumerated(EnumType.STRING)
-    private Progress state; //상태
+
+    @Builder.Default
+    private Boolean state = false; //상태
 
     @Column(name = "has_test")
     private Boolean hasTest; // 테스트 여부

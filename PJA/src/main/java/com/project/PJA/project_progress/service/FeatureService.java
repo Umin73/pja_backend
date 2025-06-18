@@ -2,15 +2,16 @@ package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.project_progress.dto.CreateProgressDto;
-import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.CreateActionDto;
+import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
+import com.project.PJA.project_progress.dto.UpdateActionDto;
+import com.project.PJA.project_progress.dto.UpdateFeatureAndCategoryDto;
 import com.project.PJA.project_progress.entity.Feature;
 import com.project.PJA.project_progress.entity.FeatureCategory;
 import com.project.PJA.project_progress.entity.Progress;
 import com.project.PJA.project_progress.repository.FeatureCategoryRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
 import com.project.PJA.user.entity.Users;
-import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -18,10 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,7 +32,7 @@ public class FeatureService {
     private final FeatureCategoryRepository featureCategoryRepository;
 
     @Transactional
-    public Long createFeature(Users user, Long workspaceId, Long categoryId, CreateProgressDto dto) {
+    public Long createFeature(Users user, Long workspaceId, Long categoryId, CreateCategoryAndFeatureDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 기능을 생성할 권한이 없습니다.");
 
         FeatureCategory category = featureCategoryRepository.findById(categoryId)
@@ -48,7 +45,7 @@ public class FeatureService {
 
         Feature feature = Feature.builder()
                 .name(dto.getName())
-                .state(Progress.valueOf(dto.getState().toUpperCase()))
+                .state(dto.getState())
                 .hasTest(false)
                 .orderIndex(nextOrder)
                 .category(category)
@@ -58,14 +55,14 @@ public class FeatureService {
     }
 
     @Transactional
-    public void updateFeature(Users user, Long workspaceId, Long categoryId, Long featureId, UpdateProgressDto dto) {
+    public void updateFeature(Users user, Long workspaceId, Long categoryId, Long featureId, UpdateFeatureAndCategoryDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 기능을 수정할 권한이 없습니다.");
 
         Feature feature = getFeature(featureId);
         validateFeatureHierarchy(workspaceId, categoryId, featureId, feature);
 
         if (dto.getName() != null) feature.setName(dto.getName());
-        if (dto.getState() != null) feature.setState(Progress.valueOf(dto.getState().toUpperCase()));
+        if (dto.getState() != null) feature.setState(dto.getState());
         if (dto.getOrderIndex() != null) feature.setOrderIndex(dto.getOrderIndex());
         if (dto.getHasTest() != null) feature.setHasTest(dto.getHasTest());
     }
