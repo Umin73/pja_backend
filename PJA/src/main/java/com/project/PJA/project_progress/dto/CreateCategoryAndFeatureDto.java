@@ -10,22 +10,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-public class CreateProgressDto {
-
+public class CreateCategoryAndFeatureDto {
     @NotBlank
     private String name;
 
-    private LocalDateTime startDate;
-
-    private LocalDateTime endDate;
-
-    @NotNull
-    private String state; // 문자열로 받아서 enum으로 변환 (BEFORE, IN_PROGRESS, DONE)
+    private Boolean state;
 
     private Boolean hasTest;
-
-    @Min(1) @Max(5)
-    private Integer importance;
-
-    private List<Long> participantsId; // worksapceMember의 id 목록
 }

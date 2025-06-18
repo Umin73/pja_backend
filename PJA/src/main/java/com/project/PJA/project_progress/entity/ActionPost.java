@@ -3,6 +3,8 @@ package com.project.PJA.project_progress.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,7 @@ public class ActionPost {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_id", unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Action action;
 
     @Builder.Default

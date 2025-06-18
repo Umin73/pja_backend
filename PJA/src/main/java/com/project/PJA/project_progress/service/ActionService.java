@@ -1,30 +1,16 @@
 package com.project.PJA.project_progress.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.common.user_act_log.UserActionLogService;
 import com.project.PJA.common.user_act_log.UserActionType;
-import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.ideainput.dto.IdeaInputRequest;
-import com.project.PJA.ideainput.dto.MainFunctionData;
-import com.project.PJA.ideainput.dto.TechStackData;
-import com.project.PJA.ideainput.entity.IdeaInput;
-import com.project.PJA.ideainput.entity.MainFunction;
-import com.project.PJA.ideainput.entity.TechStack;
-import com.project.PJA.project_progress.dto.CreateProgressDto;
-import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.CreateActionDto;
+import com.project.PJA.project_progress.dto.UpdateActionDto;
 import com.project.PJA.project_progress.dto.aiDto.*;
-import com.project.PJA.project_progress.entity.Action;
-import com.project.PJA.project_progress.entity.Feature;
-import com.project.PJA.project_progress.entity.FeatureCategory;
-import com.project.PJA.project_progress.entity.Progress;
+import com.project.PJA.project_progress.entity.*;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
-import com.project.PJA.projectinfo.dto.*;
-import com.project.PJA.projectinfo.entity.ProjectInfo;
-import com.project.PJA.requirement.dto.RequirementRequest;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
@@ -61,7 +47,7 @@ public class ActionService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateProgressDto dto) {
+    public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateActionDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 생성할 권한이 없습니다.");
 
         Feature feature = featureRepository.findById(featureId)
@@ -70,10 +56,10 @@ public class ActionService {
         validateFeatureHierarchy(workspaceId, categoryId, featureId, feature);
 
 
-        Set<WorkspaceMember> participants = workspaceMemberRepository.findAllById(dto.getParticipantsId())
-                .stream()
-                .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-                .collect(Collectors.toSet());
+//        Set<WorkspaceMember> participants = workspaceMemberRepository.findAllById(dto.getParticipantsId())
+//                .stream()
+//                .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
+//                .collect(Collectors.toSet());
 
         Integer nextOrder = actionRepository
                 .findTopByFeatureOrderByOrderIndexDesc(feature)
@@ -89,10 +75,20 @@ public class ActionService {
                 .hasTest(false)
                 .orderIndex(nextOrder)
                 .feature(feature)
-                .participants(participants)
+                .participants(new HashSet<>())
                 .build();
 
         actionRepository.save(action);
+
+        Set<ActionParticipant> actionParticipants
+                = workspaceMemberRepository.findAllById(dto.getParticipantsId()).stream()
+                        .filter(m -> m.getWorkspace().getWorkspaceId().equals(workspaceId))
+                                .map(member -> ActionParticipant.builder()
+                                        .action(action)
+                                        .workspaceMember(member)
+                                        .build())
+                                        .collect(Collectors.toSet());
+        action.setParticipants(actionParticipants);
 
         actionPostService.createActionPost(action);
 
@@ -107,9 +103,9 @@ public class ActionService {
                         "state", action.getState().name(),
                         "importance", action.getImportance(),
                         "participants", action.getParticipants().stream()
-                                .map(pm -> Map.of(
-                                        "userId", pm.getUser().getUserId(),
-                                        "username", pm.getUser().getUsername()
+                                .map(p -> Map.of(
+                                        "userId", p.getWorkspaceMember().getUser().getUserId(),
+                                        "username", p.getWorkspaceMember().getUser().getUsername()
                                 ))
                                 .collect(Collectors.toList())
                 )
@@ -196,7 +192,7 @@ public class ActionService {
     }
 
     @Transactional
-    public void updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateProgressDto dto) {
+    public void updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateActionDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 수정할 권한이 없습니다.");
 
         Action action = actionRepository.findById(actionId)
@@ -226,8 +222,8 @@ public class ActionService {
                                 "endDate", LocalDateTime.now(),
                                 "participants", action.getParticipants().stream()
                                         .map(pm -> Map.of(
-                                                "userId", pm.getUser().getUserId(),
-                                                "username", pm.getUser().getUsername()
+                                                "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                                                "username", pm.getWorkspaceMember().getUser().getUsername()
                                         ))
                                         .collect(Collectors.toList())
                         )
@@ -238,10 +234,18 @@ public class ActionService {
         if (dto.getOrderIndex() != null) action.setOrderIndex(dto.getOrderIndex());
         if (dto.getHasTest() != null) action.setHasTest(dto.getHasTest());
         if (dto.getParticipantIds() != null) {
-            Set<WorkspaceMember> members = workspaceMemberRepository.findAllById(dto.getParticipantIds()).stream()
-                    .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-                    .collect(Collectors.toSet());
-            action.setParticipants(members);
+            action.getParticipants().clear(); // 기존 ActionParticipant 제거
+
+            Set<ActionParticipant> updatedParticipants
+                    = workspaceMemberRepository.findAllById(dto.getParticipantIds())
+                    .stream().map(
+                            member -> ActionParticipant.builder()
+                                    .action(action)
+                                    .workspaceMember(member)
+                                    .build()
+                    ).collect(Collectors.toSet());
+
+            action.getParticipants().addAll(updatedParticipants);
 
             // 참여자 추가(수정) 시 -> 유저 행동 로그 데이터 남김
             userActionLogService.log(
@@ -255,8 +259,8 @@ public class ActionService {
                             "importance", action.getImportance(),
                             "participants", action.getParticipants().stream()
                                     .map(pm -> Map.of(
-                                            "userId", pm.getUser().getUserId(),
-                                            "username", pm.getUser().getUsername()
+                                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                                            "username", pm.getWorkspaceMember().getUser().getUsername()
                                     ))
                                     .collect(Collectors.toList())
                     )
@@ -288,8 +292,8 @@ public class ActionService {
                         "importance", action.getImportance(),
                         "participants", action.getParticipants().stream()
                                 .map(pm -> Map.of(
-                                        "userId", pm.getUser().getUserId(),
-                                        "username", pm.getUser().getUsername()
+                                        "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                                        "username", pm.getWorkspaceMember().getUser().getUsername()
                                 ))
                                 .collect(Collectors.toList())
                 )

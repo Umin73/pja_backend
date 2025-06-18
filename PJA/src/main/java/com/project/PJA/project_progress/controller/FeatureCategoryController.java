@@ -1,8 +1,9 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.project_progress.dto.CreateProgressDto;
-import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.CreateActionDto;
+import com.project.PJA.project_progress.dto.CreateCategoryAndFeatureDto;
+import com.project.PJA.project_progress.dto.UpdateFeatureAndCategoryDto;
 import com.project.PJA.project_progress.service.FeatureCategoryService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class FeatureCategoryController {
     @PostMapping("{workspaceId}/project/category")
     ResponseEntity<SuccessResponse<?>> createCategory(@AuthenticationPrincipal Users user,
                                                       @PathVariable("workspaceId") Long workspaceId,
-                                                      @RequestBody CreateProgressDto dto) {
+                                                      @RequestBody CreateCategoryAndFeatureDto dto) {
         log.info("== 기능 카테고리 생성 API 진입, {} ==", dto);
         Long data = featureCategoryService.createFeatureCategory(user, workspaceId, dto);
 
@@ -35,7 +36,7 @@ public class FeatureCategoryController {
     public ResponseEntity<SuccessResponse<?>> updateAction(@AuthenticationPrincipal Users user,
                                                            @PathVariable("workspaceId") Long workspaceId,
                                                            @PathVariable("categoryId") Long categoryId,
-                                                           @RequestBody UpdateProgressDto dto) {
+                                                           @RequestBody UpdateFeatureAndCategoryDto dto) {
         featureCategoryService.updateCategory(user, workspaceId, categoryId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "카테고리가 수정되었습니다.", null);

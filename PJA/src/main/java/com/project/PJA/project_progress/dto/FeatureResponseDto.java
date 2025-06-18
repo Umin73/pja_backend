@@ -18,7 +18,7 @@ public class FeatureResponseDto {
 
     private Long featureId; // 기능 아이디
     private String name; // 기능의 이름
-    private Progress state; // 진행 상태
+    private Boolean state; // 진행 상태
     private Boolean hasTest; // 테스트 여부
     private Integer orderIndex; // 순서(리스트 상의 순서)
     private List<ActionResponseDto> actions;

@@ -1,8 +1,11 @@
 package com.project.PJA.project_progress.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.project.PJA.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -29,7 +32,9 @@ public class ActionComment {
     private Users user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "action_post_id")
+    @JoinColumn(name = "action_post_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonBackReference
     private ActionPost actionPost;
 
     @Column(name = "updated_at")

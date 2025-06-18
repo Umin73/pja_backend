@@ -1,6 +1,7 @@
 package com.project.PJA.project_progress.service;
 
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.member.service.MemberService;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -126,11 +128,15 @@ public class ProjectProgressService {
 
         List<ActionResponseDto> actionResponseDtoList = new ArrayList<>();
         for(Action action : actions) {
+            Set<WorkspaceMember> participants = action.getParticipants().stream()
+                    .map(ActionParticipant::getWorkspaceMember)
+                    .collect(Collectors.toSet());
+
             ActionResponseDto dto = new ActionResponseDto();
             dto.setActionId(action.getActionId());
             dto.setName(action.getName());
             dto.setImportance(action.getImportance());
-            dto.setParticipants(getWorkspaceMemberDto(action.getParticipants()));
+            dto.setParticipants(getWorkspaceMemberDto(participants));
             dto.setStartDate(action.getStartDate());
             dto.setEndDate(action.getEndDate());
             dto.setOrderIndex(action.getOrderIndex());
