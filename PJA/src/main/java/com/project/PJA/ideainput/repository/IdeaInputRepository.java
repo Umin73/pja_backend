@@ -2,6 +2,7 @@ package com.project.PJA.ideainput.repository;
 
 import com.project.PJA.ideainput.entity.IdeaInput;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
