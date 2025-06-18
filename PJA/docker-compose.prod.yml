@@ -1,0 +1,3 @@
+services:
+  my-server:
+    image: 073658113926.dkr.ecr.ap-northeast-2.amazonaws.com/pja-server:latest

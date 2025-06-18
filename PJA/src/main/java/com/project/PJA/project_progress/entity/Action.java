@@ -35,7 +35,7 @@ public class Action {
     @Enumerated(EnumType.STRING)
     private Progress state; //상태
 
-    @Min(1)
+    @Min(0)
     @Max(5)
     @Column(nullable = false)
     private Integer importance; // 중요도

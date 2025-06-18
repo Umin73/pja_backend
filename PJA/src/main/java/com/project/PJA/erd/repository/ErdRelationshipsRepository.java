@@ -10,5 +10,4 @@ import java.util.Optional;
 public interface ErdRelationshipsRepository extends JpaRepository<ErdRelationships, Long> {
 
     Optional<ErdRelationships> findByForeignColumn(ErdColumn foreignColumn);
-
 }

@@ -2,6 +2,7 @@ package com.project.PJA.erd.controller;
 
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.erd.dto.aiGenerateDto.ErdAiCreateResponse;
 import com.project.PJA.erd.dto.reactFlowtDto.ERDFlowResponseDto;
 import com.project.PJA.erd.entity.Erd;
 import com.project.PJA.erd.service.ErdService;
@@ -15,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -26,6 +28,7 @@ public class ErdController {
     private final ErdService erdService;
     private final ReactFlowConverter reactFlowConverter;
 
+    // ERD 사용자가 추가(생성)
     @PostMapping("{workspaceId}/erd")
     public ResponseEntity<SuccessResponse<?>> createErd(@AuthenticationPrincipal Users user,
                                                         @PathVariable Long workspaceId) {
@@ -41,6 +44,19 @@ public class ErdController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    // ERD AI 추천 요청
+    @PostMapping("{workspaceId}/erds/recommendations")
+    public ResponseEntity<SuccessResponse<?>> recommendErd(@AuthenticationPrincipal Users user,
+                                                           @PathVariable("workspaceId")Long workspaceId) {
+        log.info("== ERD AI 추천 요청 API 진입 ==");
+
+        List<ErdAiCreateResponse> data = erdService.recommendErd(user, workspaceId);
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "AI로부터 ERD 추천을 성공적으로 받았습니다.", data);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // ERD 조회하기
     @GetMapping("{workspaceId}/erd/{erdId}/flow")
     public ResponseEntity<SuccessResponse<?>> getFlow(@AuthenticationPrincipal Users user,
                                                       @PathVariable Long workspaceId,

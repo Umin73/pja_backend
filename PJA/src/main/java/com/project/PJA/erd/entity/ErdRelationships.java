@@ -2,13 +2,13 @@ package com.project.PJA.erd.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "erd_relationships",
         uniqueConstraints = @UniqueConstraint(columnNames = {"from_erd_table_id", "foreign_key"}))
