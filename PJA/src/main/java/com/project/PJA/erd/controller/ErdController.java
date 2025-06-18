@@ -67,4 +67,14 @@ public class ErdController {
         SuccessResponse<?> response = new SuccessResponse<>("success", "ERD 데이터 조회에 성공했습니다.", dto);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    // workspaceId로 erdId 찾기
+    @GetMapping("{workspaceId}/erd")
+    public ResponseEntity<SuccessResponse<?>> getErdId(@AuthenticationPrincipal Users user,
+                                                       @PathVariable Long workspaceId) {
+
+        Long data = erdService.findErdId(user, workspaceId);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "ERDID를 반환하였습니다", Map.of("erdId", data));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
