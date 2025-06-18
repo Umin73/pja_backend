@@ -76,8 +76,8 @@ public class ErdService {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
         // erd 존재 시 예외처리
-        if(erdRepository.existsByWorkspaceId(workspaceId)) {
-            throw new BadRequestException("이미 해당 워크스페이스에 ERD가 존재합니다.");
+        if(!erdRepository.existsByWorkspaceId(workspaceId)) {
+            throw new BadRequestException("이미 해당 워크스페이스에 ERD가 존재하지 않습니다.");
         }
 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
