@@ -41,6 +41,15 @@ public class ActionPostService {
         actionPostRepository.save(actionPost);
     }
 
+    public Long getActionPostId(Long actionId) {
+        ActionPost actionPost = actionPostRepository.findById(actionId).orElseThrow(
+                ()->new NotFoundException("Action을 찾을 수 없습니다.")
+        );
+
+        return actionPost.getActionPostId();
+    }
+
+    @Transactional(readOnly = true)
     public Map<String, Object> readActionPost(Long actionId, Long actionPostId) {
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
                 .orElseThrow(()->new NotFoundException("액션 포스트가 존재하지 않습니다."));
