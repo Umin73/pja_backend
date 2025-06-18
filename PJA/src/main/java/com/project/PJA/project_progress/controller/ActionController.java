@@ -5,6 +5,7 @@ import com.project.PJA.common.user_act_log.UserActionLogService;
 import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.project_progress.dto.CreateProgressDto;
 import com.project.PJA.project_progress.dto.UpdateProgressDto;
+import com.project.PJA.project_progress.dto.aiDto.RecommendedAction;
 import com.project.PJA.project_progress.service.ActionService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -44,7 +46,8 @@ public class ActionController {
                                                                @PathVariable("workspaceId") Long workspaceId,
                                                                @PathVariable("actionId") Long actionId) {
 
-        SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", null);
+        List<RecommendedAction> data = actionService.recommendedActions(user, workspaceId, actionId);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

@@ -14,9 +14,7 @@ import com.project.PJA.ideainput.entity.MainFunction;
 import com.project.PJA.ideainput.entity.TechStack;
 import com.project.PJA.project_progress.dto.CreateProgressDto;
 import com.project.PJA.project_progress.dto.UpdateProgressDto;
-import com.project.PJA.project_progress.dto.aiDto.AiRequestAction;
-import com.project.PJA.project_progress.dto.aiDto.AiRequestCategory;
-import com.project.PJA.project_progress.dto.aiDto.AiRequestFeature;
+import com.project.PJA.project_progress.dto.aiDto.*;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.Feature;
 import com.project.PJA.project_progress.entity.FeatureCategory;
@@ -34,11 +32,12 @@ import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -56,6 +55,7 @@ public class ActionService {
     private final ActionRepository actionRepository;
     private final ActionPostService actionPostService;
     private final UserActionLogService userActionLogService;
+    private final RestTemplate restTemplate;
 
     @Transactional
     public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateProgressDto dto) {
@@ -117,28 +117,28 @@ public class ActionService {
 
     // 프로젝트 액션 AI 추천
     @Transactional(readOnly = true)
-    public ProjectInfoResponse createProjectInfo(Long userId, Long workspaceId, Long actionId) {
+    public List<RecommendedAction> recommendedActions(Users user, Long workspaceId, Long actionId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 액션을 추천받을 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 추천받을 권한이 없습니다.");
 
-        Action action = actionRepository.findById(actionId).orElseThrow(()->new RuntimeException("해당 액션을 찾을 수 없습니다."));
+        Action action = actionRepository.findById(actionId)
+                .orElseThrow(() -> new NotFoundException("해당 액션을 찾을 수 없습니다."));
 
         Feature feature = action.getFeature();
         FeatureCategory category = feature.getCategory();
         List<Action> actionList = actionRepository.findActionsByFeature(feature);
 
-        List<AiRequestAction> aiRequestActionList
-                = actionList.stream().map(
-                        ac -> new AiRequestAction(
-                                ac.getActionId(),
-                                ac.getName(),
-                                ac.getStartDate(),
-                                ac.getEndDate(),
-                                ac.getImportance()
-                        )
-        ).toList();
+        List<AiRequestAction> aiRequestActionList = actionList.stream()
+                .map(ac -> new AiRequestAction(
+                        ac.getActionId(),
+                        ac.getName(),
+                        ac.getStartDate(),
+                        ac.getEndDate(),
+                        ac.getImportance()
+                ))
+                .toList();
 
         AiRequestFeature aiRequestFeature = new AiRequestFeature(
                 feature.getFeatureId(),
@@ -152,101 +152,36 @@ public class ActionService {
                 aiRequestFeature
         );
 
-        // MLOps URL 설정
         String mlopsUrl = "http://3.34.185.3:8000/api/PJA/recommend/generate";
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("project_list", projectListText);
+        requestBody.put("project_list", aiRequestCategory); // 실제 JSON 구조에 맞게 조정
         requestBody.put("max_tokens", 3000);
         requestBody.put("temperature", 0.3);
         requestBody.put("model", "gpt-4o-mini");
 
-        // 아이디어 입력 정보 찾기
-        IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
-        List<MainFunction> foundMainFunctions = mainFunctionRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
-        List<TechStack> foundTechStacks = techStackRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
-
-        List<MainFunctionData> mainFunctionDataList = foundMainFunctions.stream()
-                .map(mainFunction -> new MainFunctionData(
-                        mainFunction.getMainFunctionId(),
-                        mainFunction.getContent()
-                ))
-                .collect(Collectors.toList());
-
-        List<TechStackData> techStackDataList = foundTechStacks.stream()
-                .map(techStack -> new TechStackData(
-                        techStack.getTechStackId(),
-                        techStack.getContent()
-                ))
-                .collect(Collectors.toList());
-
-        IdeaInputRequest ideaInputRequest = new IdeaInputRequest(
-                foundIdeaInput.getProjectName(),
-                foundIdeaInput.getProjectTarget(),
-                mainFunctionDataList,
-                techStackDataList,
-                foundIdeaInput.getProjectDescription()
-        );
-
-        String projectOverviewJson;
-        String requirements;
-
         try {
-            projectOverviewJson = objectMapper.writeValueAsString(ideaInputRequest);
-            requirements = objectMapper.writeValueAsString(requests);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
-        }
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
-        ProjectInfoCreateRequest projectInfoCreateRequest = ProjectInfoCreateRequest.builder()
-                .projectOverview(projectOverviewJson)
-                .requirements(requirements)
-                .build();
-
-        try {
-            ResponseEntity<ProjectInfoCreateResponse> response = restTemplate.postForEntity(
+            ResponseEntity<RecommendationResponse> response = restTemplate.exchange(
                     mlopsUrl,
-                    projectInfoCreateRequest,
-                    ProjectInfoCreateResponse.class);
-
-            ProjectInfoCreateResponse body = response.getBody();
-            ProjectInfoData projectInfoData = body.getJson().getProjectInfo();
-            log.info("=== 프로젝트 정보 ml에서 받은거 : {}", projectInfoData);
-            ProblemSolvingData problemSolvingData = projectInfoData.getProblemSolving();
-            ProblemSolving converted = ProblemSolving.builder()
-                    .currentProblem(problemSolvingData.getCurrentProblem())
-                    .solutionIdea(problemSolvingData.getSolutionIdea())
-                    .expectedBenefits(problemSolvingData.getExpectedBenefits())
-                    .build();
-
-            ProjectInfo savedProjectInfo = projectInfoRepository.save(
-                    ProjectInfo.builder()
-                            .workspace(foundWorkspace)
-                            .title(projectInfoData.getTitle())
-                            .category(projectInfoData.getCategory())
-                            .targetUsers(projectInfoData.getTargetUsers())
-                            .coreFeatures(projectInfoData.getCoreFeatures())
-                            .technologyStack(projectInfoData.getTechnologyStack())
-                            .problemSolving(converted)
-                            .build()
+                    HttpMethod.POST,
+                    request,
+                    RecommendationResponse.class
             );
 
-            return new ProjectInfoResponse(
-                    savedProjectInfo.getProjectInfoId(),
-                    projectInfoData.getTitle(),
-                    projectInfoData.getCategory(),
-                    projectInfoData.getTargetUsers(),
-                    projectInfoData.getCoreFeatures(),
-                    projectInfoData.getTechnologyStack(),
-                    converted
-            );
-        }
-        catch (HttpClientErrorException | HttpServerErrorException e) {
+            RecommendationResponse body = response.getBody();
+            List<RecommendedAction> result = body.getRecommendations().getRecommendedActions();
+
+            log.info("추천된 액션 리스트: {}", result);
+            return result;
+
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
     }
-
 
     @Transactional
     public void updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateProgressDto dto) {
