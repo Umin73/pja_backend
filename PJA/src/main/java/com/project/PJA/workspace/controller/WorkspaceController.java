@@ -1,23 +1,19 @@
 package com.project.PJA.workspace.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.common.user_act_log.UserActionLog;
 import com.project.PJA.common.user_act_log.UserActionLogService;
-import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.invitation.service.InvitationService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -75,6 +71,8 @@ public class WorkspaceController {
                                                                               @PathVariable Long workspaceId,
                                                                               @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
         Long userId = user.getUserId();
+        log.info("=== workspace 수정 API 진입 == userId: {}", userId);
+
         WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -86,9 +84,13 @@ public class WorkspaceController {
 
     // 워크스페이스 진행도 상태 수정
     @PatchMapping("/{workspaceId}/progress")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspaceProgressStep(@PathVariable Long workspaceId,
+    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspaceProgressStep(@AuthenticationPrincipal Users user,
+                                                                                          @PathVariable Long workspaceId,
                                                                                           @RequestBody WorkspaceProgressStep workspaceProgressStep) {
-        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspaceProgressStep(workspaceId, workspaceProgressStep);
+        Long userId = user.getUserId();
+        log.info("=== workspace 진행도 상태 수정 API 진입 == userId: {}", userId);
+
+        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspaceProgressStep(userId, workspaceId, workspaceProgressStep);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "요청하신 워크스페이스의 진행도가 성공적으로 수정되었습니다.", updatedWorkspace
