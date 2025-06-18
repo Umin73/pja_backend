@@ -126,6 +126,7 @@ public class IdeaInputService {
     }
     
     // 메인 기능 생성
+    @Transactional
     public MainFunctionData createMainFunction(Long userId, Long workspaceId, Long ideaInputId) {
         IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
@@ -143,6 +144,7 @@ public class IdeaInputService {
     }
 
     // 메인 기능 삭제
+    @Transactional
     public MainFunctionData deleteMainFunction(Long userId, Long workspaceId, Long mainFunctionId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
 
@@ -158,6 +160,7 @@ public class IdeaInputService {
     }
     
     // 기술 스택 생성
+    @Transactional
     public TechStackData createTechStack(Long userId, Long workspaceId, Long ideaInputId) {
         IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
@@ -175,6 +178,7 @@ public class IdeaInputService {
     }
 
     // 기술 스택 삭제
+    @Transactional
     public TechStackData deleteTechStack(Long userId, Long workspaceId, Long techStackId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
 
