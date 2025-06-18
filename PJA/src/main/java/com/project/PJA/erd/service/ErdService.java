@@ -33,6 +33,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -54,11 +55,27 @@ public class ErdService {
     private final ErdColumnRepository erdColumnRepository;
     private final ErdRelationshipsRepository erdRelationshipsRepository;
 
+    // workspaceID로 erdId 찾기
+    public Long findErdId(Users user, Long workspaceId) {
+
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                        .orElseThrow(() -> new NotFoundException("해당 워크스페이스 아이디로 발견된 워크스페이스가 없습니다."));
+
+        workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
+
+        Optional<Erd> erdOptional = erdRepository.findByWorkspaceId(workspaceId);
+
+        if(erdOptional.isEmpty()) {
+            throw new NotFoundException("erd가 존재하지 않습니다.");
+        }
+        return erdOptional.get().getErdId();
+    }
+
     // 사용자가 ERD 생성
     public Erd createErd(Users user, Long workspaceId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD를 생성할 권한이 없습니다.");
 
-        if(erdRepository.existsById(workspaceId)) {
+        if(erdRepository.existsByWorkspaceId(workspaceId)) {
             throw new
                     ConflictException("해당 워크스페이스에는 이미 ERD가 존재합니다.");
         }
