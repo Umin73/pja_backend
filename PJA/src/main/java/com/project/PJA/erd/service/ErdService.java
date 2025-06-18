@@ -75,7 +75,7 @@ public class ErdService {
     public Erd createErd(Users user, Long workspaceId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD를 생성할 권한이 없습니다.");
 
-        if(erdRepository.existsById(workspaceId)) {
+        if(erdRepository.existsByWorkspaceId(workspaceId)) {
             throw new
                     ConflictException("해당 워크스페이스에는 이미 ERD가 존재합니다.");
         }
