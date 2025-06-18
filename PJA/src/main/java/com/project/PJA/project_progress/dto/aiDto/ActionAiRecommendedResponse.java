@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ActionAiRecommendedResponse {
     @JsonProperty("recommendations")
-    private ErdJson json;
+    private ActionRecommendationJson json;
 
     @JsonProperty("model")
     private String model;

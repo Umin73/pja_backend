@@ -7,12 +7,12 @@ import lombok.Setter;
 
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class AiRequestFeature {
+public class FeatureData {
     private Long featureId;
-    private String name;
-    private List<AiRequestAction> aiFeature;
+    private String featureName;
+    private List<ActionData> actionDataList;
 }

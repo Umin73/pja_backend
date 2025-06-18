@@ -8,7 +8,8 @@ import java.util.List;
 
 @Getter
 @Setter
-public class ActionRecommendations {
+public class ActionRecommendationJson {
+
     @JsonProperty("workspaceId")
     private Long workspaceId;
 

@@ -1,6 +1,7 @@
 package com.project.PJA.project_progress.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.common.user_act_log.UserActionLogService;
 import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.exception.BadRequestException;
@@ -40,6 +41,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,6 +58,7 @@ public class ActionService {
     private final ActionPostService actionPostService;
     private final UserActionLogService userActionLogService;
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateProgressDto dto) {
@@ -130,55 +133,64 @@ public class ActionService {
         FeatureCategory category = feature.getCategory();
         List<Action> actionList = actionRepository.findActionsByFeature(feature);
 
-        List<AiRequestAction> aiRequestActionList = actionList.stream()
-                .map(ac -> new AiRequestAction(
-                        ac.getActionId(),
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        List<ActionData> actionDataList = actionList.stream().map(
+                ac -> new ActionData(
                         ac.getName(),
-                        ac.getStartDate(),
-                        ac.getEndDate(),
-                        ac.getImportance()
-                ))
-                .toList();
+                        ac.getImportance(),
+                        ac.getStartDate().format(formatter),
+                        ac.getEndDate().format(formatter)
+                )
+        ).toList();
 
-        AiRequestFeature aiRequestFeature = new AiRequestFeature(
+        FeatureData featureData = new FeatureData(
                 feature.getFeatureId(),
                 feature.getName(),
-                aiRequestActionList
+                actionDataList
         );
 
-        AiRequestCategory aiRequestCategory = new AiRequestCategory(
+        CategoryData categoryData = new CategoryData(
                 category.getFeatureCategoryId(),
                 category.getName(),
-                aiRequestFeature
+                featureData
         );
+
+        // 직렬화용 객체로 변환
+        String projectDataJson;
+
+        try {
+            projectDataJson = objectMapper.writeValueAsString(categoryData);
+        } catch (Exception e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        ActionAiRequestDto aiRequestDto = ActionAiRequestDto.builder()
+                .project_list(projectDataJson)
+                .max_tokens(3000L)
+                .temperature(0.3)
+                .model("gpt-4o-mini")
+                .build();
 
         String mlopsUrl = "http://3.34.185.3:8000/api/PJA/recommend/generate";
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("project_list", aiRequestCategory); // 실제 JSON 구조에 맞게 조정
-        requestBody.put("max_tokens", 3000);
-        requestBody.put("temperature", 0.3);
-        requestBody.put("model", "gpt-4o-mini");
-
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<RecommendationResponse> response = restTemplate.exchange(
+            ResponseEntity<ActionAiRecommendedResponse> response = restTemplate.postForEntity(
                     mlopsUrl,
-                    HttpMethod.POST,
-                    request,
-                    RecommendationResponse.class
+                    aiRequestDto,
+                    ActionAiRecommendedResponse.class
             );
 
-            RecommendationResponse body = response.getBody();
-            List<RecommendedAction> result = body.getRecommendations().getRecommendedActions();
+            ActionAiRecommendedResponse body = response.getBody();
 
-            log.info("추천된 액션 리스트: {}", result);
-            return result;
+            if (body == null || body.getJson() == null) {
+                throw new RuntimeException("추천 결과가 비어 있습니다.");
+            }
 
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.info("body: {}", body.toString());
+
+            return body.getJson().getRecommendedActions();
+
+        }  catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
     }

@@ -45,7 +45,7 @@ public class ActionController {
     public ResponseEntity<SuccessResponse<?>> generateAiAction(@AuthenticationPrincipal Users user,
                                                                @PathVariable("workspaceId") Long workspaceId,
                                                                @PathVariable("actionId") Long actionId) {
-
+        log.info("== Action 추천받기 API 진입 ==");
         List<RecommendedAction> data = actionService.recommendedActions(user, workspaceId, actionId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -61,7 +61,6 @@ public class ActionController {
         actionService.updateAction(user, workspaceId, categoryId, featureId, actionId, dto);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 수정되었습니다.", null);
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

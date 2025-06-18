@@ -9,8 +9,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AiRequestCategory {
+public class CategoryData {
     private Long categoryId;
-    private String name;
-    private AiRequestFeature aiFeature;
+    private String categoryName;
+    private FeatureData featureData;
 }

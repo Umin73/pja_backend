@@ -5,16 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class AiRequestAction {
-    private Long actionId;
+public class ActionData {
     private String name;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
     private Integer importance;
+    private String startDate;
+    private String endDate;
 }
