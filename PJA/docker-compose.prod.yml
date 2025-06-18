@@ -1,3 +1,10 @@
 services:
   my-server:
     image: 073658113926.dkr.ecr.ap-northeast-2.amazonaws.com/pja-server:latest
+    restart: unless-stopped
+
+  my-db:
+    restart: unless-stopped
+
+  my-cache-server:
+    restart: unless-stopped
