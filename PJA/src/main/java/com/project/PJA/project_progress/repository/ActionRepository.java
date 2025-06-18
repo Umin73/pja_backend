@@ -12,6 +12,7 @@ public interface ActionRepository extends JpaRepository<Action, Long> {
     Optional<Action> findTopByFeatureOrderByOrderIndexDesc(Feature feature);
     // Feature로 Action 리스트 찾기
     List<Action> findActionsByFeature(Feature feature);
+    List<Action> findByFeatureOrderByOrderIndexAsc(Feature feature);
     // workspaceId로 Action 리스트 찾기
     List<Action> findByFeature_Workspace_WorkspaceId(Long workspaceId);
 }

@@ -13,6 +13,7 @@ public interface FeatureCategoryRepository extends JpaRepository<FeatureCategory
     Optional<FeatureCategory> findTopByWorkspaceOrderByOrderIndexDesc(Workspace workspace);
 
     // 워크스페이스로 기능카테고리 리스트 가져오기
-    List<FeatureCategory> findFeatureCategoriesByWorkspace(Workspace workspace);
+//    List<FeatureCategory> findFeatureCategoriesByWorkspace(Workspace workspace);
+    List<FeatureCategory> findByWorkspaceOrderByOrderIndexAsc(Workspace workspace);
 
 }

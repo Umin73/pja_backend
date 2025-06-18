@@ -2,7 +2,6 @@ package com.project.PJA.project_progress.repository;
 
 import com.project.PJA.project_progress.entity.Feature;
 import com.project.PJA.project_progress.entity.FeatureCategory;
-import com.project.PJA.workspace.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,5 +12,6 @@ public interface FeatureRepository extends JpaRepository<Feature, Long> {
     Optional<Feature> findTopByCategoryOrderByOrderIndexDesc(FeatureCategory category);
 
     // FeatureCategory로 Feature 리스트 찾기
-    List<Feature> findFeaturesByCategory(FeatureCategory category);
+//    List<Feature> findFeaturesByCategory(FeatureCategory category);
+    List<Feature> findByCategoryOrderByOrderIndexAsc(FeatureCategory category);
 }
