@@ -68,7 +68,7 @@ public class ProjectProgressService {
     List<String> getCoreFeatures(Workspace workspace) {
         Optional<ProjectInfo> optionalIdea = projectInfoRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
         if(optionalIdea.isEmpty()) {
-            throw new NotFoundException("아이디어가 존재하지 않습니다.");
+            return Collections.emptyList();
         }
         ProjectInfo idea = optionalIdea.get();
 
@@ -77,7 +77,7 @@ public class ProjectProgressService {
 
     List<FeatureCategoryResponseDto> getFeatureCategories(Workspace workspace) {
         List<FeatureCategory> categories = Optional.ofNullable(
-                featureCategoryRepository.findFeatureCategoriesByWorkspace(workspace)
+                featureCategoryRepository.findByWorkspaceOrderByOrderIndexAsc(workspace)
         ).orElse(new ArrayList<>());
         log.info("categories: {}",categories);
 
@@ -100,7 +100,7 @@ public class ProjectProgressService {
 
     List<FeatureResponseDto> getFeatures(FeatureCategory category) {
         List<Feature> features = Optional.ofNullable(
-                featureRepository.findFeaturesByCategory(category)
+                featureRepository.findByCategoryOrderByOrderIndexAsc(category)
         ).orElse(new ArrayList<>());
         log.info("features: {}",features);
 
@@ -122,7 +122,7 @@ public class ProjectProgressService {
 
     List<ActionResponseDto> getActions(Feature feature) {
         List<Action> actions = Optional.ofNullable(
-                actionRepository.findActionsByFeature(feature)
+                actionRepository.findByFeatureOrderByOrderIndexAsc(feature)
         ).orElse(new ArrayList<>());
         log.info("actions: {}",actions);
 

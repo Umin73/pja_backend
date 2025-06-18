@@ -220,7 +220,7 @@ public class ActionService {
     }
 
     @Transactional
-    public void updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateActionDto dto) {
+    public Map<String, Object> updateAction(Users user, Long workspaceId, Long categoryId, Long featureId, Long actionId, UpdateActionDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 수정할 권한이 없습니다.");
 
         Action action = actionRepository.findById(actionId)
@@ -294,6 +294,8 @@ public class ActionService {
                     )
             );
         }
+
+        return Map.of("actionId", actionId, "actionPostId", action.getActionPost().getActionPostId());
     }
 
     @Transactional
