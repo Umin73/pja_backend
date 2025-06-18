@@ -2,7 +2,6 @@ package com.project.PJA.project_progress.repository;
 
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.Feature;
-import com.project.PJA.project_progress.entity.FeatureCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -13,5 +12,6 @@ public interface ActionRepository extends JpaRepository<Action, Long> {
     Optional<Action> findTopByFeatureOrderByOrderIndexDesc(Feature feature);
     // Feature로 Action 리스트 찾기
     List<Action> findActionsByFeature(Feature feature);
-    // Action의 name
+    // workspaceId로 Action 리스트 찾기
+    List<Action> findByFeature_Workspace_WorkspaceId(Long workspaceId);
 }

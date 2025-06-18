@@ -2,6 +2,7 @@ package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.project_progress.dto.CreateActionDto;
+import com.project.PJA.project_progress.dto.OnlyActionResponseDto;
 import com.project.PJA.project_progress.dto.UpdateActionDto;
 import com.project.PJA.project_progress.dto.aiDto.RecommendedAction;
 import com.project.PJA.project_progress.service.ActionService;
@@ -22,6 +23,17 @@ import java.util.List;
 public class ActionController {
 
     private final ActionService actionService;
+
+    @GetMapping("{workspaceId}/action")
+    ResponseEntity<SuccessResponse<?>> getActionList(@AuthenticationPrincipal Users user,
+                                                     @PathVariable("workspaceId") Long workspaceId) {
+
+        log.info("== 액션 리스트 불러오기 API 진입 ==");
+
+        List<OnlyActionResponseDto> data = actionService.readActionList(user, workspaceId);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "액션 리스트 정보를 불러왔습니다.", data);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 
     @PostMapping("{workspaceId}/project/category/{categoryId}/feature/{featureId}/action")
     ResponseEntity<SuccessResponse<?>> createAction(@AuthenticationPrincipal Users user,

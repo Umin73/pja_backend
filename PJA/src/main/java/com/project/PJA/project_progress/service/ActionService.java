@@ -6,6 +6,7 @@ import com.project.PJA.common.user_act_log.UserActionType;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.project_progress.dto.CreateActionDto;
+import com.project.PJA.project_progress.dto.OnlyActionResponseDto;
 import com.project.PJA.project_progress.dto.UpdateActionDto;
 import com.project.PJA.project_progress.dto.aiDto.*;
 import com.project.PJA.project_progress.entity.*;
@@ -13,7 +14,6 @@ import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
-import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -46,6 +46,30 @@ public class ActionService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    @Transactional(readOnly = true)
+    public List<OnlyActionResponseDto> readActionList(Users user, Long workspaceId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                        .orElseThrow(() -> new NotFoundException("워크스페이스가 존재하지 않습니다."));
+
+        workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
+
+        List<Action> actionList = actionRepository.findByFeature_Workspace_WorkspaceId(workspaceId);
+
+        List<OnlyActionResponseDto> dtoList = new ArrayList<>();
+        for(Action action : actionList) {
+            OnlyActionResponseDto dto = new OnlyActionResponseDto();
+            dto.setActionId(action.getActionId());
+            dto.setActionName(action.getName());
+            dto.setStartDate(action.getStartDate());
+            dto.setEndDate(action.getEndDate());
+            dto.setActionPostId(action.getActionPost().getActionPostId());
+
+            dtoList.add(dto);
+        }
+
+        return dtoList;
+    }
+
     @Transactional
     public Long createAction(Users user, Long workspaceId, Long categoryId, Long featureId, CreateActionDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 생성할 권한이 없습니다.");
@@ -66,8 +90,12 @@ public class ActionService {
                 .map(c -> c.getOrderIndex() + 1)
                 .orElse(1); // 현재 존재하는 action 없으면 1번 부여
 
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(()-> new NotFoundException("워크스페이스가 존재하지 않습니다."));
+
         Action action = Action.builder()
                 .name(dto.getName())
+                .workspace(foundWorkspace)
                 .startDate(dto.getStartDate())
                 .endDate(dto.getEndDate())
                 .state(Progress.valueOf(dto.getState().toUpperCase()))

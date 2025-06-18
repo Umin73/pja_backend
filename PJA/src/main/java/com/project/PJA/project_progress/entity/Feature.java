@@ -1,5 +1,6 @@
 package com.project.PJA.project_progress.entity;
 
+import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
@@ -27,6 +28,11 @@ public class Feature {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "feature_id")
     private Long featureId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workspace_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Workspace workspace; // 워크스페이스
 
     private String name; // 이름
 

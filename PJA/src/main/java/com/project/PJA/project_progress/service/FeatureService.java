@@ -12,6 +12,7 @@ import com.project.PJA.project_progress.entity.Progress;
 import com.project.PJA.project_progress.repository.FeatureCategoryRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -43,8 +44,12 @@ public class FeatureService {
                 .map(c -> c.getOrderIndex() + 1)
                 .orElse(1); // 현재 존재하는 feature 없으면 1번 부여
 
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("워크스페이스가 존재하지 않습니다."));
+
         Feature feature = Feature.builder()
                 .name(dto.getName())
+                .workspace(foundWorkspace)
                 .state(dto.getState())
                 .hasTest(false)
                 .orderIndex(nextOrder)
