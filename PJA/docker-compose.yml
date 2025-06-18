@@ -1,6 +1,5 @@
 services:
   my-server:
-    build: .
     ports:
       - 8080:8080
     depends_on:
@@ -13,7 +12,7 @@ services:
 #      my-logstash:
 #        condition: service_healthy
     env_file:
-      - /.env
+      - .env
     volumes:
       - ./uploads:/app/uploads
       - ./shared_logs:/logs
