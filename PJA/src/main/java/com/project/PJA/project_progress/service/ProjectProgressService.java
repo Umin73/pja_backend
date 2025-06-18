@@ -68,7 +68,7 @@ public class ProjectProgressService {
     List<String> getCoreFeatures(Workspace workspace) {
         Optional<ProjectInfo> optionalIdea = projectInfoRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
         if(optionalIdea.isEmpty()) {
-            throw new NotFoundException("아이디어가 존재하지 않습니다.");
+            return Collections.emptyList();
         }
         ProjectInfo idea = optionalIdea.get();
 
