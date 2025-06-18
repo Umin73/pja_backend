@@ -1,10 +1,11 @@
 package com.project.PJA.project_progress.entity;
 
-import com.project.PJA.workspace.entity.WorkspaceMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -47,16 +48,12 @@ public class Action {
     private Boolean hasTest; // 테스트 여부
 
     @Builder.Default
-    @ManyToMany
-    @JoinTable(
-            name = "action_participant",
-            joinColumns = @JoinColumn(name = "action_id"),
-            inverseJoinColumns = @JoinColumn(name = "workspace_member_id")
-    )
-    private Set<WorkspaceMember> participants = new HashSet<>(); // 참여자(워크스페이스 멤버로만 한정)
+    @OneToMany(mappedBy = "action", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ActionParticipant> participants = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "feature_id")
+    @JoinColumn(name = "feature_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Feature feature;
 
     @OneToOne(mappedBy ="action", cascade = CascadeType.ALL, orphanRemoval = true)

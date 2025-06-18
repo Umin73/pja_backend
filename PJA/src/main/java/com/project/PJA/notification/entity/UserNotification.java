@@ -4,6 +4,8 @@ import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -28,9 +30,11 @@ public class UserNotification {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Users receiver; // 알림 받는 사람
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Notification notification; // 알림
 }

@@ -6,6 +6,7 @@ import com.project.PJA.notification.service.NotificationService;
 import com.project.PJA.project_progress.dto.ActionContentDto;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.ActionComment;
+import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.project_progress.entity.ActionPost;
 import com.project.PJA.project_progress.repository.ActionCommentRepository;
 import com.project.PJA.project_progress.repository.ActionPostRepository;
@@ -57,7 +58,9 @@ public class ActionCommentService {
         actionCommentRepository.save(actionComment);
 
         // 해당 Action의 참여자에게 알림 보내기
-        Set<WorkspaceMember> participants = action.getParticipants(); // Lazy 로딩
+        Set<WorkspaceMember> participants = action.getParticipants().stream()
+                .map(ActionParticipant::getWorkspaceMember)
+                .collect(Collectors.toSet());
 
         List<Users> receivers = participants.stream()
                 .map(WorkspaceMember::getUser)

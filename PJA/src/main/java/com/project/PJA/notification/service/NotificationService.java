@@ -7,6 +7,7 @@ import com.project.PJA.notification.entity.UserNotification;
 import com.project.PJA.notification.repository.NotificationRepository;
 import com.project.PJA.notification.repository.UserNotificationRepository;
 import com.project.PJA.project_progress.entity.Action;
+import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.project_progress.entity.ActionPost;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.WorkspaceMember;
@@ -83,7 +84,9 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
 
         Action action = actionPost.getAction();
-        Set<WorkspaceMember> participants = action.getParticipants();
+        Set<WorkspaceMember> participants = action.getParticipants().stream()
+                .map(ActionParticipant::getWorkspaceMember)
+                .collect(Collectors.toSet());
 
         List<UserNotification> userNotifications = receivers.stream()
                 .map(user -> UserNotification.builder()
