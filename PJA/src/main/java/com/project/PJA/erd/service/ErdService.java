@@ -1,9 +1,11 @@
 package com.project.PJA.erd.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.PJA.erd.dto.*;
+import com.project.PJA.erd.dto.aiGenerateDto.*;
 import com.project.PJA.erd.entity.*;
 import com.project.PJA.erd.repository.ErdColumnRepository;
+import com.project.PJA.erd.repository.ErdRelationshipsRepository;
 import com.project.PJA.erd.repository.ErdRepository;
 import com.project.PJA.erd.repository.ErdTableRepository;
 import com.project.PJA.exception.BadRequestException;
@@ -33,8 +35,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -51,6 +52,7 @@ public class ErdService {
     private final RestTemplate restTemplate;
     private final ErdTableRepository erdTableRepository;
     private final ErdColumnRepository erdColumnRepository;
+    private final ErdRelationshipsRepository erdRelationshipsRepository;
 
     // 사용자가 ERD 생성
     public Erd createErd(Users user, Long workspaceId) {
@@ -73,17 +75,14 @@ public class ErdService {
     public List<ErdAiCreateResponse> recommendErd(Users user, Long workspaceId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
-        log.info("erd ai 요청 로그(1)");
         // erd 존재 시 예외처리
         if(erdRepository.existsByWorkspaceId(workspaceId)) {
             throw new BadRequestException("이미 해당 워크스페이스에 ERD가 존재합니다.");
         }
 
-        log.info("erd ai 요청 로그(2)");
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        log.info("erd ai 요청 로그(3)");
         // 아이디어 입력 조회 및 데이터 생성
         IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
@@ -94,7 +93,6 @@ public class ErdService {
                 foundIdeaInput.getProjectDescription()
         );
 
-        log.info("erd ai 요청 로그(4)");
         // 요구사항 명세서 조회 및 데이터 생성
         List<Requirement> foundRequirementList = requirementRepository.findByWorkspace_WorkspaceId(workspaceId);
         List<RequirementData> requirementDataList = foundRequirementList.stream()
@@ -105,7 +103,6 @@ public class ErdService {
                 ))
                 .toList();
 
-        log.info("erd ai 요청 로그(5)");
         // 프로젝트 요약 정보 조회 및 데이터 생성
         ProjectInfo foundProjectInfo  = projectInfoRepository.findByWorkspace_WorkspaceId(workspaceId)
                 .orElseThrow(()-> new NotFoundException("요청하신 아이디어 요약 정보를 찾을 수 없습니다."));
@@ -126,8 +123,6 @@ public class ErdService {
                 updatedAtStr
         );
 
-
-        log.info("erd ai 요청 로그(6)");
         // 직렬화용 객체로 변환
         String projectOverviewJson;
         String requirementJson;
@@ -140,7 +135,6 @@ public class ErdService {
         } catch (Exception e) {
             throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
         }
-        log.info("erd ai 요청 로그(7)");
 
         ErdAiRequestDto erdCreateRequest = ErdAiRequestDto.builder()
                 .project_overview(projectOverviewJson)
@@ -151,11 +145,6 @@ public class ErdService {
                 .model("ft:gpt-4o-mini-2024-07-18:test::BebIPMSD")
                 .build();
 
-        log.info("erd ai 요청 로그(8)");
-        log.info("erdCreateRequest.getProject_summury(): {}", erdCreateRequest.getProject_summury());
-        log.info("erdCreateRequest.getProject_overview(): {}", erdCreateRequest.getProject_overview());
-        log.info("erdCreateRequest.getRequirements(): {}", erdCreateRequest.getRequirements());
-
         String mlopsUrl = "http://3.34.185.3:8000/api/PJA/json_ERD/generate";
 
         try {
@@ -164,66 +153,77 @@ public class ErdService {
                     erdCreateRequest,
                     ErdAiCreateResponse.class
             );
-            log.info("erd ai 요청 로그(9)");
 
             ErdAiCreateResponse body = response.getBody();
-            log.info("body: {}", body.getJson().getErdSpecifications().size());
-            List<ErdSpecificationsData> erdSpecificationsDataList = body.getJson().getErdSpecifications();
-            log.info("erd ai 요청 로그(10), {}", erdSpecificationsDataList.size());
 
-            for(ErdSpecificationsData erdSpecificationsData : erdSpecificationsDataList) {
-                log.info("erdSpecificationsData: {}", erdSpecificationsData);
+            // DB 저장
+            Erd savedErd = erdRepository.save(
+                    Erd.builder()
+                        .workspaceId(workspaceId)
+                        .createdAt(LocalDateTime.now())
+                        .tables(new ArrayList<>()) // 이후에 추가
+                        .build());
+
+            Map<String, ErdTable> tableMap = new HashMap<>();
+            List<ErdTable> savedTables = new ArrayList<>();
+            List<ErdColumn> savedColumns = new ArrayList<>();
+
+            for(AiErdTable aiErdTable : body.getJson().getErdTables()) {
+                ErdTable erdTable = ErdTable.builder()
+                        .erd(savedErd)
+                        .name(aiErdTable.getName())
+                        .columns(new ArrayList<>())
+                        .build();
+
+                List<ErdColumn> columns = aiErdTable.getErdColumns().stream()
+                        .map(col -> ErdColumn.builder()
+                                .erdTable(erdTable)
+                                .name(col.getName())
+                                .dataType(col.getDataType())
+                                .isPrimaryKey(col.isPrimaryKey())
+                                .isForeignKey(col.isForeignKey())
+                                .isNullable(col.isNullable())
+                                .build())
+                        .toList();
+
+                erdTable.setColumns(columns);
+                savedTables.add(erdTable);
+                savedColumns.addAll(columns);
+                tableMap.put(aiErdTable.getName(), erdTable);
             }
 
-//            // DB 저장
-//            Erd savedErd = erdRepository.save(Erd.builder()
-//                    .workspaceId(workspaceId)
-//                    .createdAt(LocalDateTime.now())
-//                    .tables(new ArrayList<>()) // 이후에 추가
-//                    .build());
-//            List<ErdTable> savedTables = new ArrayList<>();
-//            List<ErdColumn> savedColumns = new ArrayList<>();
-//            List<ErdRelation> savedRelations = new ArrayList<>();
+            erdTableRepository.saveAll(savedTables);
+            erdColumnRepository.saveAll(savedColumns);
 
-
-//            for(ErdSpecificationsData spec : erdSpecificationsDataList) {
-//                for (AiErdTable table : spec.getErdTables()) {
-//                    // 1. 테이블 저장
-//                    ErdTable erdTable = ErdTable.builder()
-//                            .erd(savedErd)
-//                            .name(table.getName())
-//                            .columns(new ArrayList<>())
-//                            .build();
+//            List<ErdRelationships> savedRelations = new ArrayList<>();
+//            for (AiErdRelationships rel : body.getJson().getErdRelationships()) {
+//                ErdTable fromTable = savedTables.stream()
+//                        .filter(t -> t.getName().equals(rel.getFromTable()))
+//                        .findFirst()
+//                        .orElseThrow(() -> new NotFoundException("fromTable not found"));
 //
-//                    // 2. 컬럼 저장
-//                    List<ErdColumn> columns = table.getErdColumns().stream()
-//                            .map(col -> ErdColumn.builder()
-//                                    .erdTable(erdTable)
-//                                    .name(col.getName())
-//                                    .dataType(col.getDataType())
-//                                    .isPrimaryKey(col.isPrimaryKey())
-//                                    .isNullable(col.isNullable())
-//                                    .build())
-//                            .toList();
+//                ErdTable toTable = savedTables.stream()
+//                        .filter(t -> t.getName().equals(rel.getToTable()))
+//                        .findFirst()
+//                        .orElseThrow(() -> new NotFoundException("toTable not found"));
 //
-//                    erdTable.setColumns(columns);
-//                    savedTables.add(erdTable);
-//                    savedColumns.addAll(columns);
+//                Optional<ErdColumn> optionalForeignColumn = erdColumnRepository.findByErdTableAndName(toTable, rel.getForeignKey());
+//                ErdColumn foreignErdColumn = null;
+//
+//                if (optionalForeignColumn.isPresent()) {
+//                    foreignErdColumn = optionalForeignColumn.get();
 //                }
 //
-//                // 3. 관계 저장
-//                for (AiErdRelationships rel : spec.getErdRelationships()) {
-//                    ErdRelationships relation = ErdRelationships.builder()
-//                            .fromTable(erdTableRepository.findByName(rel.getFromTable()))
-//                            .toTable(erdTableRepository.findByName(rel.getToTable()))
-//                            .foreignColumn(rel.getForeignKey())
-//                            .constraintName(rel.getConstraintName())
+//                ErdRelationships relation = ErdRelationships.builder()
+//                        .fromTable(fromTable)
+//                        .toTable(toTable)
+//                        .foreignColumn(foreignErdColumn)
+//                        .constraintName(rel.getConstraintName())
+//                        .build();
 //
-//                            .build();
-//                    savedRelations.add(relation);
-//                }
+//                savedRelations.add(relation);
 //            }
-
+//            erdRelationshipsRepository.saveAll(savedRelations);
             return body != null ? List.of(body) : new ArrayList<>();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());

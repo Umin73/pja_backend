@@ -2,7 +2,7 @@ package com.project.PJA.erd.controller;
 
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.erd.dto.ErdAiCreateResponse;
+import com.project.PJA.erd.dto.aiGenerateDto.ErdAiCreateResponse;
 import com.project.PJA.erd.dto.reactFlowtDto.ERDFlowResponseDto;
 import com.project.PJA.erd.entity.Erd;
 import com.project.PJA.erd.service.ErdService;

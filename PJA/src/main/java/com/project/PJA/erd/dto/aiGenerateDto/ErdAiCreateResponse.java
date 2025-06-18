@@ -1,7 +1,6 @@
-package com.project.PJA.erd.dto;
+package com.project.PJA.erd.dto.aiGenerateDto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.project.PJA.api.dto.ApiSpecifications;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ErdAiCreateResponse {
     @JsonProperty("json")
-    private ErdSpecifications json;
+    private ErdJson json;
 
     @JsonProperty("model")
     private String model;

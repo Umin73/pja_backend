@@ -1,4 +1,4 @@
-package com.project.PJA.erd.dto;
+package com.project.PJA.erd.dto.aiGenerateDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
