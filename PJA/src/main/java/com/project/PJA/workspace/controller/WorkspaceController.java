@@ -151,7 +151,7 @@ public class WorkspaceController {
     // 팀 탈퇴
     @DeleteMapping("/{workspaceId}/leave")
     public ResponseEntity<SuccessResponse<WorkspaceLeaveRequest>> leaveWorkspace(@AuthenticationPrincipal Users user,
-                                                                          @PathVariable Long workspaceId) {
+                                                                                 @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
         log.info("=== workspace 팀 탈퇴 == userId: {}", userId);
         

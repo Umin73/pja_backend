@@ -216,10 +216,22 @@ public class WorkspaceService {
     // 팀 탈퇴
     @Transactional
     public WorkspaceLeaveRequest leaveWorkspace(Long userId, Long workspaceId) {
-        // 팀원 확인?
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("해당 워크스페이스를 찾을 수 없습니다."));
 
+        if (foundWorkspace.getUser().getUserId().equals(userId)) {
+            throw new BadRequestException("해당 워크스페이스의 오너는 탈퇴할 수 없습니다.");
+        }
 
-        // 맞으면 탈퇴?
+        WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId)
+                .orElseThrow(() -> new ForbiddenException("해당 워크스페이스의 팀원이 아닙니다."));
+
+        workspaceMemberRepository.delete(foundWorkspaceMember);
+
+        return new WorkspaceLeaveRequest(
+                workspaceId,
+                foundWorkspace.getProjectName(),
+                foundWorkspace.getTeamName());
     }
 
     // 비공개 워크스페이스의 팀원이 아니면 403 반환
