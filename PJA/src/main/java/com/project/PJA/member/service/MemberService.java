@@ -10,6 +10,9 @@ import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ public class MemberService {
     private final WorkspaceService workspaceService;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final WorkspaceActivityService workspaceActivityService;
 
     @Transactional(readOnly = true)
     public List<MemberResponse> getMembers(Long userId, Long workspaceId) {
@@ -58,6 +62,9 @@ public class MemberService {
 
         foundWorkspaceMember.update(memberRequest.getWorkspaceRole());
 
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(foundWorkspaceMember.getUser(), workspaceId, ActivityTargetType.ROLE, ActivityActionType.CHANGE);
+
         return new MemberResponse(
                 foundWorkspaceMember.getUser().getUserId(),
                 foundWorkspaceMember.getUser().getName(),
@@ -77,6 +84,9 @@ public class MemberService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
 
         workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버를 삭제할 권한이 없습니다.");
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(foundWorkspaceMember.getUser(), workspaceId, ActivityTargetType.MEMBER, ActivityActionType.LEAVE);
 
         workspaceMemberRepository.delete(foundWorkspaceMember);
 

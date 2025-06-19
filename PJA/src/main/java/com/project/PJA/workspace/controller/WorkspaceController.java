@@ -73,7 +73,7 @@ public class WorkspaceController {
         Long userId = user.getUserId();
         log.info("=== workspace 수정 API 진입 == userId: {}", userId);
 
-        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
+        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(user, workspaceId, workspaceUpdateRequest);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "요청하신 워크스페이스가 성공적으로 수정되었습니다.", updatedWorkspace

@@ -62,8 +62,8 @@ public class WorkspaceActivityService {
 
             dto.setUsername(activity.getUser().getUsername());
             dto.setUserProfile(activity.getUser().getProfileImage());
-            dto.setActionType(activity.getActionType().toString());
-            dto.setTargetType(activity.getTargetType().toString());
+            dto.setActionType(activity.getActionType().toString()); // 한글로 수정 필요?
+            dto.setTargetType(activity.getTargetType().toString()); // 한글로 수정 필요?
             dto.setRelativeDateLabel(getRelativeDate(activity.getCreatedAt()));
 
             dtoList.add(dto);

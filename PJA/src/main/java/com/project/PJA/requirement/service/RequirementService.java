@@ -15,9 +15,13 @@ import com.project.PJA.ideainput.repository.TechStackRepository;
 import com.project.PJA.requirement.dto.*;
 import com.project.PJA.requirement.entity.Requirement;
 import com.project.PJA.requirement.repository.RequirementRepository;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +46,7 @@ public class RequirementService {
     private final WorkspaceService workspaceService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 요구사항 명세서 조회
     @Transactional(readOnly = true)
@@ -130,11 +135,11 @@ public class RequirementService {
 
     // 요구사항 명세서 생성
     @Transactional
-    public RequirementResponse createRequirement(Long userId, Long workspaceId, RequirementRequest requirementRequest) {
+    public RequirementResponse createRequirement(Users user, Long workspaceId, RequirementRequest requirementRequest) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
         Requirement createdRequirement = requirementRepository.save(
                 Requirement.builder()
@@ -143,6 +148,9 @@ public class RequirementService {
                         .content(requirementRequest.getContent())
                         .build()
         );
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.REQUIREMENT, ActivityActionType.CREATE);
 
         return new RequirementResponse(
                 createdRequirement.getRequirementId(),
@@ -153,13 +161,16 @@ public class RequirementService {
 
     // 요구사항 명세서 수정
     @Transactional
-    public RequirementResponse updateRequirement(Long userId, Long workspaceId, Long requirementId, RequirementContentRequest requirementContentRequest) {
+    public RequirementResponse updateRequirement(Users user, Long workspaceId, Long requirementId, RequirementContentRequest requirementContentRequest) {
         Requirement foundRequirement = requirementRepository.findById(requirementId)
                 .orElseThrow(() -> new NotFoundException("요청하신 요구사항을 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         foundRequirement.update(requirementContentRequest.getContent());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.REQUIREMENT, ActivityActionType.UPDATE);
 
         return new RequirementResponse(
                 foundRequirement.getRequirementId(),
@@ -170,13 +181,16 @@ public class RequirementService {
 
     // 요구사항 명세서 삭제
     @Transactional
-    public RequirementResponse deleteRequirement(Long userId, Long workspaceId, Long requirementId) {
+    public RequirementResponse deleteRequirement(Users user, Long workspaceId, Long requirementId) {
         Requirement foundRequirement = requirementRepository.findById(requirementId)
                 .orElseThrow(() -> new NotFoundException("요청하신 요구사항을 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
 
         requirementRepository.delete(foundRequirement);
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.REQUIREMENT, ActivityActionType.DELETE);
 
         return new RequirementResponse(
                 foundRequirement.getRequirementId(),

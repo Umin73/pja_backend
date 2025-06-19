@@ -1,14 +1,14 @@
 package com.project.PJA.workspace_activity.enumeration;
 
 public enum ActivityTargetType {
-    IDEA,
-    REQUIREMENT,
-    PROJECT_INFO,
+    IDEA, // OK
+    REQUIREMENT, // OK
+    PROJECT_INFO, // OK
     ERD,
-    API,
-    ACTION,
-    MEMBER,
-    ROLE,
-    WORKSPACE_SETTING,
-    GIT
+    API, // OK
+    ACTION, // OK
+    MEMBER, // OK
+    ROLE, // OK
+    WORKSPACE_SETTING, // OK
+    GIT // OK
 }

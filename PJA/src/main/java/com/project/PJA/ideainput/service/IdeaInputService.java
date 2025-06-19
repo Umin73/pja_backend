@@ -9,9 +9,13 @@ import com.project.PJA.ideainput.entity.TechStack;
 import com.project.PJA.ideainput.repository.IdeaInputRepository;
 import com.project.PJA.ideainput.repository.MainFunctionRepository;
 import com.project.PJA.ideainput.repository.TechStackRepository;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +32,7 @@ public class IdeaInputService {
     private final IdeaInputRepository ideaInputRepository;
     private final MainFunctionRepository mainFunctionRepository;
     private final TechStackRepository techStackRepository;
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 아이디어 입력 조회
     @Transactional(readOnly = true)
@@ -195,8 +200,8 @@ public class IdeaInputService {
 
     // 아이디어 입력 수정
     @Transactional
-    public IdeaInputResponse updateIdeaInput(Long userId, Long workspaceId, Long ideaInputId, IdeaInputRequest ideaInputRequest) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+    public IdeaInputResponse updateIdeaInput(Users user, Long workspaceId, Long ideaInputId, IdeaInputRequest ideaInputRequest) {
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
@@ -222,6 +227,9 @@ public class IdeaInputService {
                     .orElseThrow(() -> new NotFoundException("요청하신 ID가 " + req.getTechStackId() + "인 기술 스택을 찾을 수 없습니다."));
             ts.update(req.getContent());
         }
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
 
         return new IdeaInputResponse(
                 ideaInputId,

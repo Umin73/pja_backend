@@ -5,5 +5,6 @@ public enum ActivityActionType {
     UPDATE,
     DELETE,
     JOIN,
-    LEAVE
+    LEAVE,
+    CHANGE, // 역할 변경
 }

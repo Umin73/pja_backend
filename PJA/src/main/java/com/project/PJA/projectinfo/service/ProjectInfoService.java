@@ -17,9 +17,13 @@ import com.project.PJA.projectinfo.dto.*;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.requirement.dto.RequirementRequest;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +48,7 @@ public class ProjectInfoService {
     private final RestTemplate restTemplate;
     private final WorkspaceService workspaceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 프로젝트 정보 조회
     @Transactional(readOnly = true)
@@ -170,9 +175,9 @@ public class ProjectInfoService {
 
     // 프로젝트 정보 수정
     @Transactional
-    public ProjectInfoResponse updateProjectInfo(Long userId, Long workspaceId, Long projectInfoId, ProjectInfoRequest request) {
+    public ProjectInfoResponse updateProjectInfo(Users user, Long workspaceId, Long projectInfoId, ProjectInfoRequest request) {
         // 수정 권한 확인(멤버 or 오너)
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         // 맞으면 수정 가능
         ProjectInfo foundProjectInfo = projectInfoRepository.findById(projectInfoId)
@@ -186,6 +191,9 @@ public class ProjectInfoService {
                 request.getTechnologyStack(),
                 request.getProblemSolving()
                 );
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.PROJECT_INFO, ActivityActionType.UPDATE);
 
         return new ProjectInfoResponse(
                 projectInfoId,

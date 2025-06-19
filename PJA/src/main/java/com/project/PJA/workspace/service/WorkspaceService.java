@@ -16,7 +16,10 @@ import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace_activity.entity.WorkspaceActivity;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.repository.WorkspaceActivityRepository;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,6 +37,7 @@ public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final WorkspaceActivityRepository workspaceActivityRepository;
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
@@ -129,16 +133,19 @@ public class WorkspaceService {
 
     // 워크스페이스 수정
     @Transactional
-    public WorkspaceResponse updateWorkspace(Long userId, Long workspaceId, WorkspaceUpdateRequest workspaceUpdateRequest) {
+    public WorkspaceResponse updateWorkspace(Users user, Long workspaceId, WorkspaceUpdateRequest workspaceUpdateRequest) {
         // 워크스페이스 찾기
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
+        authorizeOwnerOrThrow(user.getUserId(), foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
 
         // 해당 워크스페이스의 오너이면 수정
         foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName(), workspaceUpdateRequest.getIsPublic());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.WORKSPACE_SETTING, ActivityActionType.UPDATE);
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
