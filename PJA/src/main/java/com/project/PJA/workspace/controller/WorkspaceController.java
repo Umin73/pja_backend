@@ -1,7 +1,7 @@
 package com.project.PJA.workspace.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.common.user_act_log.UserActionLogService;
+import com.project.PJA.user_act_log.service.UserActionLogService;
 import com.project.PJA.invitation.service.InvitationService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.dto.*;

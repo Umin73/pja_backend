@@ -2,6 +2,8 @@ package com.project.PJA.erd.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Builder
 @Getter
@@ -19,6 +21,7 @@ public class ErdColumn {
 
     @ManyToOne
     @JoinColumn(name = "erd_table_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ErdTable erdTable; // 해당 컬럼이 소한 테이블
 
     private String name; // 컬럼 이름
@@ -26,12 +29,15 @@ public class ErdColumn {
     @Column(name = "data_type")
     private String dataType; // 데이터 타입(VARCHAR, INT, ...)
 
+    @Builder.Default
     @Column(name = "is_primary_key", nullable = false)
-    private boolean isPrimaryKey; // 기본키 여부
+    private boolean isPrimaryKey = false; // 기본키 여부
 
+    @Builder.Default
     @Column(name = "is_foreign_key", nullable = false)
-    private boolean isForeignKey; // 외래키 여부
+    private boolean isForeignKey = false; // 외래키 여부
 
+    @Builder.Default
     @Column(name = "is_nullable", nullable = false)
-    private boolean isNullable; // null 허용 여부
+    private boolean isNullable = false; // null 허용 여부
 }

@@ -55,9 +55,9 @@ public class UserSettingController {
     public ResponseEntity<SuccessResponse<?>> changeName(@AuthenticationPrincipal Users user,
                                          @RequestBody ChangeNameRequestDto dto) {
         log.info("== 회원 이름 변경 API 진입 == uid: {}", user.getUid());
-        userService.updateUserName(user, dto.getNewName());
+        String newName = userService.updateUserName(user, dto.getNewName());
 
-        SuccessResponse<?> response = new SuccessResponse<>("success", "이름이 성공적으로 변경되었습니다.", null);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "이름이 성공적으로 변경되었습니다.", Map.of("newName",newName));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

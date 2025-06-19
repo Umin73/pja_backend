@@ -1,8 +1,7 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.common.user_act_log.UserActionLogService;
-import com.project.PJA.common.user_act_log.UserActionType;
+import com.project.PJA.user_act_log.service.UserActionLogService;
 import com.project.PJA.project_progress.service.ActionPostService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
