@@ -42,7 +42,7 @@ public class FeatureCategoryService {
         FeatureCategory featureCategory = FeatureCategory.builder()
                 .name(dto.getName())
                 .state(dto.getState())
-                .hasTest(false)
+                .hasTest(dto.getHasTest())
                 .orderIndex(nextOrder)
                 .workspace(workspace)
                 .build();
