@@ -4,6 +4,8 @@ import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.member.dto.MemberRequest;
 import com.project.PJA.member.dto.MemberResponse;
 import com.project.PJA.project_progress.dto.WorkspaceMemberDto;
+import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemberService {
     private final WorkspaceService workspaceService;
+    private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
 
@@ -51,11 +54,18 @@ public class MemberService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
+        Users foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("요청하신 사용자를 찾을 수 없습니다."));
+
         WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, memberRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
 
         workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버 역할을 수정할 권한이 없습니다.");
 
+        if (memberRequest.getWorkspaceRole() == WorkspaceRole.OWNER) {
+           foundWorkspace.updateOwner(foundUser);
+           
+        }
         foundWorkspaceMember.update(memberRequest.getWorkspaceRole());
 
         return new MemberResponse(
