@@ -18,7 +18,7 @@
     </appender>
 
     <!-- 사용자 액션 전용 로거 설정 -->
-    <logger name="com.project.PJA.common.user_act_log.UserActionLogService" level="INFO" additivity="false">
+    <logger name="com.project.PJA.user_act_log.service.UserActionLogService" level="INFO" additivity="false">
         <appender-ref ref="USER_ACTION_FILE"/>
     </logger>
 

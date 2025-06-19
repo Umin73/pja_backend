@@ -1,8 +1,7 @@
 package com.project.PJA.requirement.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.common.user_act_log.UserActionLogService;
-import com.project.PJA.common.user_act_log.UserActionType;
+import com.project.PJA.user_act_log.service.UserActionLogService;
 import com.project.PJA.requirement.dto.RequirementContentRequest;
 import com.project.PJA.requirement.dto.RequirementRequest;
 import com.project.PJA.requirement.dto.RequirementResponse;
@@ -16,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController

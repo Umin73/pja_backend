@@ -1,4 +1,4 @@
-package com.project.PJA.common.user_act_log;
+package com.project.PJA.user_act_log.enumeration;
 
 public enum UserActionType {
     UPDATE_PARTICIPANT_TO_ACTION,

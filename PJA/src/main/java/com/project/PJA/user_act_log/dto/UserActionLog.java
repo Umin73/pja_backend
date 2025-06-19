@@ -1,6 +1,7 @@
-package com.project.PJA.common.user_act_log;
+package com.project.PJA.user_act_log.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.project.PJA.user_act_log.enumeration.UserActionType;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.ZonedDateTime;
