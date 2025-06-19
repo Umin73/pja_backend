@@ -1,14 +1,12 @@
-package com.project.PJA.common.user_act_log;
+package com.project.PJA.user_act_log.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.user_act_log.dto.UserActionLog;
+import com.project.PJA.user_act_log.enumeration.UserActionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Map;
