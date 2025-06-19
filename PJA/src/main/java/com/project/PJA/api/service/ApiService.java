@@ -30,10 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -163,15 +160,16 @@ public class ApiService {
                 .build();
 
         try {
-            ResponseEntity<ApiCreateResponse> response = restTemplate.postForEntity(
+            ResponseEntity<ApiSpecifications> response = restTemplate.postForEntity(
                     mlopsUrl,
                     apiCreateRequest,
-                    ApiCreateResponse.class
+                    ApiSpecifications.class
             );
 
-            ApiCreateResponse body = response.getBody();
+            ApiSpecifications body = response.getBody();
             log.info("body: {}", body);
-            List<ApiSpecificationsData> apiSpecificationsDataList = body.getJson().getApiSpecifications();
+            List<ApiSpecificationsData> apiSpecificationsDataList = body.getApiSpecifications();
+                    //body.getJson().getApiSpecifications();
             log.info("apiSpecificationsDataList: {}", apiSpecificationsDataList.size());
 
             // DB 저장
@@ -210,8 +208,8 @@ public class ApiService {
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         } catch (RestClientException e) {
-            // 응답 변환 과정에서 오류가 발생했을 때 원인 파악용 로그
-            if (e instanceof org.springframework.web.client.HttpStatusCodeException ex) {
+            log.error("RestClientException 발생: {}", e.getMessage(), e);
+            if (e instanceof HttpStatusCodeException ex) {
                 log.error("응답 본문: {}", ex.getResponseBodyAsString());
             }
             throw new RuntimeException("MLOps API 처리 중 예외 발생", e);
