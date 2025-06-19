@@ -5,10 +5,7 @@ import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
-import com.project.PJA.workspace.dto.WorkspaceCreateRequest;
-import com.project.PJA.workspace.dto.WorkspaceProgressStep;
-import com.project.PJA.workspace.dto.WorkspaceResponse;
-import com.project.PJA.workspace.dto.WorkspaceUpdateRequest;
+import com.project.PJA.workspace.dto.*;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.enumeration.ProgressStep;
@@ -214,6 +211,15 @@ public class WorkspaceService {
                 foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
+    }
+
+    // 팀 탈퇴
+    @Transactional
+    public WorkspaceLeaveRequest leaveWorkspace(Long userId, Long workspaceId) {
+        // 팀원 확인?
+
+
+        // 맞으면 탈퇴?
     }
 
     // 비공개 워크스페이스의 팀원이 아니면 403 반환
