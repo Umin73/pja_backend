@@ -3,6 +3,8 @@ package com.project.PJA.erd.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Builder
 @Getter
@@ -29,6 +31,7 @@ public class ErdRelationships {
 
     @ManyToOne
     @JoinColumn(name = "foreign_column_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ErdColumn foreignColumn;
 
     @Column(name = "constraint_name")
@@ -36,9 +39,11 @@ public class ErdRelationships {
 
     @ManyToOne
     @JoinColumn(name = "from_erd_table_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ErdTable fromTable; // 관계의 출발 테이블
 
     @ManyToOne
     @JoinColumn(name = "to_erd_table_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private ErdTable toTable; // 관계의 대상 테이블
 }
