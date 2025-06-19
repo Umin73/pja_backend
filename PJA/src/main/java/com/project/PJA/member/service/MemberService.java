@@ -62,16 +62,16 @@ public class MemberService {
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
 
         // 권한 체크: 요청자가 워크스페이스 오너인지 확인
-        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버 역할을 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "워크스페이스 소유자만 멤버 역할을 수정할 수 있습니다.");
 
         // 오너가 자기 역할을 바꾸려는 경우 차단
         if (userId.equals(memberRequest.getUserId())) {
-            throw new BadRequestException("오너는 자기 역할을 바꿀 수 없습니다.");
+            throw new BadRequestException("오너는 자신의 역할을 변경할 수 없습니다.");
         }
 
         // 이미 같은 역할이면 변경 불필요
         if (memberRequest.getWorkspaceRole() == targetMember.getWorkspaceRole()) {
-            throw new BadRequestException("이미 해당 역할입니다.");
+            throw new BadRequestException("이미 해당 역할이 지정되어 있습니다.");
         }
 
         // 오너 역할 위임 처리
