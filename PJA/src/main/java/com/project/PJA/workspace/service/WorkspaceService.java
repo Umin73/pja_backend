@@ -15,6 +15,8 @@ import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
+import com.project.PJA.workspace_activity.entity.WorkspaceActivity;
+import com.project.PJA.workspace_activity.repository.WorkspaceActivityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,6 +33,7 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final WorkspaceActivityRepository workspaceActivityRepository;
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
@@ -203,6 +206,9 @@ public class WorkspaceService {
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
         authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 삭제할 권한이 없습니다.");
+
+        // 최근 활동 기록들 모두 삭제
+        workspaceActivityRepository.deleteByWorkspaceId(workspaceId);
 
         // 해당 워크스페이스의 오너이면 삭제
         workspaceRepository.delete(foundWorkspace);
