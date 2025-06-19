@@ -51,7 +51,7 @@ public class FeatureService {
                 .name(dto.getName())
                 .workspace(foundWorkspace)
                 .state(dto.getState())
-                .hasTest(false)
+                .hasTest(dto.getHasTest())
                 .orderIndex(nextOrder)
                 .category(category)
                 .build();
