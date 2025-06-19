@@ -160,16 +160,15 @@ public class ApiService {
                 .build();
 
         try {
-            ResponseEntity<ApiSpecifications> response = restTemplate.postForEntity(
+            ResponseEntity<ApiCreateResponse> response = restTemplate.postForEntity(
                     mlopsUrl,
                     apiCreateRequest,
-                    ApiSpecifications.class
+                    ApiCreateResponse.class
             );
 
-            ApiSpecifications body = response.getBody();
+            ApiCreateResponse body = response.getBody();
             log.info("body: {}", body);
-            List<ApiSpecificationsData> apiSpecificationsDataList = body.getApiSpecifications();
-                    //body.getJson().getApiSpecifications();
+            List<ApiSpecificationsData> apiSpecificationsDataList = body.getJson().getApiSpecifications();
             log.info("apiSpecificationsDataList: {}", apiSpecificationsDataList.size());
 
             // DB 저장
