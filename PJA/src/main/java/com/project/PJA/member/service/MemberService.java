@@ -1,9 +1,12 @@
 package com.project.PJA.member.service;
 
+import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.member.dto.MemberRequest;
 import com.project.PJA.member.dto.MemberResponse;
 import com.project.PJA.project_progress.dto.WorkspaceMemberDto;
+import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MemberService {
     private final WorkspaceService workspaceService;
+    private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
 
@@ -51,19 +55,49 @@ public class MemberService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        WorkspaceMember foundWorkspaceMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, memberRequest.getUserId())
+        Users foundUser = userRepository.findById(memberRequest.getUserId())
+                .orElseThrow(() -> new NotFoundException("요청하신 사용자를 찾을 수 없습니다."));
+
+        WorkspaceMember targetMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, memberRequest.getUserId())
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버 역할을 수정할 권한이 없습니다.");
+        // 권한 체크: 요청자가 워크스페이스 오너인지 확인
+        workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "워크스페이스 소유자만 멤버 역할을 수정할 수 있습니다.");
 
-        foundWorkspaceMember.update(memberRequest.getWorkspaceRole());
+        // 오너가 자기 역할을 바꾸려는 경우 차단
+        if (userId.equals(memberRequest.getUserId())) {
+            throw new BadRequestException("오너는 자신의 역할을 변경할 수 없습니다.");
+        }
+
+        // 이미 같은 역할이면 변경 불필요
+        if (memberRequest.getWorkspaceRole() == targetMember.getWorkspaceRole()) {
+            throw new BadRequestException("이미 해당 역할이 지정되어 있습니다.");
+        }
+
+        // 오너 역할 위임 처리
+        if (memberRequest.getWorkspaceRole() == WorkspaceRole.OWNER) {
+            // 워크스페이스 오너 변경
+           foundWorkspace.updateOwner(foundUser);
+
+            // 기존 오너 멤버로 강등
+            WorkspaceMember currentOwnerMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, userId)
+                    .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스와 사용자를 찾을 수 없습니다."));
+            currentOwnerMember.update(WorkspaceRole.MEMBER);
+
+            // 타겟 멤버 역할 OWNER로 변경
+            targetMember.update(WorkspaceRole.OWNER);
+        }
+        // 일반 역할 변경
+        else {
+            targetMember.update(memberRequest.getWorkspaceRole());
+        }
 
         return new MemberResponse(
-                foundWorkspaceMember.getUser().getUserId(),
-                foundWorkspaceMember.getUser().getName(),
-                foundWorkspaceMember.getUser().getEmail(),
+                targetMember.getUser().getUserId(),
+                targetMember.getUser().getName(),
+                targetMember.getUser().getEmail(),
                 memberRequest.getWorkspaceRole(),
-                foundWorkspaceMember.getJoinedAt()
+                targetMember.getJoinedAt()
         );
     }
 
