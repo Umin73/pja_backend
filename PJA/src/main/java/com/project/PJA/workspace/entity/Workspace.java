@@ -44,6 +44,9 @@ public class Workspace {
     @Column(name = "progress_step", nullable = false, length = 10)
     private ProgressStep progressStep = ProgressStep.ZERO;
 
+    @Column(name = "github_url")
+    private String githubUrl;
+
     @Builder
     public Workspace(Users user, String projectName, String teamName, Boolean isPublic) {
         this.user = user;
@@ -53,10 +56,11 @@ public class Workspace {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void update(String projectName, String teamName, Boolean isPublic) {
+    public void update(String projectName, String teamName, Boolean isPublic, String githubUrl) {
         this.projectName = projectName;
         this.teamName = teamName;
         this.isPublic = isPublic;
+        this.githubUrl = githubUrl;
     }
 
     public void updateOwner(Users user) {
