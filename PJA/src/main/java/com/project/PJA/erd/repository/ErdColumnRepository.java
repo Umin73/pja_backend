@@ -11,5 +11,5 @@ public interface ErdColumnRepository extends JpaRepository<ErdColumn, Long> {
 
     Optional<ErdColumn> findByErdColumnIdAndErdTable(Long erdColumnId, ErdTable erdTable);
     Optional<ErdColumn> findByErdTableAndName(ErdTable erdTable, String name);
-
+    Optional<ErdColumn> findByNameAndErdTable(String name, ErdTable erdTable);
 }
