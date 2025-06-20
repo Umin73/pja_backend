@@ -144,7 +144,7 @@ public class ActionService {
 
     // 프로젝트 액션 AI 추천
     @Transactional(readOnly = true)
-    public List<RecommendedAction> recommendedActions(Users user, Long workspaceId, Long actionId) {
+    public ActionRecommendationJson recommendedActions(Users user, Long workspaceId, Long actionId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
@@ -212,7 +212,7 @@ public class ActionService {
 
             log.info("body: {}", body.toString());
 
-            return body.getJson().getRecommendedActions();
+            return body.getJson();
 
         }  catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());

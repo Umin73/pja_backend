@@ -4,6 +4,7 @@ import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.project_progress.dto.CreateActionDto;
 import com.project.PJA.project_progress.dto.OnlyActionResponseDto;
 import com.project.PJA.project_progress.dto.UpdateActionDto;
+import com.project.PJA.project_progress.dto.aiDto.ActionRecommendationJson;
 import com.project.PJA.project_progress.dto.aiDto.RecommendedAction;
 import com.project.PJA.project_progress.service.ActionPostService;
 import com.project.PJA.project_progress.service.ActionService;
@@ -59,7 +60,7 @@ public class ActionController {
                                                                @PathVariable("workspaceId") Long workspaceId,
                                                                @PathVariable("actionId") Long actionId) {
         log.info("== Action 추천받기 API 진입 ==");
-        List<RecommendedAction> data = actionService.recommendedActions(user, workspaceId, actionId);
+        ActionRecommendationJson data = actionService.recommendedActions(user, workspaceId, actionId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
