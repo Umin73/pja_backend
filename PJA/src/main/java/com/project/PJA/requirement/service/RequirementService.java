@@ -83,8 +83,10 @@ public class RequirementService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        if (foundWorkspace.getProgressStep() != ProgressStep.ZERO && foundWorkspace.getProgressStep() != ProgressStep.ONE) {
-            throw new BadRequestException("요구사항 단계가 지난 후에는 AI 추천을 받을 수 없습니다.");
+        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
+            throw new BadRequestException("AI 추천을 받기 위해서는 아이디어 입력이 먼저 필요합니다.");
+        } else if (foundWorkspace.getProgressStep() != ProgressStep.ONE) {
+            throw new BadRequestException("요구사항 작성 단계가 완료되어 AI 추천을 더 이상 받을 수 없습니다.");
         }
 
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
