@@ -206,14 +206,6 @@ public class IdeaInputService {
     public IdeaInputResponse updateIdeaInput(Users user, Long workspaceId, Long ideaInputId, IdeaInputRequest ideaInputRequest) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
-        // 단계 검사해서 0이면 1로 올려주기
-        /*Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
-            foundWorkspace.updateProgressStep(ProgressStep.ONE);
-        }*/
-
         // 입력값 검사
         validateNotEmpty(ideaInputRequest.getProjectName(), "프로젝트명을 비어둘 수 없습니다.");
         validateNotEmpty(ideaInputRequest.getProjectTarget(), "프로젝트 대상을 비어둘 수 없습니다.");
@@ -266,6 +258,14 @@ public class IdeaInputService {
 
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+
+        // 단계 검사해서 0이면 1로 올려주기
+        /*Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
+            foundWorkspace.updateProgressStep(ProgressStep.ONE);
+        }*/
 
         return new IdeaInputResponse(
                 ideaInputId,
