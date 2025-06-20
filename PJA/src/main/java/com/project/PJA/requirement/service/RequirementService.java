@@ -74,11 +74,8 @@ public class RequirementService {
 
     // 요구사항 명세서 AI 생성 요청
     public List<RequirementRequest> recommendRequirement(Long userId, Long workspaceId, List<RequirementRequest> requests) {
-        for (RequirementRequest request : requests) {
-            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-                throw new BadRequestException("요구사항 내용을 입력해 주세요.");
-            }
-        }
+        // 요구사항 개수 확인
+        validateRequirements(requests);
 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -90,9 +87,6 @@ public class RequirementService {
         }
 
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
-
-        // 요구사항 개수 확인
-        validateRequirementCounts(requests);
 
         // 아이디어 입력 정보 찾기
         IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
@@ -221,11 +215,14 @@ public class RequirementService {
     }
 
     // 요구사항 명세서 개수 확인
-    public void validateRequirementCounts(List<RequirementRequest> requests) {
+    public void validateRequirements(List<RequirementRequest> requests) {
         int functionalCount = 0;
         int performanceCount = 0;
 
         for (RequirementRequest request : requests) {
+            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                throw new BadRequestException("요구사항 내용을 입력해 주세요.");
+            }
             if (request.getRequirementType() == RequirementType.FUNCTIONAL) {
                 functionalCount++;
             }
@@ -235,11 +232,11 @@ public class RequirementService {
         }
 
         if (functionalCount < 3) {
-            throw new BadRequestException("기능 요구사항을 3개 이상 입력해야 AI 추천이 가능합니다.");
+            throw new BadRequestException("기능 요구사항은 최소 3개 이상 입력해야 합니다.");
         }
 
         if (performanceCount < 3) {
-            throw new BadRequestException("성능 요구사항을 3개 이상 입력해야 AI 추천이 가능합니다.");
+            throw new BadRequestException("성능 요구사항은 최소 3개 이상 입력해야 합니다.");
         }
     }
 }

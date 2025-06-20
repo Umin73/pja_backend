@@ -17,6 +17,7 @@ import com.project.PJA.projectinfo.dto.*;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.requirement.dto.RequirementRequest;
+import com.project.PJA.requirement.service.RequirementService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
@@ -47,6 +48,7 @@ public class ProjectInfoService {
     private final TechStackRepository techStackRepository;
     private final RestTemplate restTemplate;
     private final WorkspaceService workspaceService;
+    private final RequirementService requirementService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final WorkspaceActivityService workspaceActivityService;
 
@@ -75,6 +77,8 @@ public class ProjectInfoService {
     // 프로젝트 정보 AI 생성
     @Transactional
     public ProjectInfoResponse createProjectInfo(Long userId, Long workspaceId, List<RequirementRequest> requests) {
+        requirementService.validateRequirements(requests);
+
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
@@ -157,6 +161,8 @@ public class ProjectInfoService {
                             .problemSolving(converted)
                             .build()
             );
+
+            //foundWorkspace.updateProgressStep(ProgressStep.TWO);
 
             return new ProjectInfoResponse(
                     savedProjectInfo.getProjectInfoId(),
