@@ -39,7 +39,7 @@ public class MemberController {
                                                                         @PathVariable Long workspaceId,
                                                                         @RequestBody MemberRequest memberRequest) {
         Long userId = user.getUserId();
-        MemberResponse memberResponse = memberService.updateMember(userId, workspaceId, memberRequest);
+        MemberResponse memberResponse = memberService.updateMember(user.getUserId(), workspaceId, memberRequest);
 
         SuccessResponse<MemberResponse> response = new SuccessResponse<>(
                 "success", "해당 워크스페이스의 멤버의 역할이 성공적으로 수정되었습니다.", memberResponse

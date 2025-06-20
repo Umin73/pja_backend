@@ -65,7 +65,7 @@ public class RequirementController {
         Long userId = user.getUserId();
         log.info("=== 요구사항 명세서 생성 API 진입 == userId: {}", userId);
         
-        RequirementResponse requirementResponse = requirementService.createRequirement(userId, workspaceId, requirementRequest);
+        RequirementResponse requirementResponse = requirementService.createRequirement(user, workspaceId, requirementRequest);
 
         SuccessResponse<RequirementResponse> response = new SuccessResponse<>(
                 "success", "요구사항이 성공적으로 저장되었습니다.", requirementResponse
@@ -83,7 +83,7 @@ public class RequirementController {
         Long userId = user.getUserId();
         log.info("=== 요구사항 명세서 수정 API 진입 == userId: {}", userId);
         
-        RequirementResponse requirementResponse = requirementService.updateRequirement(userId, workspaceId, requirementId, requirementContentRequest);
+        RequirementResponse requirementResponse = requirementService.updateRequirement(user, workspaceId, requirementId, requirementContentRequest);
 
         SuccessResponse<RequirementResponse> response = new SuccessResponse<>(
                 "success", "요구사항이 성공적으로 수정되었습니다.", requirementResponse
@@ -100,7 +100,7 @@ public class RequirementController {
         Long userId = user.getUserId();
         log.info("=== 요구사항 명세서 삭제 API 진입 == userId: {}", userId);
         
-        RequirementResponse requirementResponse = requirementService.deleteRequirement(userId, workspaceId, requirementId);
+        RequirementResponse requirementResponse = requirementService.deleteRequirement(user, workspaceId, requirementId);
 
         SuccessResponse<RequirementResponse> response = new SuccessResponse<>(
                 "success", "요구사항이 성공적으로 삭제되었습니다.", requirementResponse

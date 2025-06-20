@@ -61,7 +61,7 @@ public class ApiController {
         Long userId = user.getUserId();
         log.info("=== API 생성 API 진입 == userId: {}", userId);
         
-        ApiResponse apiResponse = apiService.createApi(userId, workspaceId, apiRequest);
+        ApiResponse apiResponse = apiService.createApi(user, workspaceId, apiRequest);
 
         SuccessResponse<ApiResponse> response = new SuccessResponse<>(
                 "success", "API를 성공적으로 생성했습니다.", apiResponse
@@ -79,7 +79,7 @@ public class ApiController {
         Long userId = user.getUserId();
         log.info("=== API 수정 API 진입 == userId: {}", userId);
         
-        ApiResponse apiResponse = apiService.updateApi(userId, workspaceId, apiId, apiRequest);
+        ApiResponse apiResponse = apiService.updateApi(user, workspaceId, apiId, apiRequest);
 
         SuccessResponse<ApiResponse> response = new SuccessResponse<>(
                 "success", "API를 성공적으로 수정했습니다.", apiResponse
@@ -96,7 +96,7 @@ public class ApiController {
         Long userId = user.getUserId();
         log.info("=== API 삭제 API 진입 == userId: {}", userId);
         
-        ApiResponse apiResponse = apiService.deleteApi(userId, workspaceId, apiId);
+        ApiResponse apiResponse = apiService.deleteApi(user, workspaceId, apiId);
 
         SuccessResponse<ApiResponse> response = new SuccessResponse<>(
                 "success", "API를 성공적으로 삭제했습니다.", apiResponse
