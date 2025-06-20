@@ -191,7 +191,7 @@ public class ActionService {
                 .project_list(projectDataJson)
                 .max_tokens(3000L)
                 .temperature(0.3)
-                .model("gpt-4o-mini")
+                .model("gpt-4o")
                 .build();
 
         String mlopsUrl = "http://3.34.185.3:8000/api/PJA/recommend/generate";
