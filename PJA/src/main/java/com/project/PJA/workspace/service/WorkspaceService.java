@@ -12,9 +12,6 @@ import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
-import com.project.PJA.workspace_activity.entity.WorkspaceActivity;
-import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
-import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.repository.WorkspaceActivityRepository;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
@@ -142,7 +139,7 @@ public class WorkspaceService {
         foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName(), workspaceUpdateRequest.getIsPublic());
 
         // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.WORKSPACE_SETTING, ActivityActionType.UPDATE);
+        //workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.WORKSPACE_SETTING, ActivityActionType.UPDATE);
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
@@ -212,7 +209,7 @@ public class WorkspaceService {
         authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 삭제할 권한이 없습니다.");
 
         // 최근 활동 기록들 모두 삭제
-        workspaceActivityRepository.deleteByWorkspaceId(workspaceId);
+        //workspaceActivityRepository.deleteByWorkspaceId(workspaceId);
 
         // 해당 워크스페이스의 오너이면 삭제
         workspaceRepository.delete(foundWorkspace);
