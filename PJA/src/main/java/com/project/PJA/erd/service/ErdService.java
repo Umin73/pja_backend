@@ -167,7 +167,7 @@ public class ErdService {
                 .project_summury(projectSummaryJson)
                 .max_tokens(8000L)
                 .temperature(0.3)
-                .model("ft:gpt-4o-mini-2024-07-18:test::BebIPMSD")
+                .model("gpt-4o")
                 .build();
         log.info("erd ai 생성 요청(8)");
 
@@ -182,7 +182,6 @@ public class ErdService {
 
             ErdAiCreateResponse body = response.getBody();
             log.info("erd ai 생성 요청(9)");
-            log.info("생성됨: {}", body.getJson().getErdTables());
 
             Erd savedErd = erdRepository.findByWorkspaceId(workspaceId).orElseThrow(
                     () -> new NotFoundException("workspace에 ERD가 존재하지 않습니다.")
@@ -224,12 +223,12 @@ public class ErdService {
 //                ErdTable fromTable = savedTables.stream()
 //                        .filter(t -> t.getName().equals(rel.getFromTable()))
 //                        .findFirst()
-//                        .orElseThrow(() -> new NotFoundException("fromTable not found"));
+//                        .orElseThrow(() -> new NotFoundException("from 테이블이 존재하지 않습니다."));
 //
 //                ErdTable toTable = savedTables.stream()
 //                        .filter(t -> t.getName().equals(rel.getToTable()))
 //                        .findFirst()
-//                        .orElseThrow(() -> new NotFoundException("toTable not found"));
+//                        .orElseThrow(() -> new NotFoundException("to 테이블이 존재하지 않습니다."));
 //
 //                Optional<ErdColumn> optionalForeignColumn = erdColumnRepository.findByErdTableAndName(toTable, rel.getForeignKey());
 //                ErdColumn foreignErdColumn = null;
