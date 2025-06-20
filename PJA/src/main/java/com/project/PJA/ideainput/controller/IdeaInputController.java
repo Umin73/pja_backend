@@ -130,7 +130,7 @@ public class IdeaInputController {
         Long userId = user.getUserId();
         log.info("=== 아이디어 입력 수정 API 진입 == userId: {}", userId);
         
-        IdeaInputResponse ideaInputResponse = ideaInputService.updateIdeaInput(userId, workspaceId, ideaInputId, ideaInputRequest);
+        IdeaInputResponse ideaInputResponse = ideaInputService.updateIdeaInput(user, workspaceId, ideaInputId, ideaInputRequest);
 
         SuccessResponse<IdeaInputResponse> response = new SuccessResponse<>(
                 "success", "아이디어 입력을 성공적으로 수정했습니다.", ideaInputResponse

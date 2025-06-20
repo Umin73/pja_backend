@@ -66,7 +66,7 @@ public class ProjectInfoController {
         Long userId = user.getUserId();
         log.info("=== 프로젝트 정보 수정 API 진입 == userId: {}", userId);
         
-        ProjectInfoResponse projectInfo = projectInfoService.updateProjectInfo(userId, workspaceId, projectInfoId, projectInfoRequest);
+        ProjectInfoResponse projectInfo = projectInfoService.updateProjectInfo(user, workspaceId, projectInfoId, projectInfoRequest);
 
         SuccessResponse<ProjectInfoResponse> response = new SuccessResponse<>(
                 "success", "프로젝트 정보가 성공적으로 수정되었습니다.", projectInfo

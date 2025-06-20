@@ -19,6 +19,9 @@ import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,7 @@ public class InvitationService {
     private final InvitationRepository invitationRepository;
     private final EmailService emailService;
     private final WorkspaceService workspaceService;
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 워크스페이스 팀원 초대 메일 전송
     @Transactional
@@ -97,11 +101,11 @@ public class InvitationService {
 
     // 초대 수락
     @Transactional
-    public InvitationDecisionResponse acceptInvitation(Long userId, String token) {
+    public InvitationDecisionResponse acceptInvitation(Users user, String token) {
         Invitation foundInvitation = invitationRepository.findByToken(token)
                 .orElseThrow(() -> new BadRequestException("유효하지 않은 초대 토큰입니다."));
 
-        Users foundUser = userRepository.findById(userId)
+        Users foundUser = userRepository.findById(user.getUserId())
                 .orElseThrow(() -> new BadRequestException("사용자를 찾을 수 없습니다."));
 
         if(!foundInvitation.getInvitedEmail().equals(foundUser.getEmail())) {
@@ -129,6 +133,9 @@ public class InvitationService {
                 .workspaceRole(foundInvitation.getWorkspaceRole())
                 .build();
         workspaceMemberRepository.save(newWorkspaceMember);
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(foundUser, foundWorkspace.getWorkspaceId(), ActivityTargetType.MEMBER, ActivityActionType.JOIN);
 
         return new InvitationDecisionResponse(
                 foundWorkspace.getWorkspaceId(),
