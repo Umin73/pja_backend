@@ -144,16 +144,15 @@ public class ActionService {
 
     // 프로젝트 액션 AI 추천
     @Transactional(readOnly = true)
-    public ActionRecommendationJson recommendedActions(Users user, Long workspaceId, Long actionId) {
+    public ActionRecommendationJson recommendedActions(Users user, Long workspaceId, Long featureId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 추천받을 권한이 없습니다.");
 
-        Action action = actionRepository.findById(actionId)
-                .orElseThrow(() -> new NotFoundException("해당 액션을 찾을 수 없습니다."));
+        Feature feature = featureRepository.findById(featureId)
+                .orElseThrow(() -> new NotFoundException("해당 기능을 찾을 수 없습니다."));
 
-        Feature feature = action.getFeature();
         FeatureCategory category = feature.getCategory();
         List<Action> actionList = actionRepository.findActionsByFeature(feature);
 

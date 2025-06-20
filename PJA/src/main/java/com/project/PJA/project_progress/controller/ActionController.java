@@ -55,12 +55,12 @@ public class ActionController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PostMapping("/{workspaceId}/action/{actionId}/generation")
+    @PostMapping("/{workspaceId}/feature/{featureId}/generation")
     public ResponseEntity<SuccessResponse<?>> generateAiAction(@AuthenticationPrincipal Users user,
                                                                @PathVariable("workspaceId") Long workspaceId,
-                                                               @PathVariable("actionId") Long actionId) {
+                                                               @PathVariable("featureId") Long featureId) {
         log.info("== Action 추천받기 API 진입 ==");
-        ActionRecommendationJson data = actionService.recommendedActions(user, workspaceId, actionId);
+        ActionRecommendationJson data = actionService.recommendedActions(user, workspaceId, featureId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 추천되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
