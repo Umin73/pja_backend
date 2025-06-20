@@ -12,8 +12,6 @@ import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.enumeration.WorkspaceRole;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
-import com.project.PJA.workspace_activity.repository.WorkspaceActivityRepository;
-import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,8 +28,8 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
-    private final WorkspaceActivityRepository workspaceActivityRepository;
-    private final WorkspaceActivityService workspaceActivityService;
+    //private final WorkspaceActivityRepository workspaceActivityRepository;
+    //private final WorkspaceActivityService workspaceActivityService;
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
