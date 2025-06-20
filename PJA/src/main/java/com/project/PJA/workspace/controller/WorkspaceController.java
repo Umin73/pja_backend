@@ -104,6 +104,8 @@ public class WorkspaceController {
     public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateCompletionStatus(@AuthenticationPrincipal Users user,
                                                                                      @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
+        log.info("=== workspace 진행도 상태 완료 수정 API 진입 == userId: {}", userId);
+        
         WorkspaceResponse updatedWorkspace = workspaceService.updateCompletionStatus(userId, workspaceId);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -118,6 +120,8 @@ public class WorkspaceController {
     public ResponseEntity<SuccessResponse<WorkspaceResponse>> deleteWorkspace(@AuthenticationPrincipal Users user,
                                                                               @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
+        log.info("=== workspace 삭제 API 진입 == userId: {}", userId);
+        
         WorkspaceResponse deletedWorkspace = workspaceService.deleteWorkspace(userId, workspaceId);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
@@ -133,10 +137,28 @@ public class WorkspaceController {
                                                                                           @PathVariable Long workspaceId,
                                                                                           @RequestBody WorkspaceInviteRequest workspaceInviteRequest) {
         Long userId = user.getUserId();
+        log.info("=== workspace 팀원 초대 메일 전송 API 진입 == userId: {}", userId);
+        
         WorkspaceInviteResponse workspaceInviteResponse = invitationService.sendInvitation(userId, workspaceId, workspaceInviteRequest);
 
         SuccessResponse<WorkspaceInviteResponse> response = new SuccessResponse<>(
                 "success", "팀원 초대 이메일이 성공적으로 전송됐습니다.", workspaceInviteResponse
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 팀 탈퇴
+    @DeleteMapping("/{workspaceId}/leave")
+    public ResponseEntity<SuccessResponse<WorkspaceLeaveRequest>> leaveWorkspace(@AuthenticationPrincipal Users user,
+                                                                                 @PathVariable Long workspaceId) {
+        Long userId = user.getUserId();
+        log.info("=== workspace 팀 탈퇴 == userId: {}", userId);
+        
+        WorkspaceLeaveRequest leftWorkspace = workspaceService.leaveWorkspace(userId, workspaceId);
+
+        SuccessResponse<WorkspaceLeaveRequest> response = new SuccessResponse<>(
+                "success", "워크스페이스를 성공적으로 탈퇴했습니다.", leftWorkspace
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

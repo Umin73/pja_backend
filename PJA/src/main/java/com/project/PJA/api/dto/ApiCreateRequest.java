@@ -35,6 +35,6 @@ public class ApiCreateRequest {
         this.projectSummury = projectSummury;
         this.maxTokens = 4000;
         this.temperature = 0.3;
-        this.model = "gpt-4o-mini";
+        this.model = "gpt-4o";
     }
 }

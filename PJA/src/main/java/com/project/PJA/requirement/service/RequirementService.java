@@ -2,6 +2,7 @@ package com.project.PJA.requirement.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.ideainput.dto.IdeaInputRequest;
 import com.project.PJA.ideainput.dto.MainFunctionData;
@@ -14,9 +15,11 @@ import com.project.PJA.ideainput.repository.MainFunctionRepository;
 import com.project.PJA.ideainput.repository.TechStackRepository;
 import com.project.PJA.requirement.dto.*;
 import com.project.PJA.requirement.entity.Requirement;
+import com.project.PJA.requirement.enumeration.RequirementType;
 import com.project.PJA.requirement.repository.RequirementRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
@@ -71,7 +74,17 @@ public class RequirementService {
 
     // 요구사항 명세서 AI 생성 요청
     public List<RequirementRequest> recommendRequirement(Long userId, Long workspaceId, List<RequirementRequest> requests) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        if (foundWorkspace.getProgressStep() != ProgressStep.ZERO && foundWorkspace.getProgressStep() != ProgressStep.ONE) {
+            throw new BadRequestException("요구사항 단계가 지난 후에는 AI 추천을 받을 수 없습니다.");
+        }
+
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
+
+        // 요구사항 개수 확인
+        validateRequirementCounts(requests);
 
         // 아이디어 입력 정보 찾기
         IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
@@ -197,5 +210,28 @@ public class RequirementService {
                 foundRequirement.getRequirementType(),
                 foundRequirement.getContent()
         );
+    }
+
+    // 요구사항 명세서 개수 확인
+    public void validateRequirementCounts(List<RequirementRequest> requests) {
+        int functionalCount = 0;
+        int performanceCount = 0;
+
+        for (RequirementRequest request : requests) {
+            if (request.getRequirementType() == RequirementType.FUNCTIONAL) {
+                functionalCount++;
+            }
+            else if (request.getRequirementType() == RequirementType.PERFORMANCE){
+                performanceCount++;
+            }
+        }
+
+        if (functionalCount < 3) {
+            throw new BadRequestException("기능 요구사항을 3개 이상 입력해야 AI 추천이 가능합니다.");
+        }
+
+        if (performanceCount < 3) {
+            throw new BadRequestException("성능 요구사항을 3개 이상 입력해야 AI 추천이 가능합니다.");
+        }
     }
 }

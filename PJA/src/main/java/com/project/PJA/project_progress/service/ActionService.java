@@ -151,16 +151,15 @@ public class ActionService {
 
     // 프로젝트 액션 AI 추천
     @Transactional(readOnly = true)
-    public List<RecommendedAction> recommendedActions(Users user, Long workspaceId, Long actionId) {
+    public ActionRecommendationJson recommendedActions(Users user, Long workspaceId, Long featureId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션을 추천받을 권한이 없습니다.");
 
-        Action action = actionRepository.findById(actionId)
-                .orElseThrow(() -> new NotFoundException("해당 액션을 찾을 수 없습니다."));
+        Feature feature = featureRepository.findById(featureId)
+                .orElseThrow(() -> new NotFoundException("해당 기능을 찾을 수 없습니다."));
 
-        Feature feature = action.getFeature();
         FeatureCategory category = feature.getCategory();
         List<Action> actionList = actionRepository.findActionsByFeature(feature);
 
@@ -199,7 +198,7 @@ public class ActionService {
                 .project_list(projectDataJson)
                 .max_tokens(3000L)
                 .temperature(0.3)
-                .model("gpt-4o-mini")
+                .model("gpt-4o")
                 .build();
 
         String mlopsUrl = "http://3.34.185.3:8000/api/PJA/recommend/generate";
@@ -219,7 +218,7 @@ public class ActionService {
 
             log.info("body: {}", body.toString());
 
-            return body.getJson().getRecommendedActions();
+            return body.getJson();
 
         }  catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());

@@ -59,6 +59,10 @@ public class Workspace {
         this.isPublic = isPublic;
     }
 
+    public void updateOwner(Users user) {
+        this.user = user;
+    }
+
     public void updateProgressStep(ProgressStep progressStep) {
         this.progressStep = progressStep;
     }
