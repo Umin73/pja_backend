@@ -130,15 +130,15 @@ public class WorkspaceService {
     @Transactional
     public WorkspaceDetailResponse updateWorkspace(Users user, Long workspaceId, WorkspaceUpdateRequest request) {
         if (request.getProjectName() == null || request.getProjectName().trim().isEmpty()) {
-            throw new BadRequestException("프로젝트명은 필수입니다.");
+            throw new BadRequestException("프로젝트명을 입력해 주세요.");
         }
 
         if (request.getTeamName() == null || request.getTeamName().trim().isEmpty()) {
-            throw new BadRequestException("팀 이름은 필수입니다.");
+            throw new BadRequestException("팀 이름을 입력해 주세요.");
         }
 
         if (request.getIsPublic() == null) {
-            throw new BadRequestException("공개 여부는 필수입니다.");
+            throw new BadRequestException("공개 여부를 선택해 주세요.");
         }
 
         // 워크스페이스 찾기
