@@ -11,4 +11,5 @@ public class WorkspaceUpdateRequest {
     private String projectName;
     private String teamName;
     private Boolean isPublic;
+    private String githubUrl;
 }
