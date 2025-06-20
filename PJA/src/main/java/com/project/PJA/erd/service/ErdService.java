@@ -184,14 +184,9 @@ public class ErdService {
             log.info("erd ai 생성 요청(9)");
             log.info("생성됨: {}", body.getJson().getErdTables());
 
-            // DB 저장
-            Erd savedErd = erdRepository.save(
-                    Erd.builder()
-                        .workspaceId(workspaceId)
-                        .createdAt(LocalDateTime.now())
-                        .tables(new ArrayList<>()) // 이후에 추가
-                        .build());
-            log.info("erd ai 생성 요청(10)");
+            Erd savedErd = erdRepository.findByWorkspaceId(workspaceId).orElseThrow(
+                    () -> new NotFoundException("workspace에 ERD가 존재하지 않습니다.")
+            );
 
             Map<String, ErdTable> tableMap = new HashMap<>();
             List<ErdTable> savedTables = new ArrayList<>();
