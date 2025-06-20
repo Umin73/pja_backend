@@ -25,7 +25,7 @@ public class WorkspaceActivityController {
 
     private final WorkspaceActivityService workspaceActivityService;
 
-    @GetMapping("/{workspaceId}/workspace-activity}")
+    @GetMapping("/{workspaceId}/workspace-activity")
     ResponseEntity<SuccessResponse<?>> getWorkspaceActivity(@AuthenticationPrincipal Users user,
                                                             @PathVariable Long workspaceId) {
 
