@@ -6,7 +6,6 @@ import com.project.PJA.workspace_activity.dto.WorkspaceActivityResponseDto;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +25,7 @@ public class WorkspaceActivityController {
 
     private final WorkspaceActivityService workspaceActivityService;
 
-    @GetMapping("/{workspaceId/workspace-activity}")
+    @GetMapping("/{workspaceId}/workspace-activity")
     ResponseEntity<SuccessResponse<?>> getWorkspaceActivity(@AuthenticationPrincipal Users user,
                                                             @PathVariable Long workspaceId) {
 
