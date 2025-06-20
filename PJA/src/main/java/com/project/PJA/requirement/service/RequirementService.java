@@ -74,6 +74,12 @@ public class RequirementService {
 
     // 요구사항 명세서 AI 생성 요청
     public List<RequirementRequest> recommendRequirement(Long userId, Long workspaceId, List<RequirementRequest> requests) {
+        for (RequirementRequest request : requests) {
+            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                throw new BadRequestException("요구사항 내용을 입력해 주세요.");
+            }
+        }
+
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
