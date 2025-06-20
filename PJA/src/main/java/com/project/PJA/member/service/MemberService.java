@@ -97,7 +97,7 @@ public class MemberService {
         }
 
         // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(foundWorkspaceMember.getUser(), workspaceId, ActivityTargetType.ROLE, ActivityActionType.CHANGE);
+        workspaceActivityService.addWorkspaceActivity(targetMember.getUser(), workspaceId, ActivityTargetType.ROLE, ActivityActionType.CHANGE);
 
         return new MemberResponse(
                 targetMember.getUser().getUserId(),
