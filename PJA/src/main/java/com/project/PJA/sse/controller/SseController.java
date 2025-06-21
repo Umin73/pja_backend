@@ -25,7 +25,7 @@ public class SseController {
 
 
     @GetMapping("/{workspaceId}/noti/subscribe")
-    public ResponseEntity<SuccessResponse<?>> subscribe(@AuthenticationPrincipal Users user,
+    public SseEmitter subscribe(@AuthenticationPrincipal Users user,
                                                      @PathVariable("workspaceId") Long workspaceId) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간 동안 SSE 연결
 
@@ -44,7 +44,6 @@ public class SseController {
             throw new RuntimeException("SSE 연결 오류가 발생했습니다.", e);
         }
 
-        SuccessResponse<?> response = new SuccessResponse<>("success", "SSE 연결에 성공했습니다.", emitter);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return emitter;
     }
 }
