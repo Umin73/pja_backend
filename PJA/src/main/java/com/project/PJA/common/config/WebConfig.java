@@ -22,8 +22,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true);
 
-        registry.addMapping("/api/workspaces/**/noti/subscribe")
-                .allowedOrigins("http://localhost:5173")
+        registry.addMapping("/api/workspaces/*/noti/subscribe")
+                .allowedOrigins("https://localhost:5173")
                 .allowedMethods("GET")
                 .allowedHeaders("*")
                 .allowCredentials(false);
