@@ -6,18 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-<<<<<<<< HEAD:PJA/src/main/java/com/project/PJA/projectinfo/dto/AiProjectSummaryData.java
-public class AiProjectSummaryData {
-========
 public class ProjectInfoData {
->>>>>>>> develop:PJA/src/main/java/com/project/PJA/projectinfo/dto/ProjectInfoData.java
     @JsonProperty("title")
     private String title;
 
