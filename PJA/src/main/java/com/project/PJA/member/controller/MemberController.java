@@ -15,12 +15,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/workspace")
+@RequestMapping("/api/workspaces")
 public class MemberController {
     private final MemberService memberService;
     
     // 팀원 전체 조회
-    @GetMapping("/{workspaceId}/member")
+    @GetMapping("/{workspaceId}/members")
     public ResponseEntity<SuccessResponse<List<MemberResponse>>> getMembers(@AuthenticationPrincipal Users user,
                                                                             @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
@@ -34,12 +34,12 @@ public class MemberController {
     }
     
     // 팀원 역할 변경
-    @PutMapping("/{workspaceId}/member")
+    @PutMapping("/{workspaceId}/members")
     public ResponseEntity<SuccessResponse<MemberResponse>> updateMember(@AuthenticationPrincipal Users user,
                                                                         @PathVariable Long workspaceId,
                                                                         @RequestBody MemberRequest memberRequest) {
         Long userId = user.getUserId();
-        MemberResponse memberResponse = memberService.updateMember(userId, workspaceId, memberRequest);
+        MemberResponse memberResponse = memberService.updateMember(user.getUserId(), workspaceId, memberRequest);
 
         SuccessResponse<MemberResponse> response = new SuccessResponse<>(
                 "success", "해당 워크스페이스의 멤버의 역할이 성공적으로 수정되었습니다.", memberResponse
@@ -49,7 +49,7 @@ public class MemberController {
     }
 
     // 팀원 삭제
-    @DeleteMapping("/{workspaceId}/member/{memberId}")
+    @DeleteMapping("/{workspaceId}/members/{memberId}")
     public ResponseEntity<SuccessResponse<MemberResponse>> deleteMember(@AuthenticationPrincipal Users user,
                                                                         @PathVariable Long workspaceId,
                                                                         @PathVariable Long memberId) {

@@ -1,16 +1,16 @@
 package com.project.PJA.erd.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "erd_Table")
 public class ErdTable {
@@ -27,12 +27,15 @@ public class ErdTable {
     @JoinColumn(name = "erd_id", nullable = false)
     private Erd erd; // 해당 테이블이 속한 ERD
 
+    @Builder.Default
     @OneToMany(mappedBy = "erdTable", cascade = CascadeType.ALL)
     private List<ErdColumn> columns = new ArrayList<>(); // 해당 테이블의 컬럼 리스트
 
+    @Builder.Default
     @OneToMany(mappedBy = "fromTable")
     private List<ErdRelationships> fromRelationships = new ArrayList<>(); // 이 테이블이 from(출발지?)인 관계들
 
+    @Builder.Default
     @OneToMany(mappedBy = "toTable")
     private List<ErdRelationships> toRelationships = new ArrayList<>(); // 이 테이블이 to(도착지?)인 관계들
 }

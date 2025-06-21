@@ -14,6 +14,7 @@ public class MemberResponse {
     private Long memberId;
     private String name;
     private String email;
+    private String profile;
     private WorkspaceRole workspaceRole;
     private LocalDateTime joinedAt;
 }

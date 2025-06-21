@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
+//@EnableScheduling
 @SpringBootApplication
 @EntityScan(basePackages = "com.project.PJA")
 public class PjaApplication {

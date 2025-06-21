@@ -18,9 +18,9 @@ public class InvitationController {
     private final InvitationService invitationService;
 
     // 초대 링크 정보 조회
-    @GetMapping("/{token}")
+    @GetMapping
     public ResponseEntity<SuccessResponse<InvitationInfoResponse>> getInvitationInfo(@AuthenticationPrincipal Users user,
-                                            @PathVariable String token) {
+                                                                                     @RequestParam String token) {
         Long userId = user.getUserId();
         InvitationInfoResponse invitationInfo = invitationService.getInvitationInfo(userId, token);
 
@@ -36,7 +36,7 @@ public class InvitationController {
     public ResponseEntity<SuccessResponse<InvitationDecisionResponse>> acceptInvitation(@AuthenticationPrincipal Users user,
                                                                                         @PathVariable String token) {
         Long userId = user.getUserId();
-        InvitationDecisionResponse acceptInvitation = invitationService.acceptInvitation(userId, token);
+        InvitationDecisionResponse acceptInvitation = invitationService.acceptInvitation(user, token);
 
         SuccessResponse<InvitationDecisionResponse> response = new SuccessResponse<>(
                 "success", "초대를 성공적으로 수락하였습니다.", acceptInvitation

@@ -1,6 +1,5 @@
 services:
   my-server:
-    build: .
     ports:
       - 8080:8080
     depends_on:
@@ -12,6 +11,10 @@ services:
       - .env
     volumes:
       - ./uploads:/app/uploads
+      - ./shared_logs:/app/shared_logs
+    environment:
+      LOG_PATH: /app/shared_logs/user-actions.json
+      ML_API_PATH: ${ML_PATH}/api/PJA/stats/generate
 
   my-db:
     image: postgres:15
@@ -24,7 +27,7 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
       interval: 5s
       retries: 10
 

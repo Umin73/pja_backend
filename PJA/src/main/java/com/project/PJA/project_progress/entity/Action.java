@@ -1,10 +1,12 @@
 package com.project.PJA.project_progress.entity;
 
-import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.entity.Workspace;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -24,6 +26,11 @@ public class Action {
     @Column(name = "action_id")
     private Long actionId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workspace_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Workspace workspace; // 워크스페이스
+
     private String name; // 이름
 
     @Column(name = "start_date")
@@ -35,7 +42,7 @@ public class Action {
     @Enumerated(EnumType.STRING)
     private Progress state; //상태
 
-    @Min(1)
+    @Min(0)
     @Max(5)
     @Column(nullable = false)
     private Integer importance; // 중요도
@@ -47,16 +54,12 @@ public class Action {
     private Boolean hasTest; // 테스트 여부
 
     @Builder.Default
-    @ManyToMany
-    @JoinTable(
-            name = "action_participant",
-            joinColumns = @JoinColumn(name = "action_id"),
-            inverseJoinColumns = @JoinColumn(name = "workspace_member_id")
-    )
-    private Set<WorkspaceMember> participants = new HashSet<>(); // 참여자(워크스페이스 멤버로만 한정)
+    @OneToMany(mappedBy = "action", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ActionParticipant> participants = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "feature_id")
+    @JoinColumn(name = "feature_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Feature feature;
 
     @OneToOne(mappedBy ="action", cascade = CascadeType.ALL, orphanRemoval = true)

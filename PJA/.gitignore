@@ -17,10 +17,6 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-# Do not commit local environment config
-application-*.properties
-src/main/resources/application-dev.properties
-
 ### IntelliJ IDEA ###
 .idea\
 .idea
@@ -41,7 +37,6 @@ out/
 ### VS Code ###
 .vscode/
 
-
 ### .env 파일
 .env
 
@@ -50,3 +45,7 @@ postgres_data/
 
 ### User uploads
 uploads/
+
+### elasticsearch data
+esdata/
+shared_logs/

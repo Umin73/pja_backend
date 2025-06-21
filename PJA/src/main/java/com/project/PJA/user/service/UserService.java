@@ -210,12 +210,14 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserName(Users user, String newName) {
+    public String updateUserName(Users user, String newName) {
         if(user == null) {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
         user.setName(newName);
         userRepository.save(user);
+
+        return user.getUsername();
     }
 
     @Transactional
@@ -290,7 +292,7 @@ public class UserService {
             Files.deleteIfExists(fullPath);
         }
 
-        String newImagePath = fileStorageService.storeFile(file, user.getUserId());
+        String newImagePath = fileStorageService.storeFile(file, "user",user.getUserId());
         user.setProfileImage(newImagePath);
     }
 

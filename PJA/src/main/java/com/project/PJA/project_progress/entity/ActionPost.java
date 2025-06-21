@@ -1,10 +1,10 @@
 package com.project.PJA.project_progress.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +12,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @Entity
 @Table(name = "action_post")
 public class ActionPost {
@@ -21,13 +23,20 @@ public class ActionPost {
     @Column(name = "action_post_id")
     private Long actionPostId;
 
-    @Lob
-    private String content;
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content = "";
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_id", unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Action action;
 
+    @Builder.Default
     @OneToMany(mappedBy = "actionPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ActionComment> comments = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "actionPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ActionPostFile> actionPostFiles = new ArrayList<>();
 }

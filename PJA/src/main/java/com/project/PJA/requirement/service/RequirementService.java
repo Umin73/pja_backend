@@ -1,31 +1,55 @@
 package com.project.PJA.requirement.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.requirement.dto.RequirementContentRequest;
-import com.project.PJA.requirement.dto.RequirementRequest;
-import com.project.PJA.requirement.dto.RequirementResponse;
+import com.project.PJA.ideainput.dto.IdeaInputRequest;
+import com.project.PJA.ideainput.dto.MainFunctionData;
+import com.project.PJA.ideainput.dto.TechStackData;
+import com.project.PJA.ideainput.entity.IdeaInput;
+import com.project.PJA.ideainput.entity.MainFunction;
+import com.project.PJA.ideainput.entity.TechStack;
+import com.project.PJA.ideainput.repository.IdeaInputRepository;
+import com.project.PJA.ideainput.repository.MainFunctionRepository;
+import com.project.PJA.ideainput.repository.TechStackRepository;
+import com.project.PJA.requirement.dto.*;
 import com.project.PJA.requirement.entity.Requirement;
+import com.project.PJA.requirement.enumeration.RequirementType;
 import com.project.PJA.requirement.repository.RequirementRepository;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RequirementService {
     private final RequirementRepository requirementRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final IdeaInputRepository ideaInputRepository;
+    private final MainFunctionRepository mainFunctionRepository;
+    private final TechStackRepository techStackRepository;
     private final WorkspaceService workspaceService;
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 요구사항 명세서 조회
     @Transactional(readOnly = true)
@@ -48,92 +72,89 @@ public class RequirementService {
                 .collect(Collectors.toList());
     }
 
-    // 요구사항 명세서 ai 생성 요청
-    /*public RequirementResponse generateRequirement(Long userId, Long workspaceId, List<RequirementRequest> requirement) {
-        // 워크스페이스 확인
+    // 요구사항 명세서 AI 생성 요청
+    public List<RequirementRequest> recommendRequirement(Long userId, Long workspaceId, List<RequirementRequest> requests) {
+        // 요구사항 개수 확인
+        validateRequirements(requests);
+
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 사용자 확인
-        if(!foundWorkspace.getUser().getUserId().equals(userId)) {
-            throw new ForbiddenException("아이디어 요약을 요청할 권한이 없습니다.");
+        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
+            throw new BadRequestException("AI 추천을 받기 위해서는 아이디어 입력이 먼저 필요합니다.");
+        } else if (foundWorkspace.getProgressStep() != ProgressStep.ONE) {
+            throw new BadRequestException("요구사항 작성 단계가 완료되어 AI 추천을 더 이상 받을 수 없습니다.");
         }
 
-        // MLOps URL 설정
-        String mlopsUrl = "http://{mlops-domain.com}/mlops/models/requirement/generate";
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
+
+        // 아이디어 입력 정보 찾기
+        IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+        List<MainFunction> foundMainFunctions = mainFunctionRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
+        List<TechStack> foundTechStacks = techStackRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
+
+        List<MainFunctionData> mainFunctionDataList = foundMainFunctions.stream()
+                .map(mainFunction -> new MainFunctionData(
+                        mainFunction.getMainFunctionId(),
+                        mainFunction.getContent()
+                ))
+                .collect(Collectors.toList());
+
+        List<TechStackData> techStackDataList = foundTechStacks.stream()
+                .map(techStack -> new TechStackData(
+                        techStack.getTechStackId(),
+                        techStack.getContent()
+                ))
+                .collect(Collectors.toList());
+
+        IdeaInputRequest ideaInputRequest = new IdeaInputRequest(
+                foundIdeaInput.getProjectName(),
+                foundIdeaInput.getProjectTarget(),
+                mainFunctionDataList,
+                techStackDataList,
+                foundIdeaInput.getProjectDescription()
+        );
+
+        String projectOverviewJson;
+        String existingRequirementsJson;
 
         try {
-            ResponseEntity<RequirementRequest> response = restTemplate.postForEntity(
+            projectOverviewJson = objectMapper.writeValueAsString(ideaInputRequest);
+            existingRequirementsJson = objectMapper.writeValueAsString(requests);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        String mlopsUrl = "http://3.34.185.3:8000/api/PJA/requirements/generate";
+
+        RequirementRecommendationRequest recommendationRequest = RequirementRecommendationRequest.builder()
+                .projectOverview(projectOverviewJson)
+                .existingRequirements(existingRequirementsJson)
+                .build();
+
+        try {
+            ResponseEntity<RequirementRecommendationResponse> response = restTemplate.postForEntity(
                     mlopsUrl,
-                    projectInfo,
-                    RequirementRequest.class);
+                    recommendationRequest,
+                    RequirementRecommendationResponse.class);
 
-            AiProjectSummary body = response.getBody();
-            AiProjectSummaryData data = body.getAiProjectSummaryData();
-            AiProblemSolving aiProblemSolving = data.getProblemSolving();
-            ProblemSolving converted = ProblemSolving.builder()
-                    .currentProblem(aiProblemSolving.getCurrentProblem())
-                    .solutionIdea(aiProblemSolving.getSolutionIdea())
-                    .expectedBenefits(aiProblemSolving.getExpectedBenefits())
-                    .build();
+            RequirementRecommendationResponse body = response.getBody();
 
-
-            return new ProjectSummaryRequest(
-                    data.getTitle(),
-                    data.getCategory(),
-                    data.getTargetUsers(),
-                    data.getCoreFeatures(),
-                    data.getTechnologyStack(),
-                    converted
-            );
+            return body.getRequirements();
         }
         catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         }
-    }*/
-
-    // 요구사항 명세서 저장
-    @Transactional
-    public List<RequirementResponse> saveRequirement(Long userId, Long workspaceId, List<RequirementRequest> requirementRequests) {
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        // 오너인지 확인(이거 id로 안 받고 workspace로 받아야 겠다)
-        workspaceService.authorizeOwnerOrThrow(userId, workspaceId, "이 워크스페이스에 저장할 권한이 없습니다.");
-
-        List<RequirementResponse> requirementResponses = new ArrayList<>();
-
-        for (RequirementRequest request : requirementRequests) {
-            if (request.getRequirementType() == null) {
-                throw new BadRequestException("요구사항 타입이 비어있습니다.");
-            }
-            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-                throw new BadRequestException("요구사항 내용이 비어있습니다.");
-            }
-
-            Requirement savedRequirement = requirementRepository.save(Requirement.builder()
-                    .workspace(foundWorkspace)
-                    .requirementType(request.getRequirementType())
-                    .content(request.getContent())
-                    .build());
-
-            requirementResponses.add(new RequirementResponse(
-                    savedRequirement.getRequirementId(),
-                    savedRequirement.getRequirementType(),
-                    savedRequirement.getContent()
-            ));
-        }
-
-        return requirementResponses;
     }
 
     // 요구사항 명세서 생성
     @Transactional
-    public RequirementResponse createRequirement(Long userId, Long workspaceId, RequirementRequest requirementRequest) {
+    public RequirementResponse createRequirement(Users user, Long workspaceId, RequirementRequest requirementRequest) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
         Requirement createdRequirement = requirementRepository.save(
                 Requirement.builder()
@@ -142,6 +163,9 @@ public class RequirementService {
                         .content(requirementRequest.getContent())
                         .build()
         );
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.REQUIREMENT, ActivityActionType.CREATE);
 
         return new RequirementResponse(
                 createdRequirement.getRequirementId(),
@@ -152,13 +176,16 @@ public class RequirementService {
 
     // 요구사항 명세서 수정
     @Transactional
-    public RequirementResponse updateRequirement(Long userId, Long workspaceId, Long requirementId, RequirementContentRequest requirementContentRequest) {
+    public RequirementResponse updateRequirement(Users user, Long workspaceId, Long requirementId, RequirementContentRequest requirementContentRequest) {
         Requirement foundRequirement = requirementRepository.findById(requirementId)
                 .orElseThrow(() -> new NotFoundException("요청하신 요구사항을 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         foundRequirement.update(requirementContentRequest.getContent());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.REQUIREMENT, ActivityActionType.UPDATE);
 
         return new RequirementResponse(
                 foundRequirement.getRequirementId(),
@@ -169,18 +196,47 @@ public class RequirementService {
 
     // 요구사항 명세서 삭제
     @Transactional
-    public RequirementResponse deleteRequirement(Long userId, Long workspaceId, Long requirementId) {
+    public RequirementResponse deleteRequirement(Users user, Long workspaceId, Long requirementId) {
         Requirement foundRequirement = requirementRepository.findById(requirementId)
                 .orElseThrow(() -> new NotFoundException("요청하신 요구사항을 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
 
         requirementRepository.delete(foundRequirement);
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.REQUIREMENT, ActivityActionType.DELETE);
 
         return new RequirementResponse(
                 foundRequirement.getRequirementId(),
                 foundRequirement.getRequirementType(),
                 foundRequirement.getContent()
         );
+    }
+
+    // 요구사항 명세서 개수 확인
+    public void validateRequirements(List<RequirementRequest> requests) {
+        int functionalCount = 0;
+        int performanceCount = 0;
+
+        for (RequirementRequest request : requests) {
+            if (request.getContent() == null || request.getContent().trim().isEmpty()) {
+                throw new BadRequestException("요구사항 내용을 입력해 주세요.");
+            }
+            if (request.getRequirementType() == RequirementType.FUNCTIONAL) {
+                functionalCount++;
+            }
+            else if (request.getRequirementType() == RequirementType.PERFORMANCE){
+                performanceCount++;
+            }
+        }
+
+        if (functionalCount < 3) {
+            throw new BadRequestException("기능 요구사항은 최소 3개 이상 입력해야 합니다.");
+        }
+
+        if (performanceCount < 3) {
+            throw new BadRequestException("성능 요구사항은 최소 3개 이상 입력해야 합니다.");
+        }
     }
 }

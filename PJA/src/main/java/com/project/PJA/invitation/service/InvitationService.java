@@ -18,7 +18,12 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
+import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvitationService {
@@ -35,24 +41,31 @@ public class InvitationService {
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final InvitationRepository invitationRepository;
     private final EmailService emailService;
+    private final WorkspaceService workspaceService;
+    private final WorkspaceActivityService workspaceActivityService;
 
     // 워크스페이스 팀원 초대 메일 전송
     @Transactional
     public WorkspaceInviteResponse sendInvitation(Long userId, Long workspaceId, WorkspaceInviteRequest request) {
+        if (request.getEmails() == null || request.getEmails().isEmpty()) {
+            throw new BadRequestException("초대할 이메일 주소를 한 개 이상 입력해 주세요.");
+        }
+
+        if (request.getRole() == null) {
+            throw new BadRequestException("초대할 팀원의 역할을 선택해 주세요.");
+        }
+
         // 워크스페이스 조회
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        if(foundWorkspace.getUser().getUserId() != userId) {
-            throw new ForbiddenException("워크스페이스에 팀원을 초대할 권한이 없습니다.");
-        }
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "워크스페이스에 팀원을 초대할 권한이 없습니다.");
 
         List<Invitation> invitations = request.getEmails().stream()
                 .map(email -> Invitation.builder()
                         .workspace(foundWorkspace)
                         .invitedEmail(email)
-                        .workspaceRole(request.getWorkspaceRole())
+                        .workspaceRole(request.getRole())
                         .token(UUID.randomUUID().toString())
                         .build())
                 .collect(Collectors.toList());
@@ -60,11 +73,15 @@ public class InvitationService {
         invitationRepository.saveAll(invitations);
 
         for (Invitation invitation : invitations) {
-            String inviteUrl = "http://{front-domain.com}/invite?token=" + invitation.getToken();
-            emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
+            try {
+                String inviteUrl = "https://localhost:5173/invite?token=" + invitation.getToken();
+                emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
+            } catch (Exception e) {
+                log.error("초대 이메일 전송 실패: {}", invitation.getInvitedEmail(), e);
+            }
         }
 
-        return new WorkspaceInviteResponse(request.getEmails(), request.getWorkspaceRole());
+        return new WorkspaceInviteResponse(request.getEmails(), request.getRole());
     }
 
     // 초대 링크 정보 조회
@@ -98,11 +115,11 @@ public class InvitationService {
 
     // 초대 수락
     @Transactional
-    public InvitationDecisionResponse acceptInvitation(Long userId, String token) {
+    public InvitationDecisionResponse acceptInvitation(Users user, String token) {
         Invitation foundInvitation = invitationRepository.findByToken(token)
                 .orElseThrow(() -> new BadRequestException("유효하지 않은 초대 토큰입니다."));
 
-        Users foundUser = userRepository.findById(userId)
+        Users foundUser = userRepository.findById(user.getUserId())
                 .orElseThrow(() -> new BadRequestException("사용자를 찾을 수 없습니다."));
 
         if(!foundInvitation.getInvitedEmail().equals(foundUser.getEmail())) {
@@ -130,6 +147,9 @@ public class InvitationService {
                 .workspaceRole(foundInvitation.getWorkspaceRole())
                 .build();
         workspaceMemberRepository.save(newWorkspaceMember);
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(foundUser, foundWorkspace.getWorkspaceId(), ActivityTargetType.MEMBER, ActivityActionType.JOIN);
 
         return new InvitationDecisionResponse(
                 foundWorkspace.getWorkspaceId(),

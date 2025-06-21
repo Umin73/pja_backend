@@ -1,10 +1,11 @@
 package com.project.PJA.project_progress.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.project.PJA.user.entity.Users;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
+
 @Table(name = "action_comment")
 public class ActionComment {
 
@@ -22,7 +24,7 @@ public class ActionComment {
     @Column(name = "action_comment_id")
     private Long actionCommentId;
 
-    @Lob
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,7 +32,9 @@ public class ActionComment {
     private Users user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "action_post_id")
+    @JoinColumn(name = "action_post_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonBackReference
     private ActionPost actionPost;
 
     @Column(name = "updated_at")
