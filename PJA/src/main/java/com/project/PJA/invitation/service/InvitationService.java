@@ -23,6 +23,7 @@ import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
 import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InvitationService {
@@ -45,6 +47,14 @@ public class InvitationService {
     // 워크스페이스 팀원 초대 메일 전송
     @Transactional
     public WorkspaceInviteResponse sendInvitation(Long userId, Long workspaceId, WorkspaceInviteRequest request) {
+        if (request.getEmails() == null || request.getEmails().isEmpty()) {
+            throw new BadRequestException("초대할 이메일 주소를 한 개 이상 입력해 주세요.");
+        }
+
+        if (request.getRole() == null) {
+            throw new BadRequestException("초대할 팀원의 역할을 선택해 주세요.");
+        }
+
         // 워크스페이스 조회
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -63,8 +73,12 @@ public class InvitationService {
         invitationRepository.saveAll(invitations);
 
         for (Invitation invitation : invitations) {
-            String inviteUrl = "https://localhost:5173/invite?token=" + invitation.getToken();
-            emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
+            try {
+                String inviteUrl = "https://localhost:5173/invite?token=" + invitation.getToken();
+                emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
+            } catch (Exception e) {
+                log.error("초대 이메일 전송 실패: {}", invitation.getInvitedEmail(), e);
+            }
         }
 
         return new WorkspaceInviteResponse(request.getEmails(), request.getRole());
