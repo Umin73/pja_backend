@@ -48,6 +48,7 @@ public class MemberService {
                         member.getUser().getUserId(),
                         member.getUser().getName(),
                         member.getUser().getEmail(),
+                        member.getUser().getProfileImage(),
                         member.getWorkspaceRole(),
                         member.getJoinedAt()
                 ))
@@ -103,6 +104,7 @@ public class MemberService {
                 targetMember.getUser().getUserId(),
                 targetMember.getUser().getName(),
                 targetMember.getUser().getEmail(),
+                targetMember.getUser().getProfileImage(),
                 memberRequest.getWorkspaceRole(),
                 targetMember.getJoinedAt()
         );
@@ -128,6 +130,7 @@ public class MemberService {
                 foundWorkspaceMember.getUser().getUserId(),
                 foundWorkspaceMember.getUser().getName(),
                 foundWorkspaceMember.getUser().getEmail(),
+                foundWorkspaceMember.getUser().getProfileImage(),
                 foundWorkspaceMember.getWorkspaceRole(),
                 foundWorkspaceMember.getJoinedAt()
         );
