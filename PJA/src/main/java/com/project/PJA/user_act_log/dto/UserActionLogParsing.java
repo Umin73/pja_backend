@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserActionLogParsing {
     private String event;
-    private String userId;
+    private Long userId;
     private String username;
     private String timestamp;
     private Long workspaceId;

@@ -1,6 +1,9 @@
 package com.project.PJA.user_act_log.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.actionAnalysis.service.ActionAnalysisSaveService;
+import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.user_act_log.dto.UserActionLog;
 import com.project.PJA.user_act_log.dto.UserActionLogParsing;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class LogSenderService {
 
+    private final UserRepository userRepository;
     @Value("${ml.api.url}")
     private String mlApiUrl;
 
@@ -34,6 +38,7 @@ public class LogSenderService {
     private String logFilePath;
 
     private final RestTemplate restTemplate;
+    private final ActionAnalysisSaveService analysisSaveService;
 
     public void sendLogsFromFile() {
         try {
@@ -55,6 +60,11 @@ public class LogSenderService {
                     .filter(Objects::nonNull)
                     .toList();
 
+            if (logs.isEmpty()) {
+                log.info("전송할 유저 액션 로그가 없습니다.");
+                return;
+            }
+
             // logs 리스트를 JSON 문자열로 변환 (JSON array)
             String logJsonArrayString = objectMapper.writeValueAsString(logs);
 
@@ -68,6 +78,13 @@ public class LogSenderService {
             ResponseEntity<String> response = restTemplate.postForEntity(mlApiUrl, request, String.class);
             log.info("User Action 로그 전송 완료: {}", response.getStatusCode());
             log.info("응답 내용: {}", response.getBody());
+
+            // 분석 결과 DB에 저장
+            UserActionLogParsing firstLog = logs.get(0);
+            Long workspaceId = firstLog.getWorkspaceId();
+
+            analysisSaveService.saveAnalysisResult(response.getBody(), workspaceId);
+
         } catch (IOException e) {
             log.error("User Action 로그 파일 읽기 실패", e);
         } catch (Exception e) {
