@@ -89,4 +89,14 @@ public class JwtTokenProvider {
         }
         return null;
     }
+
+    public Long getUserIdFromToken(String token) {
+        try {
+            String uid = getUid(token);
+            return Long.parseLong(uid);
+        } catch (NumberFormatException e) {
+            log.warn("UID를 Long으로 변환하는 데 실패했습니다: {}", e.getMessage());
+            throw new IllegalArgumentException("잘못된 토큰 형식입니다.");
+        }
+    }
 }
