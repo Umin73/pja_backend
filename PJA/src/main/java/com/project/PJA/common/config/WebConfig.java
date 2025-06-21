@@ -21,12 +21,6 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("*") // 모든 메서드 허용
                 .allowedHeaders("*")
                 .allowCredentials(true);
-
-        registry.addMapping("/api/workspaces/**/noti/subscribe")
-                .allowedOrigins("http://localhost:5173")
-                .allowedMethods("GET")
-                .allowedHeaders("*")
-                .allowCredentials(false);
     }
 
     @Override
