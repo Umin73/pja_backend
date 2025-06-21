@@ -24,6 +24,7 @@ import com.project.PJA.requirement.entity.Requirement;
 import com.project.PJA.requirement.repository.RequirementRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
@@ -83,12 +84,22 @@ public class ApiService {
     public List<ApiResponse> generateApiSpecByAI(Long userId, Long workspaceId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
+            throw new BadRequestException("AI 생성을 진행하려면 먼저 아이디어를 입력해 주세요.");
+        } else if (foundWorkspace.getProgressStep() == ProgressStep.ONE) {
+            throw new BadRequestException("AI 생성을 진행하려면 먼저 요구사항을 입력해 주세요.");
+        } else if (foundWorkspace.getProgressStep() == ProgressStep.TWO) {
+            throw new BadRequestException("AI 생성을 진행하려면 먼저 프로젝트 정보를 입력해 주세요.");
+        } else if (foundWorkspace.getProgressStep() != ProgressStep.THREE) {
+            throw new BadRequestException("이미 API가 생성되어 AI 생성을 다시 진행할 수 없습니다.");
+        }
+
         if (apiRepository.existsByWorkspace_WorkspaceId(workspaceId)) {
             throw new BadRequestException("이미 해당 워크스페이스에 API 명세서가 존재합니다.");
         }
-
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 아이디어 입력 찾기
         IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
@@ -196,6 +207,8 @@ public class ApiService {
                     .collect(Collectors.toList());
 
             List<Api> savedApis = apiRepository.saveAll(apiEntities);
+
+            //foundWorkspace.updateProgressStep(ProgressStep.FOUR);
 
             return savedApis.stream()
                     .map(api -> new ApiResponse(
