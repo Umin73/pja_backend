@@ -17,6 +17,9 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -45,6 +48,7 @@ public class ActionService {
     private final UserActionLogService userActionLogService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final WorkspaceActivityService workspaceActivityService;
 
     @Transactional(readOnly = true)
     public List<OnlyActionResponseDto> readActionList(Users user, Long workspaceId) {
@@ -138,6 +142,9 @@ public class ActionService {
                                 .collect(Collectors.toList())
                 )
         );
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.CREATE);
 
         return action.getActionId();
     }
@@ -294,6 +301,9 @@ public class ActionService {
             );
         }
 
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.UPDATE);
+
         return Map.of("actionId", actionId, "actionPostId", action.getActionPost().getActionPostId());
     }
 
@@ -308,6 +318,9 @@ public class ActionService {
         validateFeatureHierarchy(workspaceId, categoryId, featureId, feature);
 
         actionRepository.delete(action);
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.DELETE);
 
         // 액션 삭제 시 -> 유저 행동 로그 데이터 남김
         userActionLogService.log(

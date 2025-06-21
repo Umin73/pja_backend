@@ -22,9 +22,13 @@ import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.requirement.dto.RequirementResponse;
 import com.project.PJA.requirement.entity.Requirement;
 import com.project.PJA.requirement.repository.RequirementRepository;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +53,7 @@ public class ApiService {
     private final WorkspaceService workspaceService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final RestTemplate restTemplate;
+    private final WorkspaceActivityService workspaceActivityService;
 
     // api 명세서 조회
     @Transactional(readOnly = true)
@@ -217,11 +222,11 @@ public class ApiService {
 
     // api 생성
     @Transactional
-    public ApiResponse createApi(Long userId, Long workspaceId, ApiRequest apiRequest) {
+    public ApiResponse createApi(Users user, Long workspaceId, ApiRequest apiRequest) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
         Api createdApi = apiRepository.save(
                 Api.builder()
@@ -234,6 +239,9 @@ public class ApiService {
                         .response(apiRequest.getResponse())
                         .build()
         );
+
+        // 워크스페이스 최근 활동 데이터 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.CREATE);
 
         return new ApiResponse(
                 createdApi.getApiId(),
@@ -248,11 +256,11 @@ public class ApiService {
 
     // api 수정
     @Transactional
-    public ApiResponse updateApi(Long userId, Long workspaceId, Long apiId, ApiRequest apiRequest) {
+    public ApiResponse updateApi(Users user, Long workspaceId, Long apiId, ApiRequest apiRequest) {
         Api foundApi = apiRepository.findById(apiId)
                 .orElseThrow(() -> new NotFoundException("요청하신 API를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
         foundApi.update(
                 apiRequest.getTitle(),
@@ -261,6 +269,10 @@ public class ApiService {
                 apiRequest.getHttpMethod(),
                 apiRequest.getRequest(),
                 apiRequest.getResponse());
+
+        // 워크스페이스 최근 활동 데이터 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.UPDATE);
+
 
         return new ApiResponse(
                 foundApi.getApiId(),
@@ -275,13 +287,17 @@ public class ApiService {
 
     // api 삭제
     @Transactional
-    public ApiResponse deleteApi(Long userId, Long workspaceId, Long apiId) {
+    public ApiResponse deleteApi(Users user, Long workspaceId, Long apiId) {
         Api foundApi = apiRepository.findById(apiId)
                 .orElseThrow(() -> new NotFoundException("요청하신 API를 찾을 수 없습니다."));
 
-        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 삭제할 권한이 없습니다.");
 
         apiRepository.delete(foundApi);
+
+        // 워크스페이스 최근 활동 데이터 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.UPDATE);
+
 
         return new ApiResponse(
                 foundApi.getApiId(),

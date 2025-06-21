@@ -40,12 +40,12 @@ public class WorkspaceController {
 
     // 워크스페이스 단일 조회
     @GetMapping("/{workspaceId}")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> getWorkspace(@AuthenticationPrincipal Users user,
-                                                                           @PathVariable Long workspaceId) {
+    public ResponseEntity<SuccessResponse<WorkspaceDetailResponse>> getWorkspace(@AuthenticationPrincipal Users user,
+                                                                                 @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
-        WorkspaceResponse workspace = workspaceService.getWorkspace(userId, workspaceId);
+        WorkspaceDetailResponse workspace = workspaceService.getWorkspace(userId, workspaceId);
 
-        SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
+        SuccessResponse<WorkspaceDetailResponse> response = new SuccessResponse<>(
                 "success","워크스페이스 정보를 성공적으로 조회했습니다.", workspace
         );
 
@@ -67,15 +67,15 @@ public class WorkspaceController {
     
     // 워크스페이스 수정
     @PutMapping("/{workspaceId}")
-    public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspace(@AuthenticationPrincipal Users user,
-                                                                              @PathVariable Long workspaceId,
-                                                                              @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
+    public ResponseEntity<SuccessResponse<WorkspaceDetailResponse>> updateWorkspace(@AuthenticationPrincipal Users user,
+                                                                                    @PathVariable Long workspaceId,
+                                                                                    @RequestBody WorkspaceUpdateRequest workspaceUpdateRequest) {
         Long userId = user.getUserId();
         log.info("=== workspace 수정 API 진입 == userId: {}", userId);
 
-        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspace(userId, workspaceId, workspaceUpdateRequest);
+        WorkspaceDetailResponse updatedWorkspace = workspaceService.updateWorkspace(user, workspaceId, workspaceUpdateRequest);
 
-        SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
+        SuccessResponse<WorkspaceDetailResponse> response = new SuccessResponse<>(
                 "success", "요청하신 워크스페이스가 성공적으로 수정되었습니다.", updatedWorkspace
         );
 

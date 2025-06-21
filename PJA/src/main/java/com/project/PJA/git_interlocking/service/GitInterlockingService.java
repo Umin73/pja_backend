@@ -9,6 +9,9 @@ import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
+import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
+import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
+import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +25,13 @@ public class GitInterlockingService {
     private final WorkspaceService workspaceService;
     private final GitInterlockingRepository gitRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceActivityService workspaceActivityService;
 
-    public GitInterlockingService(WorkspaceService workspaceService, GitInterlockingRepository gitRepository, WorkspaceRepository workspaceRepository) {
+    public GitInterlockingService(WorkspaceService workspaceService, GitInterlockingRepository gitRepository, WorkspaceRepository workspaceRepository, WorkspaceActivityService workspaceActivityService) {
         this.workspaceService = workspaceService;
         this.gitRepository = gitRepository;
         this.workspaceRepository = workspaceRepository;
+        this.workspaceActivityService = workspaceActivityService;
     }
 
     @Transactional
@@ -46,6 +51,9 @@ public class GitInterlockingService {
         gitInterlocking.setGitUrl(dto.getUrl());
 
         gitRepository.save(gitInterlocking);
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.GIT, ActivityActionType.CREATE);
 
         return gitInterlocking.getGitUrl();
     }
@@ -73,6 +81,9 @@ public class GitInterlockingService {
         }
         GitInterlocking git = optionalGit.get();
         git.setGitUrl(dto.getUrl());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.GIT, ActivityActionType.UPDATE);
 
         return gitRepository.save(git).getGitUrl();
     }

@@ -33,7 +33,9 @@ public class Notification {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ActionPost actionPost; // 알림과 관련된 액션 포스트
 
+    @Builder.Default
     @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<UserNotification> receivers = new ArrayList<>(); // 알림 받는 사람들
 
     public void addUserNotification(UserNotification userNotification) {

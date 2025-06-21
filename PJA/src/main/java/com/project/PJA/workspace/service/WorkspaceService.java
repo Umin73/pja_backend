@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,8 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    //private final WorkspaceActivityRepository workspaceActivityRepository;
+    //private final WorkspaceActivityService workspaceActivityService;
 
     // 사용자의 전체 워크스페이스 조회
     @Transactional(readOnly = true)
@@ -53,41 +56,43 @@ public class WorkspaceService {
                         workspace.getUser().getUserId(),
                         workspace.getProgressStep()))
                 .collect(Collectors.toList());
+        Collections.reverse(userWorkspaceList);
 
         return userWorkspaceList;
     }
 
     // 워크스페이스의 단일 조회
     @Transactional(readOnly = true)
-    public WorkspaceResponse getWorkspace(Long userId, Long workspaceId) {
+    public WorkspaceDetailResponse getWorkspace(Long userId, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자 확인
         validateWorkspaceAccess(userId, foundWorkspace);
 
-        return new WorkspaceResponse(
+        return new WorkspaceDetailResponse(
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
                 foundWorkspace.getTeamName(),
                 foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
-                foundWorkspace.getProgressStep()
+                foundWorkspace.getProgressStep(),
+                foundWorkspace.getGithubUrl()
         );
     }
 
     // 워크스페이스 생성
     @Transactional
-    public WorkspaceResponse createWorkspace(Long userId, WorkspaceCreateRequest workspaceCreateRequest) {
-        if (workspaceCreateRequest.getProjectName() == null || workspaceCreateRequest.getProjectName().trim().isEmpty()) {
+    public WorkspaceResponse createWorkspace(Long userId, WorkspaceCreateRequest request) {
+        if (request.getProjectName() == null || request.getProjectName().trim().isEmpty()) {
             throw new BadRequestException("필수 항목이 누락되어 워크스페이스를 생성할 수 없습니다.");
         }
 
-        if (workspaceCreateRequest.getTeamName() == null || workspaceCreateRequest.getTeamName().trim().isEmpty()) {
+        if (request.getTeamName() == null || request.getTeamName().trim().isEmpty()) {
             throw new BadRequestException("필수 항목이 누락되어 워크스페이스를 생성할 수 없습니다.");
         }
 
-        if (workspaceCreateRequest.getIsPublic() == null) {
+        if (request.getIsPublic() == null) {
             throw new BadRequestException("필수 항목이 누락되어 워크스페이스를 생성할 수 없습니다.");
         }
 
@@ -98,9 +103,9 @@ public class WorkspaceService {
         // 워크스페이스 생성 및 저장
         Workspace newWorkspace = Workspace.builder()
                 .user(foundUser)
-                .projectName(workspaceCreateRequest.getProjectName())
-                .teamName(workspaceCreateRequest.getTeamName())
-                .isPublic(workspaceCreateRequest.getIsPublic())
+                .projectName(request.getProjectName())
+                .teamName(request.getTeamName())
+                .isPublic(request.getIsPublic())
                 .build();
         Workspace savedWorkspace = workspaceRepository.save(newWorkspace);
 
@@ -123,24 +128,40 @@ public class WorkspaceService {
 
     // 워크스페이스 수정
     @Transactional
-    public WorkspaceResponse updateWorkspace(Long userId, Long workspaceId, WorkspaceUpdateRequest workspaceUpdateRequest) {
+    public WorkspaceDetailResponse updateWorkspace(Users user, Long workspaceId, WorkspaceUpdateRequest request) {
+        if (request.getProjectName() == null || request.getProjectName().trim().isEmpty()) {
+            throw new BadRequestException("프로젝트명을 입력해 주세요.");
+        }
+
+        if (request.getTeamName() == null || request.getTeamName().trim().isEmpty()) {
+            throw new BadRequestException("팀 이름을 입력해 주세요.");
+        }
+
+        if (request.getIsPublic() == null) {
+            throw new BadRequestException("공개 여부를 선택해 주세요.");
+        }
+
         // 워크스페이스 찾기
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
-        authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
+        authorizeOwnerOrThrow(user.getUserId(), foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
 
         // 해당 워크스페이스의 오너이면 수정
-        foundWorkspace.update(workspaceUpdateRequest.getProjectName(), workspaceUpdateRequest.getTeamName(), workspaceUpdateRequest.getIsPublic());
+        foundWorkspace.update(request.getProjectName(), request.getTeamName(), request.getIsPublic(), request.getGithubUrl());
 
-        return new WorkspaceResponse(
+        // 최근 활동 기록 추가
+        //workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.WORKSPACE_SETTING, ActivityActionType.UPDATE);
+
+        return new WorkspaceDetailResponse(
                 foundWorkspace.getWorkspaceId(),
-                workspaceUpdateRequest.getProjectName(),
-                workspaceUpdateRequest.getTeamName(),
-                workspaceUpdateRequest.getIsPublic(),
+                request.getProjectName(),
+                request.getTeamName(),
+                request.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
-                foundWorkspace.getProgressStep());
+                foundWorkspace.getProgressStep(),
+                request.getGithubUrl());
     }
 
     // 워크스페이스 진행도 상태 수정
@@ -200,6 +221,9 @@ public class WorkspaceService {
 
         // 사용자가 해당 워크스페이스의 오너가 아니면 403 반환
         authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 삭제할 권한이 없습니다.");
+
+        // 최근 활동 기록들 모두 삭제
+        //workspaceActivityRepository.deleteByWorkspaceId(workspaceId);
 
         // 해당 워크스페이스의 오너이면 삭제
         workspaceRepository.delete(foundWorkspace);
