@@ -12,7 +12,7 @@ public class LogSchedular {
 
     private final LogSenderService logSenderService;
 
-    @Scheduled(fixedRate = 300_000) // 5분마다 전송하기
+//    @Scheduled(fixedRate = 300_000) // 5분마다 전송하기
     public void sendLogs() {
         log.info("== User Action 로그 전송 스케줄 ==");
         logSenderService.sendLogsFromFile();
