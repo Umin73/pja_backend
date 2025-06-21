@@ -20,6 +20,7 @@ import com.project.PJA.requirement.dto.RequirementRequest;
 import com.project.PJA.requirement.service.RequirementService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
@@ -81,6 +82,12 @@ public class ProjectInfoService {
 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
+            throw new BadRequestException("AI 생성을 진행하려면 먼저 아이디어를 입력해 주세요.");
+        } else if (foundWorkspace.getProgressStep() != ProgressStep.ONE) {
+            throw new BadRequestException("이미 프로젝트 정보가 생성되어 AI 생성을 다시 진행할 수 없습니다.");
+        }
 
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
