@@ -1,15 +1,20 @@
 package com.project.PJA.sse.controller;
 
+import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.sse.repository.SseEmitterRepository;
 import com.project.PJA.user.entity.Users;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.net.http.HttpResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,8 +25,8 @@ public class SseController {
 
 
     @GetMapping("/{workspaceId}/noti/subscribe")
-    public SseEmitter subscribe(@AuthenticationPrincipal Users user,
-                                @PathVariable("workspaceId") Long workspaceId) {
+    public ResponseEntity<SuccessResponse<?>> subscribe(@AuthenticationPrincipal Users user,
+                                                     @PathVariable("workspaceId") Long workspaceId) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간 동안 SSE 연결
 
         sseEmitterRepository.save(workspaceId, user.getUserId(), emitter);
@@ -39,6 +44,7 @@ public class SseController {
             throw new RuntimeException("SSE 연결 오류가 발생했습니다.", e);
         }
 
-        return emitter;
+        SuccessResponse<?> response = new SuccessResponse<>("success", "SSE 연결에 성공했습니다.", emitter);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
