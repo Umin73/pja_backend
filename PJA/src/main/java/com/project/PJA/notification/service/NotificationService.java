@@ -95,13 +95,18 @@ public class NotificationService {
                 .collect(Collectors.toSet());
 
         List<UserNotification> userNotifications = receivers.stream()
-                .map(user -> UserNotification.builder()
-                        .receiver(user)
-                        .notification(savedNotification)
-                        .isRead(false)
-                        .workspaceId(workspaceId)
-                        .createdAt(savedNotification.getCreatedAt())
-                        .build())
+                .map(user -> {
+                    UserNotification userNotification = UserNotification.builder()
+                            .receiver(user)
+                            .notification(savedNotification)
+                            .isRead(false)
+                            .workspaceId(workspaceId)
+                            .createdAt(savedNotification.getCreatedAt())
+                            .build();
+
+                    savedNotification.addUserNotification(userNotification);
+                    return userNotification;
+                })
                 .collect(Collectors.toList());
 
         userNotificationRepository.saveAll(userNotifications);
