@@ -9,6 +9,7 @@ import com.project.PJA.notification.repository.UserNotificationRepository;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.project_progress.entity.ActionPost;
+import com.project.PJA.sse.repository.SseEmitterRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -16,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ public class NotificationService {
     private final WorkspaceService workspaceService;
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
+    private final SseEmitterRepository sseEmitterRepository;
 
     // 알림 전체 가져오기
     @Transactional(readOnly = true)
@@ -46,7 +50,9 @@ public class NotificationService {
             notiDto.setNotificationId(notification.getNotificationId());
             notiDto.setMessage(notification.getMessage());
             notiDto.setRead(userNoti.isRead());
-            notiDto.setActionPostId(notification.getActionPost().getActionPostId());
+            notiDto.setActionPostId(
+                    notification.getActionPost() != null ? notification.getActionPost().getActionPostId() : null
+            );
             notiDto.setCreatedAt(notification.getCreatedAt());
 
             notiList.add(notiDto);
@@ -98,13 +104,35 @@ public class NotificationService {
                         .build())
                 .collect(Collectors.toList());
 
-        for (UserNotification u : userNotifications) {
-            log.info("== 저장 전 UserNotification 정보 ==");
-            log.info("User: " + u.getReceiver());
-            log.info("Notification: " + u.getNotification());
-        }
-
         userNotificationRepository.saveAll(userNotifications);
+
+        // SSE 전송
+        for(Users receiver : receivers) {
+            try {
+                sseEmitterRepository.get(workspaceId, receiver.getUserId())
+                        .ifPresent(emitter -> {
+                            try {
+                                NotiReadResponseDto notiDto = NotiReadResponseDto.builder()
+                                        .notificationId(savedNotification.getNotificationId())
+                                        .message(savedNotification.getMessage())
+                                        .isRead(false)
+                                        .actionPostId(actionPost.getActionPostId())
+                                        .createdAt(savedNotification.getCreatedAt())
+                                        .build();
+
+                                emitter.send(SseEmitter.event()
+                                        .name("notification")
+                                        .data(notiDto));
+                            } catch (IOException e) {
+                                log.warn("SSE 전송 실패 - emitter 제거: {}", e.getMessage());
+                                sseEmitterRepository.delete(workspaceId, receiver.getUserId());
+                            }
+                        });
+
+            } catch (Exception e) {
+                log.error("SSE emitter 조회 중 오류가 발생했습니다: {}", e.getMessage());
+            }
+        }
     }
 
     // 알림 개별 읽음 처리

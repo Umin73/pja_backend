@@ -22,12 +22,12 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final NotificationRepository notifiactionRepository;
+    private final NotificationRepository notificationRepository;
 
     // 알림 조회 (삭제되지 않은)
     @GetMapping("{workspaceId}/noti")
-    ResponseEntity<SuccessResponse<?>> getNotification(@AuthenticationPrincipal Users user,
-                                               @PathVariable("workspaceId") Long workspaceId) {
+    ResponseEntity<SuccessResponse<?>> getNotificationRepository(@AuthenticationPrincipal Users user,
+                                                                 @PathVariable("workspaceId") Long workspaceId) {
         List<NotiReadResponseDto> data = notificationService.getNotiList(user, workspaceId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "알림 조회에 성공하였습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);
