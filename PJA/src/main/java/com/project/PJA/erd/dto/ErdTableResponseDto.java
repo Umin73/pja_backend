@@ -6,7 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ErdTableResponseDto {
-    private Long tableId;
     private Long erdId;
+    private String tableId;
     private String tableName;
 }

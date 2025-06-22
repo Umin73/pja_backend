@@ -43,26 +43,28 @@ public class ErdTableService {
     }
 
     @Transactional
-    public ErdTable updateErdTableName(Users user, Long workspaceId, Long erdId, Long erdTableId, ErdTableNameDto dto) {
+    public ErdTable updateErdTableName(Users user, Long workspaceId, Long erdId, String erdTableId, ErdTableNameDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 테이블을 수정할 권한이 없습니다.");
 
-        ErdTable erdTable = findTableAndValidateErd(erdId, erdTableId);
+        Long tableId = Long.parseLong(erdTableId.replaceAll("[^0-9]", ""));
+        ErdTable erdTable = findTableAndValidateErd(erdId, tableId);
         erdTable.setName(dto.getNewTableName());
 
         return erdTableRepository.save(erdTable);
     }
 
     @Transactional
-    public void deleteErdTable(Users user, Long workspaceId, Long erdId, Long erdTableId) {
+    public void deleteErdTable(Users user, Long workspaceId, Long erdId, String erdTableId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 테이블을 삭제할 권한이 없습니다.");
 
-        ErdTable erdTable = findTableAndValidateErd(erdId, erdTableId);
+        Long tableId = Long.parseLong(erdTableId.replaceAll("[^0-9]", ""));
+        ErdTable erdTable = findTableAndValidateErd(erdId, tableId);
         erdTableRepository.delete(erdTable);
     }
 
     public ErdTableResponseDto getErdTableDto(ErdTable erdTable) {
         ErdTableResponseDto erdTableDto = new ErdTableResponseDto();
-        erdTableDto.setTableId(erdTable.getErdTableId());
+        erdTableDto.setTableId("table-"+erdTable.getErdTableId().toString());
         erdTableDto.setErdId(erdTable.getErd().getErdId());
         erdTableDto.setTableName(erdTable.getName());
 

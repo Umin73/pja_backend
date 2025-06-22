@@ -38,7 +38,7 @@ public class ErdTableController {
     public ResponseEntity<SuccessResponse<?>> updateErdTableName(@AuthenticationPrincipal Users user,
                                                                  @PathVariable("workspaceId") Long workspaceId,
                                                                  @PathVariable("erdId") Long erdId,
-                                                                 @PathVariable("tableId") Long tableId,
+                                                                 @PathVariable("tableId") String tableId,
                                                                  @RequestBody ErdTableNameDto dto) {
         ErdTable erdTable = erdTableService.updateErdTableName(user, workspaceId, erdId, tableId, dto);
         ErdTableResponseDto data = erdTableService.getErdTableDto(erdTable);
@@ -50,7 +50,7 @@ public class ErdTableController {
     public ResponseEntity<SuccessResponse<?>> deleteErdTable(@AuthenticationPrincipal Users user,
                                                              @PathVariable("workspaceId") Long workspaceId,
                                                              @PathVariable("erdId") Long erdId,
-                                                             @PathVariable("tableId") Long tableId) {
+                                                             @PathVariable("tableId") String tableId) {
         erdTableService.deleteErdTable(user, workspaceId, erdId, tableId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "ERD 테이블이 성공적으로 삭제되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);

@@ -34,9 +34,10 @@ public class ErdColumnService {
     }
 
     @Transactional
-    public ErdColumn createErdColumn(Users user, Long workspaceId, Long erdId, Long tableId, ErdColumnRequestDto dto) {
+    public ErdColumn createErdColumn(Users user, Long workspaceId, Long erdId, String strTableId, ErdColumnRequestDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 컬럼을 생성할 권한이 없습니다.");
 
+        Long tableId = Long.parseLong(strTableId.replaceAll("[^0-9]", ""));
         ErdTable erdTable = findTableAndValidateErd(erdId, tableId);
 
         log.info("== ERD 컬럼 엔티티 생성 시작 ==");
@@ -52,9 +53,11 @@ public class ErdColumnService {
     }
 
     @Transactional
-    public ErdColumn updateErdColumn(Users user, Long workspaceId, Long erdId, Long tableId, Long columnId, ErdColumnRequestDto dto) {
+    public ErdColumn updateErdColumn(Users user, Long workspaceId, Long erdId, String strTableId, String strColumnId, ErdColumnRequestDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 컬럼을 생성할 권한이 없습니다.");
 
+        Long tableId = Long.parseLong(strTableId.replaceAll("[^0-9]", ""));
+        Long columnId = Long.parseLong(strColumnId.replaceAll("[^0-9]", ""));
         ErdColumn erdColumn = findColumnAndValidateErd(erdId, tableId, columnId);
 
         erdColumn.setName(dto.getColumnName());
@@ -66,9 +69,11 @@ public class ErdColumnService {
     }
 
     @Transactional
-    public void deleteErdColumn(Users user, Long workspaceId, Long erdId, Long tableId, Long columnId) {
+    public void deleteErdColumn(Users user, Long workspaceId, Long erdId, String strTableId, String strColumnId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 컬럼을 생성할 권한이 없습니다.");
 
+        Long tableId = Long.parseLong(strTableId.replaceAll("[^0-9]", ""));
+        Long columnId = Long.parseLong(strColumnId.replaceAll("[^0-9]", ""));
         ErdColumn erdColumn = findColumnAndValidateErd(erdId, tableId, columnId);
 
         erdColumnRepository.delete(erdColumn);
@@ -76,8 +81,8 @@ public class ErdColumnService {
 
     public ErdColumnResponseDto getErdColumnDto(ErdColumn erdColumn) {
         ErdColumnResponseDto createdErdColumnDto = new ErdColumnResponseDto();
-        createdErdColumnDto.setColumnId(erdColumn.getErdColumnId());
-        createdErdColumnDto.setTableId(erdColumn.getErdTable().getErdTableId());
+        createdErdColumnDto.setColumnId("field-"+erdColumn.getErdColumnId());
+        createdErdColumnDto.setTableId("table-"+erdColumn.getErdTable().getErdTableId());
         createdErdColumnDto.setColumnName(erdColumn.getName());
         createdErdColumnDto.setColumnType(erdColumn.getDataType());
         createdErdColumnDto.setNullable(erdColumn.isNullable());

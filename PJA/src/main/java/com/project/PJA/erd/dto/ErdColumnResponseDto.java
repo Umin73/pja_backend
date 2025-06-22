@@ -6,8 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ErdColumnResponseDto {
-    private Long columnId;
-    private Long tableId;
+    private String columnId;
+    private String tableId;
     private String columnName;
     private String columnType;
     private boolean primaryKey;

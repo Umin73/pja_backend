@@ -38,4 +38,10 @@ public class ErdTable {
     @Builder.Default
     @OneToMany(mappedBy = "toTable")
     private List<ErdRelationships> toRelationships = new ArrayList<>(); // 이 테이블이 to(도착지?)인 관계들
+
+    @Column(name = "position_x")
+    private Double positionX;
+
+    @Column(name = "position_y")
+    private Double positionY;
 }
