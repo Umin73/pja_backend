@@ -237,10 +237,21 @@ public class ErdService {
                     foreignErdColumn = optionalForeignColumn.get();
                 }
 
+                Optional<ErdColumn> optionalRfColumn = toTable.getColumns().stream()
+                        .filter(ErdColumn::isPrimaryKey)
+                        .findFirst();
+
+                if(optionalRfColumn.isEmpty()) {
+                    log.warn("참조 대상 테이블 '{}'에 기본키가 없어서 관계 생성 생략함", rel.getToTable());
+                    continue;
+                }
+                ErdColumn rfColumn = optionalRfColumn.get();
+
                 ErdRelationships relation = ErdRelationships.builder()
                         .type(ErdRelation.fromString(rel.getRelationshipType()))
                         .foreignKeyName(rel.getForeignKey())
                         .foreignColumn(findByForeignKeyName(fromTable, rel.getForeignKey()))
+                        .referencedColumn(rfColumn)
                         .constraintName(rel.getConstraintName())
                         .fromTable(fromTable)
                         .toTable(toTable)

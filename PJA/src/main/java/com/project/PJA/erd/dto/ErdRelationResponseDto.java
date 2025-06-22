@@ -10,6 +10,8 @@ public class ErdRelationResponseDto {
     private String relationType;
     private String foreignKeyName;
     private String constraintName;
+    private String fkId;
+    private String rfId;
     private ErdTableResponseDto fromTable;
     private ErdTableResponseDto toTable;
 }

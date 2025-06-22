@@ -58,6 +58,7 @@ public class ReactFlowConverter {
 
     private EdgeDto toEdgeDto(ErdRelationships relationships) {
         ErdColumn fk = relationships.getForeignColumn();
+        ErdColumn rfk = relationships.getReferencedColumn();
         ErdTable toTable = relationships.getToTable();
         ErdTable fromTable = relationships.getFromTable();
 
@@ -65,13 +66,13 @@ public class ReactFlowConverter {
         String target = "table-"+toTable.getErdTableId();
 
         String sourceHandle = "field-" + fk.getErdColumnId();
-
+        String targetHandle = "field-" + rfk.getErdColumnId();
         // 대상 테이블의 PK 컬럼 찾기
-        String targetHandle = "target-" + toTable.getColumns().stream()
-                .filter(ErdColumn::isPrimaryKey)
-                .findFirst()
-                .map(col -> "field-" + col.getErdColumnId())
-                .orElse("field-unknown");
+//        String targetHandle = "target-" + toTable.getColumns().stream()
+//                .filter(ErdColumn::isPrimaryKey)
+//                .findFirst()
+//                .map(col -> "field-" + col.getErdColumnId())
+//                .orElse("field-unknown");
 
         String label = switch (relationships.getType()) {
             case ONE_TO_ONE -> "1:1";

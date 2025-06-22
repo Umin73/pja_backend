@@ -19,8 +19,9 @@ public class ErdColumn {
     @Column(name = "erd_column_id")
     private Long erdColumnId; // 컬럼의 id
 
-    @ManyToOne
-    @JoinColumn(name = "erd_table_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "erd_table_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_erd_column_table"))
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ErdTable erdTable; // 해당 컬럼이 소한 테이블
 
