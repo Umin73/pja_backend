@@ -34,6 +34,8 @@ public class ErdRelationService {
 
         Long fromTableId = Long.parseLong(dto.getFromTableId().replaceAll("[^0-9]", ""));
         Long toTableId = Long.parseLong(dto.getToTableId().replaceAll("[^0-9]", ""));
+        Long foreignKeyId = Long.parseLong(dto.getForeignKeyId().replaceAll("[^0-9]", ""));
+        Long toTableKeyId = Long.parseLong(dto.getToTableKeyId().replaceAll("[^0-9]", ""));
 
         erdRepository.findById(erdId)
                 .orElseThrow(()-> new NotFoundException("ERD가 존재하지 않습니다."));
@@ -42,8 +44,10 @@ public class ErdRelationService {
         ErdTable toTable = erdTableRepository.findById(toTableId)
                 .orElseThrow(() -> new NotFoundException("대상 테이블이 존재하지 않습니다."));
 
-        ErdColumn fkColumn = erdColumnRepository.findByErdColumnIdAndErdTable(dto.getForeignKeyId(), fromTable)
+        ErdColumn fkColumn = erdColumnRepository.findByErdColumnIdAndErdTable(foreignKeyId, fromTable)
                 .orElseThrow(() -> new NotFoundException("외래키 컬럼이 존재하지 않습니다."));
+        ErdColumn referencedColumn = erdColumnRepository.findByErdColumnIdAndErdTable(toTableKeyId, toTable)
+                .orElseThrow(() -> new NotFoundException("참조 대상 컬럼이 존재하지 않습니다."));
 
         // 기존 관계 존재 여부 확인
         Optional<ErdRelationships> relationshipsOptional
@@ -53,6 +57,7 @@ public class ErdRelationService {
         relationships.setFromTable(fromTable);
         relationships.setToTable(toTable);
         relationships.setForeignColumn(fkColumn);
+        relationships.setReferencedColumn(referencedColumn);
         relationships.setForeignKeyName(dto.getForeignKeyName());
         relationships.setConstraintName(dto.getConstraintName());
         relationships.setType(dto.getType());
@@ -79,6 +84,9 @@ public class ErdRelationService {
 
         dto.setFromTable(fromDto);
         dto.setToTable(toDto);
+
+        dto.setFkId("field-"+relation.getForeignColumn().getErdColumnId());
+        dto.setRfId("field-"+relation.getReferencedColumn().getErdColumnId());
 
         return dto;
     }
