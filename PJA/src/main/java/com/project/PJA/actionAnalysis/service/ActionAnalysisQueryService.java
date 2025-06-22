@@ -29,7 +29,7 @@ public class ActionAnalysisQueryService {
 
         workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
 
-        return taskImbalanceResultRepository.findLatestGroupedByStateAndImportance(workspaceId);
+        return taskImbalanceResultRepository.findLatestGroupedByWorkspaceMember(workspaceId);
     }
 
     public List<AvgProcessingTimeGraphDto> getAvgProcessingTimeGraph(Users user, Long workspaceId) {

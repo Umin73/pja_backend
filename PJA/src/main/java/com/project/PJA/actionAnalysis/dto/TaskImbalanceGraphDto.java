@@ -11,6 +11,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskImbalanceGraphDto {
+    private Long memberId;
+    private String username;
     private Progress state;
     private Integer importance;
     private Long taskCount;
