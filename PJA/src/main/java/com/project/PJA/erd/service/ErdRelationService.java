@@ -12,12 +12,14 @@ import com.project.PJA.erd.repository.ErdTableRepository;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.service.WorkspaceService;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 public class ErdRelationService {
 
     private final WorkspaceService workspaceService;
@@ -25,14 +27,6 @@ public class ErdRelationService {
     private final ErdTableRepository erdTableRepository;
     private final ErdRelationshipsRepository erdRelationshipsRepository;
     private final ErdColumnRepository erdColumnRepository;
-
-    public ErdRelationService(WorkspaceService workspaceService, ErdRepository erdRepository, ErdTableRepository erdTableRepository, ErdRelationshipsRepository erdRelationshipsRepository, ErdColumnRepository erdColumnRepository) {
-        this.workspaceService = workspaceService;
-        this.erdRepository = erdRepository;
-        this.erdTableRepository = erdTableRepository;
-        this.erdRelationshipsRepository = erdRelationshipsRepository;
-        this.erdColumnRepository = erdColumnRepository;
-    }
 
     @Transactional
     public ErdRelationships createRelation(Users user, Long workspaceId, Long erdId, CreateErdRelationDto dto) {
