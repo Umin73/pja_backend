@@ -45,7 +45,7 @@ public class Workspace {
     private ProgressStep progressStep = ProgressStep.ZERO;
 
     @Column(name = "github_url")
-    private String githubUrl;
+    private String githubUrl = "";
 
     @Builder
     public Workspace(Users user, String projectName, String teamName, Boolean isPublic) {
