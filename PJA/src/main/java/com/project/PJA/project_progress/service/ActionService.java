@@ -77,12 +77,9 @@ public class ActionService {
 
     @Transactional(readOnly = true)
     public List<MyActionDto> readMyToDoActionList(Users user, Long workspaceId) {
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("워크스페이스 아이디로 워크스페이스를 찾을 수 없습니다."));
-
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "해당 워크스페이스의 오너 또는 멤버가 아니면 내 작업을 확인할 수 없습니다.");
 
-        List<Action> actionList = actionRepository.findAllByWorkspaceIdAndUserIdAndStateIsBeforeOrInProgress(workspaceId, user.getUserId());
+        List<Action> actionList = actionRepository.findAllByWorkspaceIdAndUserIdAndStateIsBeforeOrInProgressOrderByEndDateAsc(workspaceId, user.getUserId());
         List<MyActionDto> dtoList = new ArrayList<>();
         for(Action action : actionList) {
             MyActionDto dto = new MyActionDto();
@@ -90,11 +87,26 @@ public class ActionService {
             dto.setActionName(action.getName());
             dto.setState(action.getState().toString());
             dto.setEndDate(action.getEndDate());
+            dto.setImportance(action.getImportance());
 
             dtoList.add(dto);
         }
 
         return dtoList;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> readMyProgress(Users user, Long workspaceId) {
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "해당 워크스페이스의 오너 또는 멤버가 아니면 내 작업을 확인할 수 없습니다.");
+
+        long total = actionRepository.countAllActionsByWorkspaceAndUser(workspaceId, user.getUserId());
+        long done = actionRepository.countDoneActionsByWorkspaceAndUser(workspaceId, user.getUserId());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", total);
+        result.put("done", done);
+
+        return result;
     }
 
     @Transactional
