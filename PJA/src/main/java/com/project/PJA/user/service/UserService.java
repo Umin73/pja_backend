@@ -198,7 +198,7 @@ public class UserService {
         if(user != null) {
             user.setStatus(UserStatus.WITHDRAW);
             user.setUid(null);
-            user.setEmail(null);
+            user.setEmail("withdrawn_" + user.getUserId() + "@placeholder.com");
             user.setPassword(null);
             user.setName("탈퇴한 사용자");
             user.setProfileImage(null);
