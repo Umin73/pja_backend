@@ -30,8 +30,12 @@ public class ReactFlowConverter {
 
     private TableNodeDto toTableNodeDto(ErdTable table) {
         TableNodeDto dto = new TableNodeDto();
-        dto.setId(table.getName());
+        dto.setId("table-"+table.getErdTableId().toString());
         dto.setTableName(table.getName());
+
+        // 기본 좌표 값 설정
+        dto.setPositionX(table.getPositionX() != null ? table.getPositionX() : 0);
+        dto.setPositionY(table.getPositionY() != null ? table.getPositionY() : 0);
 
         List<FieldDto> fields = table.getColumns().stream()
                 .map(this::toFieldDto)
@@ -43,6 +47,7 @@ public class ReactFlowConverter {
 
     private FieldDto toFieldDto(ErdColumn column) {
         FieldDto dto = new FieldDto();
+        dto.setId("field-"+column.getErdColumnId().toString());
         dto.setName(column.getName());
         dto.setType(column.getDataType());
         dto.setPrimary(column.isPrimaryKey());
@@ -54,17 +59,19 @@ public class ReactFlowConverter {
     private EdgeDto toEdgeDto(ErdRelationships relationships) {
         ErdColumn fk = relationships.getForeignColumn();
         ErdTable toTable = relationships.getToTable();
+        ErdTable fromTable = relationships.getFromTable();
 
-        String source = relationships.getFromTable().getName();
-        String target = toTable.getName();
-        String sourceHandle = "source-" + fk.getName();
+        String source = "table-"+fromTable.getErdTableId();
+        String target = "table-"+toTable.getErdTableId();
+
+        String sourceHandle = "field-" + fk.getErdColumnId();
 
         // 대상 테이블의 PK 컬럼 찾기
         String targetHandle = "target-" + toTable.getColumns().stream()
                 .filter(ErdColumn::isPrimaryKey)
                 .findFirst()
-                .map(ErdColumn::getName)
-                .orElse("id");
+                .map(col -> "field-" + col.getErdColumnId())
+                .orElse("field-unknown");
 
         String label = switch (relationships.getType()) {
             case ONE_TO_ONE -> "1:1";
