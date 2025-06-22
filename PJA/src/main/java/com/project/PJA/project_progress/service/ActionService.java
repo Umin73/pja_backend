@@ -1,6 +1,7 @@
 package com.project.PJA.project_progress.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.project_progress.dto.MyActionDto;
 import com.project.PJA.user_act_log.service.UserActionLogService;
 import com.project.PJA.user_act_log.enumeration.UserActionType;
 import com.project.PJA.exception.ForbiddenException;
@@ -67,6 +68,28 @@ public class ActionService {
             dto.setStartDate(action.getStartDate());
             dto.setEndDate(action.getEndDate());
             dto.setActionPostId(action.getActionPost().getActionPostId());
+
+            dtoList.add(dto);
+        }
+
+        return dtoList;
+    }
+
+    @Transactional(readOnly = true)
+    public List<MyActionDto> readMyToDoActionList(Users user, Long workspaceId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("워크스페이스 아이디로 워크스페이스를 찾을 수 없습니다."));
+
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "해당 워크스페이스의 오너 또는 멤버가 아니면 내 작업을 확인할 수 없습니다.");
+
+        List<Action> actionList = actionRepository.findAllByWorkspaceIdAndUserIdAndStateIsBeforeOrInProgress(workspaceId, user.getUserId());
+        List<MyActionDto> dtoList = new ArrayList<>();
+        for(Action action : actionList) {
+            MyActionDto dto = new MyActionDto();
+            dto.setActionId(action.getActionId());
+            dto.setActionName(action.getName());
+            dto.setState(action.getState().toString());
+            dto.setEndDate(action.getEndDate());
 
             dtoList.add(dto);
         }
