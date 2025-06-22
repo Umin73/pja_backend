@@ -6,6 +6,7 @@ import com.project.PJA.project_progress.dto.ProjectProgressResponseDto;
 import com.project.PJA.project_progress.service.ActionService;
 import com.project.PJA.project_progress.service.ProjectProgressService;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -26,6 +28,7 @@ public class ProjectProgressController {
 
     private final ProjectProgressService projectProgressService;
     private final ActionService actionService;
+    private final WorkspaceService workspaceService;
 
     @GetMapping("{workspaceId}/project/progress")
     ResponseEntity<SuccessResponse<?>> readProjectProgress(@AuthenticationPrincipal Users user,
@@ -44,6 +47,16 @@ public class ProjectProgressController {
         List<MyActionDto> data = actionService.readMyToDoActionList(user, workspaceId);
 
         SuccessResponse<?>  response = new SuccessResponse<>("success", "내 작업(액션)을 성공적으로 조회하였습니다.", data);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("{workspaceId}/project/my-progress")
+    ResponseEntity<SuccessResponse<?>> readMyProgress(@AuthenticationPrincipal Users user,
+                                                      @PathVariable("workspaceId") Long workspaceId) {
+        log.info("== 내 진행률 조회 API 진입 ==");
+        Map<String, Object> data = actionService.readMyProgress(user, workspaceId);
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "내 진행률 조회에 성공하였습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

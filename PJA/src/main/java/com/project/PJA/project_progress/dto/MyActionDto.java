@@ -17,4 +17,5 @@ public class MyActionDto {
     private String actionName;
     private LocalDateTime endDate;
     private String state;
+    private Integer importance;
 }
