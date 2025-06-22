@@ -60,14 +60,23 @@ public class GitInterlockingService {
 
     @Transactional(readOnly = true)
     public String getGitUrl(Users user, Long workspaceId) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "깃허브 정보를 조회할 권한이 없습니다.");
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("워크스페이스 아이디로 발견된 워크스페이스가 존재하지 않습니다."));
 
-        Optional<GitInterlocking> optionalGit = gitRepository.findByWorkspace_WorkspaceId(workspaceId);
-        if(optionalGit.isEmpty()) {
-            throw new NotFoundException("워크스페이스 아이디로 발견된 Git 정보가 없습니다.");
+        workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
+
+        String gitUrl = foundWorkspace.getGithubUrl();
+
+        if (!isValidGitUrl(gitUrl)) {
+            throw new IllegalArgumentException("유효한 GitHub 레포지토리 URL이 아닙니다.");
         }
 
-        return optionalGit.get().getGitUrl();
+        return gitUrl;
+    }
+
+    private boolean isValidGitUrl(String gitUrl) {
+        String regex = "^https://github\\.com/[\\w.-]+/[\\w.-]+(?:\\.git)?/?$";
+        return gitUrl.matches(regex);
     }
 
     @Transactional
