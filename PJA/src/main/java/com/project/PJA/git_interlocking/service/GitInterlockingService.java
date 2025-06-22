@@ -34,30 +34,6 @@ public class GitInterlockingService {
         this.workspaceActivityService = workspaceActivityService;
     }
 
-    @Transactional
-    public String createGit(Users user, Long workspaceId, GitInfoDto dto) {
-        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                        .orElseThrow(() -> new NotFoundException("워크스페이스가 발견되지 않았습니다."));
-
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "깃허브 정보를 생성할 권한이 없습니다.");
-
-        Optional<GitInterlocking> optionalGit = gitRepository.findByWorkspace_WorkspaceId(workspaceId);
-
-        if (optionalGit.isPresent()) {
-            throw new ConflictException("Git이 이미 생성되어 있습니다.");
-        }
-        GitInterlocking gitInterlocking = new GitInterlocking();
-        gitInterlocking.setWorkspace(foundWorkspace);
-        gitInterlocking.setGitUrl(dto.getUrl());
-
-        gitRepository.save(gitInterlocking);
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.GIT, ActivityActionType.CREATE);
-
-        return gitInterlocking.getGitUrl();
-    }
-
     @Transactional(readOnly = true)
     public String getGitUrl(Users user, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
@@ -77,23 +53,5 @@ public class GitInterlockingService {
     private boolean isValidGitUrl(String gitUrl) {
         String regex = "^https://github\\.com/[\\w.-]+/[\\w.-]+(?:\\.git)?/?$";
         return gitUrl.matches(regex);
-    }
-
-    @Transactional
-    public String updateGitInfo(Users user, Long workspaceId, GitInfoDto dto) {
-        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "깃허브 url을 설정할 권한이 없습니다.");
-
-        Optional<GitInterlocking> optionalGit = gitRepository.findByWorkspace_WorkspaceId(workspaceId);
-
-        if(optionalGit.isEmpty()) {
-            throw new NotFoundException("워크스페이스 아이디로 발견된 Git 정보가 없습니다.");
-        }
-        GitInterlocking git = optionalGit.get();
-        git.setGitUrl(dto.getUrl());
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.GIT, ActivityActionType.UPDATE);
-
-        return gitRepository.save(git).getGitUrl();
     }
 }
