@@ -38,10 +38,13 @@ public class WorkspaceActivityService {
     public void addWorkspaceActivity(Users user, Long workspaceId, ActivityTargetType targetType, ActivityActionType actionType) {
 
         WorkspaceActivity workspaceActivity = new WorkspaceActivity();
-        workspaceActivity.setUser(user);
+        workspaceActivity.setUserId(user.getUserId());
+        workspaceActivity.setUsername(user.getUsername());
+        workspaceActivity.setUserProfile(user.getProfileImage());
         workspaceActivity.setWorkspaceId(workspaceId);
         workspaceActivity.setTargetType(targetType);
         workspaceActivity.setActionType(actionType);
+        workspaceActivity.setCreatedAt(LocalDateTime.now());
 
         workspaceActivityRepository.save(workspaceActivity);
     }
@@ -60,10 +63,10 @@ public class WorkspaceActivityService {
         for (WorkspaceActivity activity : workspaceActivityList) {
             WorkspaceActivityResponseDto dto = new WorkspaceActivityResponseDto();
 
-            dto.setUsername(activity.getUser().getUsername());
-            dto.setUserProfile(activity.getUser().getProfileImage());
-            dto.setActionType(activity.getActionType().toString()); // 한글로 수정 필요?
-            dto.setTargetType(activity.getTargetType().toString()); // 한글로 수정 필요?
+            dto.setUsername(activity.getUsername());
+            dto.setUserProfile(activity.getUserProfile());
+            dto.setActionType(activity.getActionType().getKorean());
+            dto.setTargetType(activity.getTargetType().getKorean());
             dto.setRelativeDateLabel(getRelativeDate(activity.getCreatedAt()));
 
             dtoList.add(dto);
@@ -73,6 +76,10 @@ public class WorkspaceActivityService {
     }
 
     private String getRelativeDate(LocalDateTime dateTime) {
+        if(dateTime == null) {
+            return "";
+        }
+
         LocalDate today = LocalDate.now();
         LocalDate targetDate = dateTime.toLocalDate();
 
@@ -80,6 +87,8 @@ public class WorkspaceActivityService {
 
         if (daysBetween == 0) {
             return "오늘";
+        } if (daysBetween == 1) {
+            return "어제";
         } else {
             return daysBetween + "일 전";
         }
