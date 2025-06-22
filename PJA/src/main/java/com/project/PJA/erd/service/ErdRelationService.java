@@ -1,10 +1,10 @@
 package com.project.PJA.erd.service;
 
 import com.project.PJA.erd.dto.CreateErdRelationDto;
-import com.project.PJA.erd.entity.Erd;
-import com.project.PJA.erd.entity.ErdColumn;
-import com.project.PJA.erd.entity.ErdRelationships;
-import com.project.PJA.erd.entity.ErdTable;
+import com.project.PJA.erd.dto.ErdColumnResponseDto;
+import com.project.PJA.erd.dto.ErdRelationResponseDto;
+import com.project.PJA.erd.dto.ErdTableResponseDto;
+import com.project.PJA.erd.entity.*;
 import com.project.PJA.erd.repository.ErdColumnRepository;
 import com.project.PJA.erd.repository.ErdRelationshipsRepository;
 import com.project.PJA.erd.repository.ErdRepository;
@@ -32,11 +32,14 @@ public class ErdRelationService {
     public ErdRelationships createRelation(Users user, Long workspaceId, Long erdId, CreateErdRelationDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "게스트는 관계를 생성할 권한이 없습니다.");
 
+        Long fromTableId = Long.parseLong(dto.getFromTableId().replaceAll("[^0-9]", ""));
+        Long toTableId = Long.parseLong(dto.getToTableId().replaceAll("[^0-9]", ""));
+
         erdRepository.findById(erdId)
                 .orElseThrow(()-> new NotFoundException("ERD가 존재하지 않습니다."));
-        ErdTable fromTable = erdTableRepository.findById(dto.getFromTableId())
+        ErdTable fromTable = erdTableRepository.findById(fromTableId)
                 .orElseThrow(() -> new NotFoundException("출발 테이블이 존재하지 않습니다."));
-        ErdTable toTable = erdTableRepository.findById(dto.getToTableId())
+        ErdTable toTable = erdTableRepository.findById(toTableId)
                 .orElseThrow(() -> new NotFoundException("대상 테이블이 존재하지 않습니다."));
 
         ErdColumn fkColumn = erdColumnRepository.findByErdColumnIdAndErdTable(dto.getForeignKeyId(), fromTable)
@@ -57,9 +60,34 @@ public class ErdRelationService {
         return erdRelationshipsRepository.save(relationships);
     }
 
+    public ErdRelationResponseDto getRelationDto(ErdRelationships relation) {
+        ErdRelationResponseDto dto = new ErdRelationResponseDto();
+        dto.setRelationId("relation-" + relation.getErdRelationshipsId());
+        dto.setRelationType(relation.getType().name());
+        dto.setForeignKeyName(relation.getForeignKeyName());
+        dto.setConstraintName(relation.getConstraintName());
+
+        ErdTableResponseDto fromDto = new ErdTableResponseDto();
+        fromDto.setTableId("table-" + relation.getFromTable().getErdTableId());
+        fromDto.setTableName(relation.getFromTable().getName());
+        fromDto.setErdId(relation.getFromTable().getErd().getErdId());
+
+        ErdTableResponseDto toDto = new ErdTableResponseDto();
+        toDto.setTableId("table-" + relation.getToTable().getErdTableId());
+        toDto.setTableName(relation.getToTable().getName());
+        toDto.setErdId(relation.getToTable().getErd().getErdId());
+
+        dto.setFromTable(fromDto);
+        dto.setToTable(toDto);
+
+        return dto;
+    }
+
     @Transactional
-    public void deleteRelation(Users user, Long workspaceId, Long erdId, Long relationId) {
+    public void deleteRelation(Users user, Long workspaceId, Long erdId, String strRelationId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "게스트는 ERD 관계를 삭제할 권한이 없습니다.");
+
+        Long relationId = Long.parseLong(strRelationId.replaceAll("[^0-9]", ""));
 
         ErdRelationships relationships = erdRelationshipsRepository.findById(relationId).orElseThrow(
                 () -> new NotFoundException("해당 관계를 찾을 수 없습니다.")
