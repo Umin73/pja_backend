@@ -27,6 +27,6 @@ public class Erd {
     @Column(name = "workspace_id", nullable = false)
     private Long workspaceId; // ERD가 속한 워크스페이스 ID
 
-    @OneToMany(mappedBy = "erd", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "erd", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ErdTable> tables = new ArrayList<>(); // ERD에 포함된 테이블들(1:N)
 }
