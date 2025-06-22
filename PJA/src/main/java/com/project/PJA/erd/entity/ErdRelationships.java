@@ -19,7 +19,7 @@ public class ErdRelationships {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "erd_relationships_id")
-    private Long erdRelationshipsId; // erd 관계의 기본키
+    private Long erdRelationshipsId; // erd 관계의 기본키!
 
 
     @Enumerated(EnumType.STRING)
