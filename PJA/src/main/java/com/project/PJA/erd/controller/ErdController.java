@@ -31,7 +31,7 @@ public class ErdController {
     // ERD 사용자가 추가(생성)
     @PostMapping("{workspaceId}/erd")
     public ResponseEntity<SuccessResponse<?>> createErd(@AuthenticationPrincipal Users user,
-                                                        @PathVariable Long workspaceId) {
+                                                        @PathVariable("workspaceId") Long workspaceId) {
         Erd createdErd = erdService.createErd(user, workspaceId);
 
         Map<String, Object> data = new HashMap<>();
@@ -59,8 +59,8 @@ public class ErdController {
     // ERD 조회하기
     @GetMapping("{workspaceId}/erd/{erdId}/flow")
     public ResponseEntity<SuccessResponse<?>> getFlow(@AuthenticationPrincipal Users user,
-                                                      @PathVariable Long workspaceId,
-                                                      @PathVariable Long erdId) {
+                                                      @PathVariable("workspaceId") Long workspaceId,
+                                                      @PathVariable("erdId") Long erdId) {
         Erd erd = erdService.findByIdOrThrow(erdId);
         ERDFlowResponseDto dto = reactFlowConverter.convertToFlowResponse(erd);
 
@@ -71,7 +71,7 @@ public class ErdController {
     // workspaceId로 erdId 찾기
     @GetMapping("{workspaceId}/erd")
     public ResponseEntity<SuccessResponse<?>> getErdId(@AuthenticationPrincipal Users user,
-                                                       @PathVariable Long workspaceId) {
+                                                       @PathVariable("workspaceId") Long workspaceId) {
 
         Long data = erdService.findErdId(user, workspaceId);
         SuccessResponse<?> response = new SuccessResponse<>("success", "ERDID를 반환하였습니다", Map.of("erdId", data));

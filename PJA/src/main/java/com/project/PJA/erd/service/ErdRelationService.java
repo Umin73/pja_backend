@@ -1,9 +1,6 @@
 package com.project.PJA.erd.service;
 
-import com.project.PJA.erd.dto.CreateErdRelationDto;
-import com.project.PJA.erd.dto.ErdColumnResponseDto;
-import com.project.PJA.erd.dto.ErdRelationResponseDto;
-import com.project.PJA.erd.dto.ErdTableResponseDto;
+import com.project.PJA.erd.dto.*;
 import com.project.PJA.erd.entity.*;
 import com.project.PJA.erd.repository.ErdColumnRepository;
 import com.project.PJA.erd.repository.ErdRelationshipsRepository;
@@ -106,5 +103,24 @@ public class ErdRelationService {
         }
 
         erdRelationshipsRepository.delete(relationships);
+    }
+
+    @Transactional
+    public ErdRelationships updateRelationType(Users user, Long workspaceId, Long erdId, String strRelationId, UpdateRelationDto dto) {
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "게스트는 ERD 관계를 수정할 권한이 없습니다.");
+
+        Long relationId = Long.parseLong(strRelationId.replaceAll("[^0-9]", ""));
+
+        ErdRelationships relationships = erdRelationshipsRepository.findById(relationId).orElseThrow(
+                () -> new NotFoundException("해당 관계를 찾을 수 없습니다.")
+        );
+
+        if(!relationships.getFromTable().getErd().getErdId().equals(erdId)) {
+            throw new IllegalArgumentException("ERD에 속하지 않은 관계입니다.");
+        }
+
+        relationships.setType(dto.getType());
+
+        return erdRelationshipsRepository.save(relationships);
     }
 }
