@@ -34,6 +34,7 @@ public class MemberService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final WorkspaceActivityService workspaceActivityService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional(readOnly = true)
     public List<MemberResponse> getMembers(Long userId, Long workspaceId) {
@@ -156,5 +157,9 @@ public class MemberService {
             dtoSet.add(dto);
         }
         return dtoSet;
+    }
+
+    public void invalidateWorkspaceAuthCache(Long workspaceId) {
+        redisTemplate.delete("workspaceAuth:" + workspaceId);
     }
 }

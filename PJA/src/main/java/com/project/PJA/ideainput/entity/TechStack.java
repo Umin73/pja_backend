@@ -27,6 +27,10 @@ public class TechStack {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Builder
     public TechStack(IdeaInput ideaInput, String content) {
         this.ideaInput = ideaInput;

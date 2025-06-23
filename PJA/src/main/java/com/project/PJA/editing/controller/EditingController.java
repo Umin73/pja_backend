@@ -35,7 +35,7 @@ public class EditingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 편집 유지 keepEditing
+    // 편집 유지
     @PostMapping("/{workspaceId}/keep")
     public ResponseEntity<SuccessResponse<EditingResponse>> keepEditing(@AuthenticationPrincipal Users user,
                                                                         @PathVariable Long workspaceId,
@@ -51,7 +51,7 @@ public class EditingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 편집 삭제 stopEditing
+    // 편집 삭제
     @PostMapping("/{workspaceId}/stop")
     public ResponseEntity<SuccessResponse<EditingResponse>> stopEditing(@AuthenticationPrincipal Users user,
                                                                         @PathVariable Long workspaceId,
@@ -67,7 +67,7 @@ public class EditingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 편집 상태 조회 getEditingStatus
+    // 편집 상태 조회
     @GetMapping("/{workspaceId}/{page}")
     public ResponseEntity<SuccessResponse<List<EditingResponse>>> getEditingStatus(@AuthenticationPrincipal Users user,
                                                                                    @PathVariable Long workspaceId,

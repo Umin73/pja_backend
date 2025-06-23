@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +34,8 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RedisTemplate<String, String> redisTemplate;
     //private final WorkspaceActivityRepository workspaceActivityRepository;
     //private final WorkspaceActivityService workspaceActivityService;
 
@@ -356,6 +359,7 @@ public class WorkspaceService {
                 }
             }
         } catch (Exception e) {
+            log.error("권한 캐시 파싱 실패: key={}, data={}", key, data, e);
             throw new RuntimeException("권한 캐시 파싱 실패", e);
         }
     }
@@ -398,6 +402,7 @@ public class WorkspaceService {
                 throw new ForbiddenException("이 워크스페이스에 수정할 권한이 없습니다.");
             }
         } catch (Exception e) {
+            log.error("권한 캐시 파싱 실패: key={}, data={}", key, data, e);
             throw new RuntimeException("권한 캐시 파싱 실패", e);
         }
     }

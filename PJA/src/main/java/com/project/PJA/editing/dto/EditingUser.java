@@ -12,4 +12,5 @@ public class EditingUser {
     private String userName;
     private String field;
     private Long fieldId;
+    private String content;
 }

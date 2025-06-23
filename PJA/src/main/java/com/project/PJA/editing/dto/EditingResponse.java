@@ -13,4 +13,5 @@ public class EditingResponse {
     private String page;
     private String field;
     private Long fieldId;
+    private String content;
 }

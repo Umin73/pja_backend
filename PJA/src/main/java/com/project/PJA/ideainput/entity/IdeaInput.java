@@ -34,6 +34,10 @@ public class IdeaInput {
     @Column(name = "project_description", columnDefinition = "TEXT")
     private String projectDescription;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Builder
     public IdeaInput(Workspace workspace, String projectName, String projectTarget, String projectDescription) {
         this.workspace = workspace;
