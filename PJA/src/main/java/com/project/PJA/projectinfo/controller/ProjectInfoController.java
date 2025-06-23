@@ -23,6 +23,19 @@ import java.util.List;
 public class ProjectInfoController {
     private final ProjectInfoService projectInfoService;
     private final UserActionLogService userActionLogService;
+
+    // public 프로젝트 정보 전체 조회
+    @GetMapping("/project-info")
+    public ResponseEntity<SuccessResponse<String>> getAllProjectInfo() {
+        log.info("=== public 프로젝트 정보 전체 조회 API 진입 ===");
+        String allProjectInfo = projectInfoService.getAllProjectInfo();
+
+        SuccessResponse<String> response = new SuccessResponse<>(
+                "success", "프로젝트 정보를 성공적으로 조회했습니다.", allProjectInfo
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
     
     // 프로젝트 정보 조회
     @GetMapping("/{workspaceId}/project-info")
