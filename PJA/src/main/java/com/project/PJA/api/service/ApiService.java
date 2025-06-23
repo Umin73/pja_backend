@@ -78,7 +78,7 @@ public class ApiService {
                 ))
                 .collect(Collectors.toList());
     }
-
+    
     // API 명세서 AI 생성 요청
     @Transactional
     public List<ApiResponse> generateApiSpecByAI(Long userId, Long workspaceId) {
