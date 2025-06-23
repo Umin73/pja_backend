@@ -3,19 +3,18 @@ package com.project.PJA.project_progress.controller;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.project_progress.dto.MyActionDto;
 import com.project.PJA.project_progress.dto.ProjectProgressResponseDto;
+import com.project.PJA.project_progress.dto.fullAiDto.AiRecommendationResponseDto;
 import com.project.PJA.project_progress.service.ActionService;
 import com.project.PJA.project_progress.service.ProjectProgressService;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -58,5 +57,16 @@ public class ProjectProgressController {
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "내 진행률 조회에 성공하였습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("{workspaceId}/project/generation")
+    ResponseEntity<SuccessResponse<?>> generateProjectProgress(@AuthenticationPrincipal Users user,
+                                                            @PathVariable("workspaceId") Long workspaceId) {
+        log.info("== 프로젝트 진행 카테고리,기능,액션 추천받기 API 진입 ==");
+
+        AiRecommendationResponseDto data = projectProgressService.recommendFeatureStructure(user, workspaceId);
+
+        SuccessResponse<?> response = new SuccessResponse<>("success", "프로젝트 진행의 카테고리, 기능, 액션을 추천받았습니다.", data);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }
