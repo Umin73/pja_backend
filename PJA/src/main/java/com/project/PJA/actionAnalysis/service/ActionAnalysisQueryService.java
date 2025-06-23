@@ -6,6 +6,7 @@ import com.project.PJA.actionAnalysis.repository.AvgProcessingTimeResultReposito
 import com.project.PJA.actionAnalysis.repository.TaskImbalanceResultRepository;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -22,6 +23,7 @@ public class ActionAnalysisQueryService {
     private final WorkspaceRepository workspaceRepository;
     private final TaskImbalanceResultRepository taskImbalanceResultRepository;
     private final AvgProcessingTimeResultRepository avgProcessingTimeResultRepository;
+    private final UserRepository userRepository;
 
     public List<TaskImbalanceGraphDto> getTaskImbalanceGraph(Users user, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
@@ -40,11 +42,16 @@ public class ActionAnalysisQueryService {
 
         return avgProcessingTimeResultRepository.findByWorkspaceId(workspaceId)
                 .stream().map(
-                        result -> new AvgProcessingTimeGraphDto(
-                                result.getUserId(),
-                                result.getImportance(),
-                                result.getMeanHours()
-                        )
+                        result -> {
+                            Users foundUser = userRepository.findById(result.getUserId())
+                                    .orElseThrow(() -> new NotFoundException("유저 아이디로 사용자 정보를 찾을 수 없습니다."));
+                            return new AvgProcessingTimeGraphDto(
+                                    foundUser.getUserId(),
+                                    foundUser.getUsername(),
+                                    result.getImportance(),
+                                    result.getMeanHours()
+                                    );
+                        }
                 ).toList();
     }
 }
