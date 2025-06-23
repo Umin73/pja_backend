@@ -40,6 +40,9 @@ dependencies {
 	implementation 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
 	implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation platform('software.amazon.awssdk:bom:2.25.30')
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'software.amazon.awssdk:auth'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
