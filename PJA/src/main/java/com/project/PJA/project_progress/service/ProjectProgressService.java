@@ -1,7 +1,12 @@
 package com.project.PJA.project_progress.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.project_progress.dto.fullAiDto.AiProjectSummaryRequestDto;
+import com.project.PJA.project_progress.dto.fullAiDto.AiRecommendationResponseDto;
 import com.project.PJA.project_progress.entity.ActionParticipant;
+import com.project.PJA.projectinfo.dto.ProjectInfoSummaryDto;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.member.service.MemberService;
@@ -12,6 +17,7 @@ import com.project.PJA.project_progress.entity.FeatureCategory;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.project_progress.repository.FeatureCategoryRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
+import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
@@ -19,7 +25,13 @@ import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,6 +49,10 @@ public class ProjectProgressService {
     private final FeatureRepository featureRepository;
     private final ActionRepository actionRepository;
     private final MemberService memberService;
+    private final RestTemplate restTemplate;
+
+    @Value("${ml.path}")
+    private String mlPath;
 
     public ProjectProgressResponseDto getProjectProcessInfo(Long userId, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
@@ -165,5 +181,72 @@ public class ProjectProgressService {
             workspaceMemberDtos.add(dto);
         }
         return workspaceMemberDtos;
+    }
+
+    // 프로젝트 진행 카테고리,기능,액션 모두 AI 추천받기
+    public AiRecommendationResponseDto recommendFeatureStructure(Users user, Long workspaceId) {
+        Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        // 사용자가 오너 or 멤버가 아니면 403 반환
+        workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "오너 또는 멤버만 AI 생성 요청을 할 수 있습니다.");
+
+        // 프로젝트 정보 찾기
+        ProjectInfo projectInfo = projectInfoRepository.findByWorkspace_WorkspaceId(workspaceId)
+                .orElseThrow(() -> new NotFoundException("해당 워크스페이스에서 프로젝트 정보가 발견되지 않았습니다."));
+
+        // AI 요청 DTO 생성
+        AiProjectSummaryRequestDto requestDto = createAiRequestDto(projectInfo);
+
+        String url = mlPath + "/api/PJA/task_generate/generate";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<AiProjectSummaryRequestDto> entity = new HttpEntity<>(requestDto, headers);
+
+        try {
+            // AI 요청 후 String으로 응답 받기
+            ResponseEntity<String> rawResponse = restTemplate.postForEntity(url, entity, String.class);
+            String responseBody = rawResponse.getBody();
+
+            // JSON 수동 파싱
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(responseBody); // 전체 JSON 파싱
+            JsonNode generatedTasksNode = root.get("generated_tasks"); // 내부 필드 접근
+
+            AiRecommendationResponseDto parsed = mapper.treeToValue(generatedTasksNode, AiRecommendationResponseDto.class); // 원하는 DTO로 변환
+
+            return parsed;
+        } catch (Exception e) {
+            log.error("AI 추천 요청 중 예외 발생", e);
+            throw new RuntimeException("AI 추천 요청 실패", e);
+        }
+    }
+
+    AiProjectSummaryRequestDto createAiRequestDto(ProjectInfo info) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            ProjectInfoSummaryDto dto = toSummaryDto(info);
+            String jsonString = objectMapper.writeValueAsString(dto);
+            return new AiProjectSummaryRequestDto(jsonString);
+        } catch (Exception e) {
+            throw new RuntimeException("Project JSON 변환에 실패했습니다.", e);
+        }
+    }
+
+    public ProjectInfoSummaryDto toSummaryDto(ProjectInfo info) {
+        return new ProjectInfoSummaryDto(
+                info.getProjectInfoId(),
+                info.getTitle(),
+                info.getCategory(),
+                info.getTargetUsers(),
+                info.getCoreFeatures(),
+                info.getTechnologyStack(),
+                info.getProblemSolving(),
+                info.getCreatedAt().toString(),
+                info.getUpdatedAt().toString(),
+                info.getWorkspace().getWorkspaceId()
+        );
     }
 }
