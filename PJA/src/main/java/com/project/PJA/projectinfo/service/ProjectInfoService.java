@@ -62,11 +62,21 @@ public class ProjectInfoService {
                 .map(workspace -> workspace.getWorkspaceId())
                 .collect(Collectors.toList());
         List<ProjectInfo> projectInfos = projectInfoRepository.findAllByWorkspace_WorkspaceIdIn(foundWorkspaceIds);
-
+        List<ProjectInfoResponse> projectInfoResponses = projectInfos.stream()
+                .map(projectInfo -> new ProjectInfoResponse(
+                        projectInfo.getProjectInfoId(),
+                        projectInfo.getTitle(),
+                        projectInfo.getCategory(),
+                        projectInfo.getTargetUsers(),
+                        projectInfo.getCoreFeatures(),
+                        projectInfo.getTechnologyStack(),
+                        projectInfo.getProblemSolving()
+                ))
+                .collect(Collectors.toList());
         String project;
 
         try {
-            project = objectMapper.writeValueAsString(projectInfos);
+            project = objectMapper.writeValueAsString(projectInfoResponses);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
         }
