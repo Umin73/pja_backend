@@ -20,7 +20,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class UserController { // 로그인 하지 않고 접근 가능한 경우의 User Controller
+public class UserController { // 로그인 하지 않고 접근 가능한 경우의 User Controller!
 
     private final UserService userService;
     private final UserRepository userRepository;
