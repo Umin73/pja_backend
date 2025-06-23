@@ -298,6 +298,8 @@ public class UserService {
         String newImagePath = s3Service.uploadFile(file, "user", user.getUserId());
 //        String newImagePath = fileStorageService.storeFile(file, "user",user.getUserId());
         user.setProfileImage(newImagePath);
+
+        userRepository.save(user);
     }
 
     @Transactional
@@ -309,13 +311,14 @@ public class UserService {
         String imagePath = user.getProfileImage();
 
         if(imagePath != null && !imagePath.isBlank()) {
-            String fileName = Paths.get(imagePath).getFileName().toString();
-            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
-
-            Files.deleteIfExists(fullPath);
+//            String fileName = Paths.get(imagePath).getFileName().toString();
+//            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
+            s3Service.deleteFile(imagePath);
+//            Files.deleteIfExists(fullPath);
         }
 
         user.setProfileImage(null);
+        userRepository.save(user);
     }
 
     public Map<String, Object> getUserInfo(Users user) {

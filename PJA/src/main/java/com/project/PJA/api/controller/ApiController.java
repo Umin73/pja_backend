@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("/api/workspaces")
 public class ApiController {
     private final ApiService apiService;
-
+    
     // API 명세서 조회
     @GetMapping("/{workspaceId}/apis")
     public ResponseEntity<SuccessResponse<List<ApiResponse>>> getApi(@AuthenticationPrincipal Users user,
