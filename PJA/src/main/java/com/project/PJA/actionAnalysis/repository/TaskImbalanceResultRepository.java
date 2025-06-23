@@ -11,15 +11,25 @@ import java.util.List;
 public interface TaskImbalanceResultRepository extends JpaRepository<TaskImbalanceResult, Long> {
 
     @Query("""
-            SELECT new com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto(
-                t.state, t.importance, SUM(t.taskCount)
-            )
-            FROM TaskImbalanceResult t
-            WHERE t.workspaceId = :workspaceId AND t.analyzedAt = (
-                SELECT MAX(t2.analyzedAt) FROM TaskImbalanceResult t2 WHERE t2.workspaceId = :workspaceId
-            )
-            GROUP BY t.state, t.importance
-        """)
-    List<TaskImbalanceGraphDto> findLatestGroupedByStateAndImportance(@Param("workspaceId") Long workspaceId);
+    SELECT new com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto(
+        wm.workspaceMemberId,
+        wm.user.name,
+        t.state,
+        t.importance,
+        SUM(t.taskCount)
+    )
+    FROM TaskImbalanceResult t
+    JOIN WorkspaceMember wm
+        ON wm.user.userId = t.userId
+        AND wm.workspace.workspaceId = t.workspaceId
+    WHERE t.workspaceId = :workspaceId
+      AND t.analyzedAt = (
+        SELECT MAX(t2.analyzedAt)
+        FROM TaskImbalanceResult t2
+        WHERE t2.workspaceId = :workspaceId
+      )
+    GROUP BY wm.workspaceMemberId, wm.user.name, t.state, t.importance
+""")
+    List<TaskImbalanceGraphDto> findLatestGroupedByWorkspaceMember(@Param("workspaceId") Long workspaceId);
 
 }

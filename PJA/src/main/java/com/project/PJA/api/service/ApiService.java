@@ -309,7 +309,7 @@ public class ApiService {
         apiRepository.delete(foundApi);
 
         // 워크스페이스 최근 활동 데이터 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.UPDATE);
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.DELETE);
 
 
         return new ApiResponse(

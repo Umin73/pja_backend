@@ -28,10 +28,11 @@ public class WorkspaceActivity {
     @Column(name = "workspace_id", nullable = false)
     private Long workspaceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_WORKSPACE_ACTIVITY_USER"))
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Users user;
+    @Column(name = "user_id")
+    private Long userId;
+    private String username;
+    @Column(name = "user_profile")
+    private String userProfile;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

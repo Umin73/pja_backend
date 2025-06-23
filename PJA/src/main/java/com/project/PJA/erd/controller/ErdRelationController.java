@@ -2,6 +2,7 @@ package com.project.PJA.erd.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.erd.dto.CreateErdRelationDto;
+import com.project.PJA.erd.dto.ErdRelationResponseDto;
 import com.project.PJA.erd.entity.ErdRelationships;
 import com.project.PJA.erd.service.ErdRelationService;
 import com.project.PJA.user.entity.Users;
@@ -26,7 +27,9 @@ public class ErdRelationController {
                                                              @PathVariable Long erdId,
                                                              @RequestBody CreateErdRelationDto dto) {
         log.info("== ERD 관계 생성 API 진입, {}", dto);
-        ErdRelationships data = erdRelationService.createRelation(user, workspaceId, erdId, dto);
+        ErdRelationships relationships = erdRelationService.createRelation(user, workspaceId, erdId, dto);
+        ErdRelationResponseDto data = erdRelationService.getRelationDto(relationships);
+
         SuccessResponse<?> response = new SuccessResponse<>("success", "관계가 생성되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -35,7 +38,7 @@ public class ErdRelationController {
     public ResponseEntity<SuccessResponse<?>> deleteRelation(@AuthenticationPrincipal Users user,
                                                              @PathVariable Long workspaceId,
                                                              @PathVariable Long erdId,
-                                                             @PathVariable Long relationId) {
+                                                             @PathVariable String relationId) {
         log.info("== ERD 관계 삭제 API 진입 , relationId: {} ==",relationId);
         erdRelationService.deleteRelation(user, workspaceId, erdId, relationId);
 
