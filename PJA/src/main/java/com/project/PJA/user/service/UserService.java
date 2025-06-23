@@ -298,6 +298,8 @@ public class UserService {
         String newImagePath = s3Service.uploadFile(file, "user", user.getUserId());
 //        String newImagePath = fileStorageService.storeFile(file, "user",user.getUserId());
         user.setProfileImage(newImagePath);
+
+        userRepository.save(user);
     }
 
     @Transactional
