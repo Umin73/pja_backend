@@ -148,7 +148,7 @@ public class ActionService {
         actionRepository.save(action);
 
         Set<ActionParticipant> actionParticipants
-                = workspaceMemberRepository.findAllById(dto.getParticipantsIds()).stream()
+                = workspaceMemberRepository.findAllById(dto.getParticipantsId()).stream()
                         .filter(m -> m.getWorkspace().getWorkspaceId().equals(workspaceId))
                                 .map(member -> ActionParticipant.builder()
                                         .action(action)
