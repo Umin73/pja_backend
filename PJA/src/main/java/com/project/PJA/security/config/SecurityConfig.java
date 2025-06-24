@@ -36,7 +36,7 @@ public class SecurityConfig {
                                 "/login/oauth2/**",
                                 "/oauth2/**",
                                 "/api/workspaces/project-info",
-                                "/api/workspaces/**/noti/subscribe").permitAll()
+                                "/api/workspaces/*/noti/subscribe").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .oauth2Login(oauth2 -> oauth2
