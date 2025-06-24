@@ -1,6 +1,5 @@
 package com.project.PJA.project_progress.dto;
 
-import com.project.PJA.project_progress.entity.Progress;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -29,5 +27,5 @@ public class CreateActionDto {
     @Min(0) @Max(5)
     private Integer importance;
 
-    private List<Long> participantsIds; // worksapceMember의 id 목록
+    private List<Long> participantsId; // worksapceMember의 id 목록
 }
