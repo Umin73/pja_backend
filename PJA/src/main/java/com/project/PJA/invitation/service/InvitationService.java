@@ -74,7 +74,7 @@ public class InvitationService {
 
         for (Invitation invitation : invitations) {
             try {
-                String inviteUrl = "https://localhost:5173/invite?token=" + invitation.getToken();
+                String inviteUrl = "https://www.pja.kr/invite?token=" + invitation.getToken();
                 emailService.sendInvitationEmail(invitation.getInvitedEmail(), inviteUrl);
             } catch (Exception e) {
                 log.error("초대 이메일 전송 실패: {}", invitation.getInvitedEmail(), e);
