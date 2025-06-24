@@ -286,7 +286,7 @@ public class WorkspaceService {
             SimilarWorkspaceResponse body = response.getBody();
             SimilarWorkspaceIds workspaceIds = body.getSimiler_ID();
 
-            List<Workspace> workspaces = workspaceRepository.findAllById(workspaceIds.getWorkspace_ID());
+            List<Workspace> workspaces = workspaceRepository.findAllById(workspaceIds.getProject_ID());
 
             List<WorkspaceResponse> workspaceResponses = workspaces.stream()
                     .map(workspace -> new WorkspaceResponse(
