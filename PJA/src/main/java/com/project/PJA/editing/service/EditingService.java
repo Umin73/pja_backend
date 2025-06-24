@@ -1,10 +1,9 @@
 package com.project.PJA.editing.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.PJA.editing.dto.EditingRequest;
-import com.project.PJA.editing.dto.EditingResponse;
-import com.project.PJA.editing.dto.EditingUser;
+import com.project.PJA.editing.dto.*;
 import com.project.PJA.exception.ConflictException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -194,5 +193,44 @@ public class EditingService {
         }
         // 키 editing:data:{workspaceId}:{page}:{field} 형태
         return "editing:data:" + workspaceId + ":" + page + ":" + field;
+    }
+
+    // 아이디어 입력 편집 시작
+    public void startIdeaInputEditing(Long userId, String userName, String userProfile, Long workspaceId, IdeaInputEditingRequest request) {
+        workspaceService.authorizeOwnerOrMemberOrThrowFromCache(userId, workspaceId);
+
+        String key = "editing:data:" + workspaceId + ":idea-input";
+
+        IdeaInputEditingUser editingUser = new IdeaInputEditingUser(
+                userId,
+                userName,
+                userProfile,
+                request.getField(),
+                request.getFieldId(),
+                request.getContent()
+        );
+
+        String jsonArrayStr = redisTemplate.opsForValue().get(key);
+        List<IdeaInputEditingUser> editingUsers;
+
+        if (jsonArrayStr == null || jsonArrayStr.isEmpty()) {
+            editingUsers = new ArrayList<>();
+        } else {
+            try {
+                editingUsers = objectMapper.readValue(jsonArrayStr, new TypeReference<List<IdeaInputEditingUser>>() {});
+            } catch (JsonProcessingException e) {
+                log.error("JSON 파싱 에러:", e);
+                editingUsers = new ArrayList<>();
+            }
+        }
+
+        editingUsers.add(editingUser);
+
+        try {
+            String updatedJsonArrayStr = objectMapper.writeValueAsString(editingUsers);
+            redisTemplate.opsForValue().set(key, updatedJsonArrayStr);
+        } catch (JsonProcessingException e) {
+            log.error("JSON 파싱 에러:", e);
+        }
     }
 }
