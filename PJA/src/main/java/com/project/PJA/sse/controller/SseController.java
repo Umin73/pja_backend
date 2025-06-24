@@ -6,6 +6,7 @@ import com.project.PJA.sse.repository.SseEmitterRepository;
 import com.project.PJA.user.entity.Users;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.net.http.HttpResponse;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/workspaces")
@@ -25,6 +27,9 @@ public class SseController {
     @GetMapping("/{workspaceId}/noti/subscribe")
     public SseEmitter subscribe(@PathVariable("workspaceId") Long workspaceId,
                                 @RequestParam("token") String token) {
+
+        log.info("== SSE 구독 API 진입 ==");
+
         if (token == null || !jwtTokenProvider.validateToken(token)) {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
