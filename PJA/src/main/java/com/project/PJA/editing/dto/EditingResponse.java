@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 public class EditingResponse {
     private Long userId;
     private String userName;
+    private String userProfile;
     private String page;
     private String field;
-    private Long fieldId;
-    private String content;
+    private String fieldId;
 }

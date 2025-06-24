@@ -32,7 +32,7 @@ services:
       retries: 10
 
   my-cache-server:
-    image: redis/redis-stack-server:latest
+    image: redis:7
     ports:
       - 6379:6379
     healthcheck:

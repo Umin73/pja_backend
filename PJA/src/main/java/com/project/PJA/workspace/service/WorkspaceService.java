@@ -467,6 +467,8 @@ public class WorkspaceService {
             if (!authorized) {
                 throw new ForbiddenException("이 워크스페이스에 수정할 권한이 없습니다.");
             }
+        } catch (ForbiddenException e) {
+            throw e;
         } catch (Exception e) {
             log.error("권한 캐시 파싱 실패: key={}, data={}", key, data, e);
             throw new RuntimeException("권한 캐시 파싱 실패", e);

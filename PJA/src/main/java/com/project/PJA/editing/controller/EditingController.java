@@ -3,7 +3,6 @@ package com.project.PJA.editing.controller;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.editing.dto.EditingRequest;
 import com.project.PJA.editing.dto.EditingResponse;
-import com.project.PJA.editing.dto.IdeaInputEditingRequest;
 import com.project.PJA.editing.service.EditingService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +28,8 @@ public class EditingController {
                                                                          @RequestBody EditingRequest editingRequest) {
         Long userId = user.getUserId();
         String userName = user.getName();
-        EditingResponse editingResponse = editingService.startEditing(userId, userName, workspaceId, editingRequest);
+        String userProfile = user.getProfileImage();
+        EditingResponse editingResponse = editingService.startEditing(userId, userName, userProfile, workspaceId, editingRequest);
 
         SuccessResponse<EditingResponse> response = new SuccessResponse<>(
                 "success", "편집을 시작했습니다.", editingResponse
@@ -45,7 +45,8 @@ public class EditingController {
                                                                         @RequestBody EditingRequest editingRequest) {
         Long userId = user.getUserId();
         String userName = user.getName();
-        EditingResponse editingResponse = editingService.keepEditing(userId, userName, workspaceId, editingRequest);
+        String userProfile = user.getProfileImage();
+        EditingResponse editingResponse = editingService.keepEditing(userId, userName, userProfile, workspaceId, editingRequest);
 
         SuccessResponse<EditingResponse> response = new SuccessResponse<>(
                 "success", "편집을 유지합니다.", editingResponse
@@ -61,7 +62,8 @@ public class EditingController {
                                                                         @RequestBody EditingRequest editingRequest) {
         Long userId = user.getUserId();
         String userName = user.getName();
-        EditingResponse editingResponse = editingService.stopEditing(userId, userName, workspaceId, editingRequest);
+        String userProfile = user.getProfileImage();
+        EditingResponse editingResponse = editingService.stopEditing(userId, userName, userProfile, workspaceId, editingRequest);
 
         SuccessResponse<EditingResponse> response = new SuccessResponse<>(
                 "success", "편집을 종료합니다.", editingResponse
@@ -80,25 +82,6 @@ public class EditingController {
 
         SuccessResponse<List<EditingResponse>> response = new SuccessResponse<>(
                 "success", "편집 중인 페이지를 조회합니다.", editingResponses
-        );
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    // 아이디어 입력 편집 시작
-    @PostMapping("/{workspaceId}/idea-input/start")
-    public ResponseEntity<SuccessResponse<Void>> startIdeaInputEditing(@AuthenticationPrincipal Users user,
-                                                                       @PathVariable Long workspaceId,
-                                                                       @PathVariable IdeaInputEditingRequest request) {
-        Long userId = user.getUserId();
-        String userName = user.getName();
-        String userProfile = user.getProfileImage();
-        log.info("=== 아이디어 입력 편집 시작 API 진입 == userId: {}", userId);
-
-        editingService.startIdeaInputEditing(userId, userName, userProfile, workspaceId, request);
-
-        SuccessResponse<Void> response = new SuccessResponse<>(
-                "success", "아이디어 입력 편집을 시작합니다.", null
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

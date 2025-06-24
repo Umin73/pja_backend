@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class EditingUser {
     private Long userId;
     private String userName;
+    private String userProfile;
     private String field;
-    private Long fieldId;
-    private String content;
+    private String fieldId;
 }

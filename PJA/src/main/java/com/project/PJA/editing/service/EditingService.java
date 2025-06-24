@@ -1,9 +1,10 @@
 package com.project.PJA.editing.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.PJA.editing.dto.*;
+import com.project.PJA.editing.dto.EditingRequest;
+import com.project.PJA.editing.dto.EditingResponse;
+import com.project.PJA.editing.dto.EditingUser;
 import com.project.PJA.exception.ConflictException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -24,10 +25,10 @@ import java.util.List;
 public class EditingService {
     private final WorkspaceService workspaceService;
     private final RedisTemplate<String, String> redisTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     // 편집 시작
-    public EditingResponse startEditing(Long userId, String userName, Long workspaceId, EditingRequest request) {
+    public EditingResponse startEditing(Long userId, String userName, String userProfile, Long workspaceId, EditingRequest request) {
         workspaceService.authorizeOwnerOrMemberOrThrowFromCache(userId, workspaceId);
 
         String key = makeRedisKey(workspaceId, request.getPage(), request.getField(), request.getFieldId());
@@ -35,9 +36,9 @@ public class EditingService {
         EditingUser editingUser = new EditingUser(
                 userId,
                 userName,
+                userProfile,
                 request.getField(),
-                request.getFieldId(),
-                request.getContent()
+                request.getFieldId()
         );
 
         try {
@@ -52,10 +53,10 @@ public class EditingService {
             return new EditingResponse(
                     userId,
                     userName,
+                    userProfile,
                     request.getPage(),
                     request.getField(),
-                    request.getFieldId(),
-                    request.getContent()
+                    request.getFieldId()
             );
         } catch (JsonProcessingException e) {
             throw new RuntimeException("편집 정보 직렬화 실패", e);
@@ -63,7 +64,7 @@ public class EditingService {
     }
 
     // 편집 유지
-    public EditingResponse keepEditing(Long userId, String userName, Long workspaceId, EditingRequest request) {
+    public EditingResponse keepEditing(Long userId, String userName, String userProfile, Long workspaceId, EditingRequest request) {
         String key = makeRedisKey(workspaceId, request.getPage(), request.getField(), request.getFieldId());
         String value = redisTemplate.opsForValue().get(key);
         if (value == null) {
@@ -82,10 +83,10 @@ public class EditingService {
             return new EditingResponse(
                     userId,
                     userName,
+                    userProfile,
                     request.getPage(),
                     request.getField(),
-                    request.getFieldId(),
-                    request.getContent()
+                    request.getFieldId()
             );
         } catch (JsonProcessingException e) {
             throw new RuntimeException("편집 정보 역직렬화 실패", e);
@@ -93,7 +94,7 @@ public class EditingService {
     }
 
     // 편집 삭제
-    public EditingResponse stopEditing(Long userId, String userName, Long workspaceId, EditingRequest request) {
+    public EditingResponse stopEditing(Long userId, String userName, String userProfile, Long workspaceId, EditingRequest request) {
         String key = makeRedisKey(workspaceId, request.getPage(), request.getField(), request.getFieldId());
         String value = redisTemplate.opsForValue().get(key);
 
@@ -113,10 +114,10 @@ public class EditingService {
             return new EditingResponse(
                     userId,
                     userName,
+                    userProfile,
                     request.getPage(),
                     request.getField(),
-                    request.getFieldId(),
-                    request.getContent()
+                    request.getFieldId()
             );
         } catch (JsonProcessingException e) {
             throw new RuntimeException("편집 정보 역직렬화 실패", e);
@@ -131,59 +132,66 @@ public class EditingService {
         // 확인했으니 보여주기
         String pattern = "editing:data:" + workspaceId + ":" + page + ":*";
         List<EditingResponse> responses = new ArrayList<>();
-        Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
+
+        try(Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
                 .getConnection()
-                .scan(ScanOptions.scanOptions().match(pattern).count(1000).build());
+                .scan(ScanOptions.scanOptions().match(pattern).count(1000).build())) {
+            while (cursor.hasNext()) {
+                String key = new String(cursor.next());
+                String value = redisTemplate.opsForValue().get(key);
+                if (value == null) continue;
 
-        while (cursor.hasNext()) {
-            String key = new String(cursor.next());
-            String value = redisTemplate.opsForValue().get(key);
-            if (value == null) continue;
+                try {
+                    EditingUser editingUser = objectMapper.readValue(value, EditingUser.class);
 
-            try {
-                EditingUser editingUser = objectMapper.readValue(value, EditingUser.class);
-
-                String[] parts = key.split(":");
-                String parsedField = null;
-                Long parsedFieldId = null;
-
-                if (page.equals("project-info") || page.equals("apis") || page.equals("action")) {
-                    // editing:data:{workspaceId}:{page}:{fieldId}
-                    if (parts.length == 5) {
-                        parsedFieldId = Long.valueOf(parts[4]);
+                    if (editingUser.getUserId().equals(userId)) {
+                        continue;
                     }
-                } else {
-                    // editing:data:{workspaceId}:{page}:{field}
-                    if (parts.length == 5) {
-                        parsedField = parts[4];
+
+                    String[] parts = key.split(":");
+                    String parsedField = null;
+                    String parsedFieldId = null;
+
+                    if (page.equals("project-info") || page.equals("apis") || page.equals("action")) {
+                        // editing:data:{workspaceId}:{page}:{fieldId}
+                        if (parts.length == 5) {
+                            parsedFieldId = parts[4];
+                        }
+                    } else {
+                        // editing:data:{workspaceId}:{page}:{field}
+                        if (parts.length == 5) {
+                            parsedField = parts[4];
+                        }
+                        // editing:data:{workspaceId}:{page}:{field}:{fieldId}
+                        else if (parts.length == 6) {
+                            parsedField = parts[4];
+                            parsedFieldId = parts[5];
+                        }
                     }
-                    // editing:data:{workspaceId}:{page}:{field}:{fieldId}
-                    else if (parts.length == 6) {
-                        parsedField = parts[4];
-                        parsedFieldId = Long.valueOf(parts[5]);
-                    }
+
+                    EditingResponse response = new EditingResponse(
+                            editingUser.getUserId(),
+                            editingUser.getUserName(),
+                            editingUser.getUserProfile(),
+                            page,
+                            parsedField,
+                            parsedFieldId
+                    );
+
+                    responses.add(response);
+                } catch (JsonProcessingException e) {
+                    log.error("편집 정보 역직렬화 실패", e);
+                    continue;
                 }
-
-                EditingResponse response = new EditingResponse(
-                        editingUser.getUserId(),
-                        editingUser.getUserName(),
-                        page,
-                        parsedField,
-                        parsedFieldId,
-                        editingUser.getContent()
-                );
-
-                responses.add(response);
-            } catch (JsonProcessingException e) {
-                log.error("편집 정보 역직렬화 실패", e);
-                continue;
             }
         }
+
+
         return responses;
     }
 
-    private String makeRedisKey(Long workspaceId, String page, String field, Long fieldId) {
-        if (page.equals("project-info") || page.equals("apis") || page.equals("action")) {
+    private String makeRedisKey(Long workspaceId, String page, String field, String fieldId) {
+        if (page.equals("requirements") || page.equals("project-info") || page.equals("apis") || page.equals("action")) {
             // 키 editing:data:{workspaceId}:{page}:{fieldId} 형태 (row 단위)
             return "editing:data:" + workspaceId + ":" + page + ":" + fieldId;
         }
@@ -193,44 +201,5 @@ public class EditingService {
         }
         // 키 editing:data:{workspaceId}:{page}:{field} 형태
         return "editing:data:" + workspaceId + ":" + page + ":" + field;
-    }
-
-    // 아이디어 입력 편집 시작
-    public void startIdeaInputEditing(Long userId, String userName, String userProfile, Long workspaceId, IdeaInputEditingRequest request) {
-        workspaceService.authorizeOwnerOrMemberOrThrowFromCache(userId, workspaceId);
-
-        String key = "editing:data:" + workspaceId + ":idea-input";
-
-        IdeaInputEditingUser editingUser = new IdeaInputEditingUser(
-                userId,
-                userName,
-                userProfile,
-                request.getField(),
-                request.getFieldId(),
-                request.getContent()
-        );
-
-        String jsonArrayStr = redisTemplate.opsForValue().get(key);
-        List<IdeaInputEditingUser> editingUsers;
-
-        if (jsonArrayStr == null || jsonArrayStr.isEmpty()) {
-            editingUsers = new ArrayList<>();
-        } else {
-            try {
-                editingUsers = objectMapper.readValue(jsonArrayStr, new TypeReference<List<IdeaInputEditingUser>>() {});
-            } catch (JsonProcessingException e) {
-                log.error("JSON 파싱 에러:", e);
-                editingUsers = new ArrayList<>();
-            }
-        }
-
-        editingUsers.add(editingUser);
-
-        try {
-            String updatedJsonArrayStr = objectMapper.writeValueAsString(editingUsers);
-            redisTemplate.opsForValue().set(key, updatedJsonArrayStr);
-        } catch (JsonProcessingException e) {
-            log.error("JSON 파싱 에러:", e);
-        }
     }
 }
