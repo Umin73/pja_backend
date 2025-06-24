@@ -17,6 +17,7 @@ import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
 import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class MemberService {
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final WorkspaceActivityService workspaceActivityService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional(readOnly = true)
     public List<MemberResponse> getMembers(Long userId, Long workspaceId) {
@@ -100,6 +102,8 @@ public class MemberService {
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(targetMember.getUser(), workspaceId, ActivityTargetType.ROLE, ActivityActionType.CHANGE);
 
+        invalidateWorkspaceAuthCache(workspaceId);
+
         return new MemberResponse(
                 targetMember.getUser().getUserId(),
                 targetMember.getUser().getName(),
@@ -126,6 +130,8 @@ public class MemberService {
 
         workspaceMemberRepository.delete(foundWorkspaceMember);
 
+        invalidateWorkspaceAuthCache(workspaceId);
+
         return new MemberResponse(
                 foundWorkspaceMember.getUser().getUserId(),
                 foundWorkspaceMember.getUser().getName(),
@@ -151,5 +157,9 @@ public class MemberService {
             dtoSet.add(dto);
         }
         return dtoSet;
+    }
+
+    private void invalidateWorkspaceAuthCache(Long workspaceId) {
+        redisTemplate.delete("workspaceAuth:" + workspaceId);
     }
 }
