@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         log.error("error, {}", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("error", "서버 내부 오류가 발생했습니다."));
+                .body(new ErrorResponse("error", ex.getMessage()));
     }
 
     // 503 Service Unavailable

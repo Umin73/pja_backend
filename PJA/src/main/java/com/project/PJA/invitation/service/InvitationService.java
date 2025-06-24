@@ -24,6 +24,7 @@ import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class InvitationService {
     private final EmailService emailService;
     private final WorkspaceService workspaceService;
     private final WorkspaceActivityService workspaceActivityService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     // 워크스페이스 팀원 초대 메일 전송
     @Transactional
@@ -150,6 +152,7 @@ public class InvitationService {
 
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(foundUser, foundWorkspace.getWorkspaceId(), ActivityTargetType.MEMBER, ActivityActionType.JOIN);
+        invalidateWorkspaceAuthCache(foundWorkspace.getWorkspaceId());
 
         return new InvitationDecisionResponse(
                 foundWorkspace.getWorkspaceId(),
@@ -188,5 +191,9 @@ public class InvitationService {
                 foundWorkspace.getWorkspaceId(),
                 foundUser.getEmail(),
                 foundInvitation.getWorkspaceRole());
+    }
+
+    private void invalidateWorkspaceAuthCache(Long workspaceId) {
+        redisTemplate.delete("workspaceAuth:" + workspaceId);
     }
 }
