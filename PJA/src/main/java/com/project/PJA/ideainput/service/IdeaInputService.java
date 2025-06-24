@@ -1,7 +1,6 @@
 package com.project.PJA.ideainput.service;
 
 import com.project.PJA.exception.BadRequestException;
-import com.project.PJA.exception.ConflictException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.ideainput.dto.IdeaInputRequest;
 import com.project.PJA.ideainput.dto.IdeaInputResponse;
@@ -21,7 +20,6 @@ import com.project.PJA.workspace_activity.enumeration.ActivityActionType;
 import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -231,38 +229,37 @@ public class IdeaInputService {
             validateNotEmpty(ts.getContent(), "기술 스택을 비어둘 수 없습니다.");
         }
 
-        try {
-            IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
-                    .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+        IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
 
-            if (!foundIdeaInput.getWorkspace().getWorkspaceId().equals(workspaceId)) {
-                throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
+        if (!foundIdeaInput.getWorkspace().getWorkspaceId().equals(workspaceId)) {
+            throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
+        }
+
+        foundIdeaInput.update(ideaInputRequest.getProjectName(), ideaInputRequest.getProjectTarget(), ideaInputRequest.getProjectDescription());
+
+        for (MainFunctionData req : ideaInputRequest.getMainFunction()) {
+            MainFunction mf = mainFunctionRepository.findById(req.getMainFunctionId())
+                    .orElseThrow(() -> new NotFoundException("요청하신 ID가 " + req.getMainFunctionId() + "인 메인 기능을 찾을 수 없습니다."));
+            if (!mf.getIdeaInput().getIdeaInputId().equals(ideaInputId)) {
+                throw new BadRequestException("요청하신 메인 기능이 현재 아이디어에 속하지 않습니다.");
             }
+            mf.update(req.getContent());
+        }
 
-            foundIdeaInput.update(ideaInputRequest.getProjectName(), ideaInputRequest.getProjectTarget(), ideaInputRequest.getProjectDescription());
-
-            for (MainFunctionData req : ideaInputRequest.getMainFunction()) {
-                MainFunction mf = mainFunctionRepository.findById(req.getMainFunctionId())
-                        .orElseThrow(() -> new NotFoundException("요청하신 ID가 " + req.getMainFunctionId() + "인 메인 기능을 찾을 수 없습니다."));
-                if (!mf.getIdeaInput().getIdeaInputId().equals(ideaInputId)) {
-                    throw new BadRequestException("요청하신 메인 기능이 현재 아이디어에 속하지 않습니다.");
-                }
-                mf.update(req.getContent());
+        for (TechStackData req : ideaInputRequest.getTechStack()) {
+            TechStack ts = techStackRepository.findById(req.getTechStackId())
+                    .orElseThrow(() -> new NotFoundException("요청하신 ID가 " + req.getTechStackId() + "인 기술 스택을 찾을 수 없습니다."));
+            if (!ts.getIdeaInput().getIdeaInputId().equals(ideaInputId)) {
+                throw new BadRequestException("요청하신 기술 스택이 현재 아이디어에 속하지 않습니다.");
             }
+            ts.update(req.getContent());
+        }
 
-            for (TechStackData req : ideaInputRequest.getTechStack()) {
-                TechStack ts = techStackRepository.findById(req.getTechStackId())
-                        .orElseThrow(() -> new NotFoundException("요청하신 ID가 " + req.getTechStackId() + "인 기술 스택을 찾을 수 없습니다."));
-                if (!ts.getIdeaInput().getIdeaInputId().equals(ideaInputId)) {
-                    throw new BadRequestException("요청하신 기술 스택이 현재 아이디어에 속하지 않습니다.");
-                }
-                ts.update(req.getContent());
-            }
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
 
-            // 최근 활동 기록 추가
-            workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
-
-            // 단계 검사해서 0이면 1로 올려주기
+        // 단계 검사해서 0이면 1로 올려주기
             /*Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
@@ -270,17 +267,14 @@ public class IdeaInputService {
                 foundWorkspace.updateProgressStep(ProgressStep.ONE);
             }*/
 
-            return new IdeaInputResponse(
-                    ideaInputId,
-                    ideaInputRequest.getProjectName(),
-                    ideaInputRequest.getProjectTarget(),
-                    ideaInputRequest.getMainFunction(),
-                    ideaInputRequest.getTechStack(),
-                    ideaInputRequest.getProjectDescription()
-            );
-        } catch (ObjectOptimisticLockingFailureException e) {
-            throw new ConflictException("다른 사용자가 먼저 수정하였습니다. 새로고침 후 다시 시도해주세요.");
-        }
+        return new IdeaInputResponse(
+                ideaInputId,
+                ideaInputRequest.getProjectName(),
+                ideaInputRequest.getProjectTarget(),
+                ideaInputRequest.getMainFunction(),
+                ideaInputRequest.getTechStack(),
+                ideaInputRequest.getProjectDescription()
+        );
     }
 
     private void validateNotEmpty(String value, String errorMessage) {
