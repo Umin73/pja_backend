@@ -159,7 +159,7 @@ public class MemberService {
         return dtoSet;
     }
 
-    public void invalidateWorkspaceAuthCache(Long workspaceId) {
+    private void invalidateWorkspaceAuthCache(Long workspaceId) {
         redisTemplate.delete("workspaceAuth:" + workspaceId);
     }
 }

@@ -243,6 +243,7 @@ public class WorkspaceService {
 
         // 해당 워크스페이스의 오너이면 삭제
         workspaceRepository.delete(foundWorkspace);
+        invalidateWorkspaceAuthCache(workspaceId);
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
@@ -324,6 +325,7 @@ public class WorkspaceService {
                 .orElseThrow(() -> new ForbiddenException("해당 워크스페이스의 팀원이 아닙니다."));
 
         workspaceMemberRepository.delete(foundWorkspaceMember);
+        invalidateWorkspaceAuthCache(workspaceId);
 
         return new WorkspaceLeaveRequest(
                 workspaceId,
@@ -473,5 +475,9 @@ public class WorkspaceService {
             log.error("권한 캐시 파싱 실패: key={}, data={}", key, data, e);
             throw new RuntimeException("권한 캐시 파싱 실패", e);
         }
+    }
+
+    private void invalidateWorkspaceAuthCache(Long workspaceId) {
+        redisTemplate.delete("workspaceAuth:" + workspaceId);
     }
 }
