@@ -15,6 +15,7 @@ services:
     environment:
       LOG_PATH: /app/shared_logs/user-actions.json
       ML_API_PATH: ${ML_PATH}/api/PJA/stats/generate
+      LOG_DIR: /app/shared_logs
 
   my-db:
     image: postgres:15
