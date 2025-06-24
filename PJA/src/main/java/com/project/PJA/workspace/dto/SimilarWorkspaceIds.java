@@ -10,5 +10,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimilarWorkspaceIds {
-    private List<Long> workspace_ID;
+    private List<Long> project_ID;
 }
