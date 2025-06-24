@@ -148,7 +148,7 @@ public class ActionService {
         actionRepository.save(action);
 
         Set<ActionParticipant> actionParticipants
-                = workspaceMemberRepository.findAllById(dto.getParticipantsId()).stream()
+                = workspaceMemberRepository.findAllById(dto.getParticipantsIds()).stream()
                         .filter(m -> m.getWorkspace().getWorkspaceId().equals(workspaceId))
                                 .map(member -> ActionParticipant.builder()
                                         .action(action)
@@ -278,24 +278,25 @@ public class ActionService {
 
             if(Progress.valueOf(dto.getState().toUpperCase()).equals(Progress.DONE)) {
                 // 상태가 완료로 변경될 시 -> 유저 행동 로그 데이터 남김
+                Map<String ,Object> logDetails = new HashMap<>();
+                logDetails.put("name", action.getName());
+                logDetails.put("state", action.getState().name());
+                logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
+                logDetails.put("startDate", action.getStartDate());
+                logDetails.put("endDate", LocalDateTime.now());
+                logDetails.put("participants", action.getParticipants().stream()
+                        .map(pm -> Map.of(
+                                "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                                "username", pm.getWorkspaceMember().getUser().getUsername()
+                        ))
+                        .collect(Collectors.toList()));
+
                 userActionLogService.log(
                         UserActionType.DONE_PROJECT_PROGRESS_ACTION,
                         String.valueOf(user.getUserId()),
                         user.getUsername(),
                         workspaceId,
-                        Map.of(
-                                "name", action.getName(),
-                                "state", action.getState().name(),
-                                "importance", action.getImportance(),
-                                "startDate", action.getStartDate(),
-                                "endDate", LocalDateTime.now(),
-                                "participants", action.getParticipants().stream()
-                                        .map(pm -> Map.of(
-                                                "userId", pm.getWorkspaceMember().getUser().getUserId(),
-                                                "username", pm.getWorkspaceMember().getUser().getUsername()
-                                        ))
-                                        .collect(Collectors.toList())
-                        )
+                        logDetails
                 );
             }
         }
@@ -316,23 +317,24 @@ public class ActionService {
 
             action.getParticipants().addAll(updatedParticipants);
 
+            Map<String, Object> logDetails = new HashMap<>();
+            logDetails.put("name", action.getName());
+            logDetails.put("state", action.getState().name());
+            logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
+            logDetails.put("participants", action.getParticipants().stream()
+                    .map(pm -> Map.of(
+                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                            "username", pm.getWorkspaceMember().getUser().getUsername()
+                    ))
+                    .collect(Collectors.toList()));
+
             // 참여자 추가(수정) 시 -> 유저 행동 로그 데이터 남김
             userActionLogService.log(
                     UserActionType.UPDATE_PARTICIPANT_TO_ACTION,
                     String.valueOf(user.getUserId()),
                     user.getUsername(),
                     workspaceId,
-                    Map.of(
-                            "name", action.getName(),
-                            "state", action.getState().name(),
-                            "importance", action.getImportance(),
-                            "participants", action.getParticipants().stream()
-                                    .map(pm -> Map.of(
-                                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
-                                            "username", pm.getWorkspaceMember().getUser().getUsername()
-                                    ))
-                                    .collect(Collectors.toList())
-                    )
+                    logDetails
             );
         }
 
