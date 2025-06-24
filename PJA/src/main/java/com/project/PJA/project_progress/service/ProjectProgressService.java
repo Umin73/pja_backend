@@ -3,17 +3,13 @@ package com.project.PJA.project_progress.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.project_progress.dto.fullAiDto.AiProjectSummaryRequestDto;
-import com.project.PJA.project_progress.dto.fullAiDto.AiRecommendationResponseDto;
-import com.project.PJA.project_progress.entity.ActionParticipant;
+import com.project.PJA.project_progress.dto.fullAiDto.*;
+import com.project.PJA.project_progress.entity.*;
 import com.project.PJA.projectinfo.dto.ProjectInfoSummaryDto;
 import com.project.PJA.projectinfo.entity.ProjectInfo;
 import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.member.service.MemberService;
 import com.project.PJA.project_progress.dto.*;
-import com.project.PJA.project_progress.entity.Action;
-import com.project.PJA.project_progress.entity.Feature;
-import com.project.PJA.project_progress.entity.FeatureCategory;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.project_progress.repository.FeatureCategoryRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
@@ -30,6 +26,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -50,6 +47,7 @@ public class ProjectProgressService {
     private final ActionRepository actionRepository;
     private final MemberService memberService;
     private final RestTemplate restTemplate;
+    private final ActionPostService actionPostService;
 
     @Value("${ml.path}")
     private String mlPath;
@@ -215,6 +213,52 @@ public class ProjectProgressService {
             JsonNode generatedTasksNode = root.get("generated_tasks"); // 내부 필드 접근
 
             AiRecommendationResponseDto parsed = mapper.treeToValue(generatedTasksNode, AiRecommendationResponseDto.class); // 원하는 DTO로 변환
+
+            List< AiCategoryDto> aiCategories = parsed.getRecommendedCategories();
+            int categoryOrder = 0;
+            for (AiCategoryDto categoryDto: aiCategories) {
+                // 카테고리 DB에 저장
+                FeatureCategory category = FeatureCategory.builder()
+                        .workspace(foundWorkspace)
+                        .name(categoryDto.getName())
+                        .orderIndex(categoryOrder++)
+                        .hasTest(false)
+                        .build();
+
+                FeatureCategory savedCategory = featureCategoryRepository.save(category);
+
+                int featureOrder = 0;
+                for(AiFeatureDto featureDto: categoryDto.getFeatures()) {
+                    // 기능 DB에 저장
+                    Feature feature = Feature.builder()
+                            .workspace(foundWorkspace)
+                            .name(featureDto.getName())
+                            .orderIndex(featureOrder++)
+                            .hasTest(false)
+                            .category(savedCategory)
+                            .build();
+
+                    Feature savedFeature = featureRepository.save(feature);
+
+                    int actionOrder = 0;
+                    for(AiActionDto actionDto: featureDto.getActions()) {
+                        Action action = Action.builder()
+                                .name(actionDto.getName())
+                                .workspace(foundWorkspace)
+                                .state(Progress.BEFORE)
+                                .importance(actionDto.getImportance())
+                                .hasTest(false)
+                                .orderIndex(actionOrder++)
+                                .feature(savedFeature)
+                                .participants(new HashSet<>())
+                                .build();
+
+                        Action savedAction = actionRepository.save(action);
+
+                        actionPostService.createActionPost(savedAction);
+                    }
+                }
+            }
 
             return parsed;
         } catch (Exception e) {
