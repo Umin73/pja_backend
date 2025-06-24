@@ -27,7 +27,7 @@ public class ErdColumnController {
     public ResponseEntity<SuccessResponse<?>> createErdColumn(@AuthenticationPrincipal Users user,
                                                               @PathVariable("workspaceId") Long workspaceId,
                                                               @PathVariable("erdId") Long erdId,
-                                                              @PathVariable("tableId") Long tableId,
+                                                              @PathVariable("tableId") String tableId,
                                                               @RequestBody ErdColumnRequestDto dto) {
         // GUEST는 삭제X
         // 멤버 권한 로직 작성 완료 시 추가 필요
@@ -44,8 +44,8 @@ public class ErdColumnController {
     public ResponseEntity<SuccessResponse<?>> updateErdColumn(@AuthenticationPrincipal Users user,
                                                                  @PathVariable("workspaceId") Long workspaceId,
                                                                  @PathVariable("erdId") Long erdId,
-                                                                 @PathVariable("tableId") Long tableId,
-                                                                 @PathVariable("columnId") Long columnId,
+                                                                 @PathVariable("tableId") String tableId,
+                                                                 @PathVariable("columnId") String columnId,
                                                                  @RequestBody ErdColumnRequestDto dto) {
         // GUEST는 삭제X
         // 멤버 권한 로직 작성 완료 시 추가 필요
@@ -61,14 +61,14 @@ public class ErdColumnController {
     public ResponseEntity<SuccessResponse<?>> deleteErdColumn(@AuthenticationPrincipal Users user,
                                                               @PathVariable("workspaceId") Long workspaceId,
                                                               @PathVariable("erdId") Long erdId,
-                                                              @PathVariable("tableId") Long tableId,
-                                                              @PathVariable("columnId") Long columnId) {
+                                                              @PathVariable("tableId") String tableId,
+                                                              @PathVariable("columnId") String columnId) {
         // GUEST는 삭제X
         // 멤버 권한 로직 작성 완료 시 추가 필요
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD 컬럼을 삭제할 권한이 없습니다.");
 
         erdColumnService.deleteErdColumn(user, workspaceId, erdId, tableId, columnId);
-        SuccessResponse<?> response = new SuccessResponse<>("success", "ERD 테이블이 성공적으로 삭제되었습니다.", null);
+        SuccessResponse<?> response = new SuccessResponse<>("success", "ERD 컬럼이 성공적으로 삭제되었습니다.", null);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

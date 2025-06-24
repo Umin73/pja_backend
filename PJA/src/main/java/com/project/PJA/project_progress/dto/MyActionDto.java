@@ -1,4 +1,4 @@
-package com.project.PJA.actionAnalysis.dto;
+package com.project.PJA.project_progress.dto;
 
 import com.project.PJA.project_progress.entity.Progress;
 import lombok.AllArgsConstructor;
@@ -6,14 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Setter
+import java.time.LocalDateTime;
+
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TaskImbalanceGraphDto {
-    private Long memberId;
-    private String username;
-    private Progress state;
+public class MyActionDto {
+    private Long actionId;
+    private String actionName;
+    private LocalDateTime endDate;
+    private String state;
     private Integer importance;
-    private Long taskCount;
 }

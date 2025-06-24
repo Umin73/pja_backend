@@ -11,4 +11,6 @@ public class TableNodeDto {
     private String id;          // 테이블 ID (e.g., "users")
     private String tableName;
     private List<FieldDto> fields;
+    private double positionX;
+    private double positionY;
 }

@@ -11,6 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AvgProcessingTimeGraphDto {
     private Long userId;
+    private String username;
     private Integer importance;
     private Long meanHours;
 }

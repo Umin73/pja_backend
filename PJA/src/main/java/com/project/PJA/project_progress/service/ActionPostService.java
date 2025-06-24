@@ -1,6 +1,7 @@
 package com.project.PJA.project_progress.service;
 
 import com.project.PJA.common.file.FileStorageService;
+import com.project.PJA.common.service.S3Service;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.project_progress.dto.ActionCommentResponseDto;
@@ -31,6 +32,7 @@ public class ActionPostService {
     private final WorkspaceService workspaceService;
     private final ActionRepository actionRepository;
     private final FileStorageService fileStorageService;
+    private final S3Service s3Service;
 
     @Transactional
     public void createActionPost(Action savedAction) {
@@ -98,12 +100,15 @@ public class ActionPostService {
 
         // 기존 파일 삭제
         for (ActionPostFile file : actionPost.getActionPostFiles()) {
-            fileStorageService.deleteFile(file.getFilePath());
+//            fileStorageService.deleteFile(file.getFilePath());
+            s3Service.deleteFile(file.getFilePath());
         }
         actionPost.getActionPostFiles().clear();
+
         if(fileList != null && !fileList.isEmpty()) {
             for(MultipartFile file : fileList) {
-                String path = fileStorageService.storeFile(file, "action", actionPostId);
+                String path = s3Service.uploadFile(file, "action", actionPostId);
+//                String path = fileStorageService.storeFile(file, "action", actionPostId);
                 String type = file.getContentType();
 
                 ActionPostFile postFile = ActionPostFile.builder()

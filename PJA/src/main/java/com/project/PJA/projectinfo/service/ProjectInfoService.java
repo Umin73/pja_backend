@@ -53,6 +53,39 @@ public class ProjectInfoService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final WorkspaceActivityService workspaceActivityService;
 
+    // 프로젝트 정보 전체 조회
+    @Transactional(readOnly = true)
+    public String getAllProjectInfo() {
+        List<Workspace> foundWorkspaces = workspaceRepository.findByIsPublicTrue();
+
+        List<Long> foundWorkspaceIds = foundWorkspaces.stream()
+                .map(workspace -> workspace.getWorkspaceId())
+                .collect(Collectors.toList());
+        List<ProjectInfo> projectInfos = projectInfoRepository.findAllByWorkspace_WorkspaceIdIn(foundWorkspaceIds);
+
+        List<PublicProjectInfoResponse> projectInfoResponses = projectInfos.stream()
+                .map(projectInfo -> new PublicProjectInfoResponse(
+                        projectInfo.getProjectInfoId(),
+                        projectInfo.getWorkspace().getWorkspaceId(),
+                        projectInfo.getTitle(),
+                        projectInfo.getCategory(),
+                        projectInfo.getTargetUsers(),
+                        projectInfo.getCoreFeatures(),
+                        projectInfo.getTechnologyStack(),
+                        projectInfo.getProblemSolving()
+                ))
+                .collect(Collectors.toList());
+        String project;
+
+        try {
+            project = objectMapper.writeValueAsString(projectInfoResponses);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        return project;
+    }
+
     // 프로젝트 정보 조회
     @Transactional(readOnly = true)
     public ProjectInfoResponse getProjectInfo(Long userId, Long workspaceId) {

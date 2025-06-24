@@ -1,4 +1,4 @@
-package com.project.PJA.user_act_log.dto;
+package com.project.PJA.project_progress.dto.fullAiDto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -10,9 +10,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DetailsParticipants {
-    @JsonProperty("userId")
-    private Integer userId;
-    @JsonProperty("username")
-    private String username;
+public class AiActionDto {
+    @JsonProperty("name")
+    private String name;
+    @JsonProperty("importance")
+    private Integer importance;
 }

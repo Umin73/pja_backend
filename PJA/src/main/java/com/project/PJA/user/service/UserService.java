@@ -1,6 +1,7 @@
 package com.project.PJA.user.service;
 
 import com.project.PJA.common.file.FileStorageService;
+import com.project.PJA.common.service.S3Service;
 import com.project.PJA.email.service.EmailServiceImpl;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
@@ -38,6 +39,7 @@ public class UserService {
     private final EmailVerificationService emailVerificationService;
     private final EmailServiceImpl emailServiceImpl;
     private final FileStorageService fileStorageService;
+    private final S3Service s3Service;
 
     @Value("${FILE_UPLOAD_DIR}")
     private String uploadDir;
@@ -198,7 +200,7 @@ public class UserService {
         if(user != null) {
             user.setStatus(UserStatus.WITHDRAW);
             user.setUid(null);
-            user.setEmail(null);
+            user.setEmail("withdrawn_" + user.getUserId() + "@placeholder.com");
             user.setPassword(null);
             user.setName("탈퇴한 사용자");
             user.setProfileImage(null);
@@ -287,13 +289,17 @@ public class UserService {
         // 프로필 이미지가 있으면 삭제
         String oldPath = user.getProfileImage();
         if (oldPath != null && !oldPath.isBlank()) {
-            String fileName = Paths.get(oldPath).getFileName().toString();
-            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
-            Files.deleteIfExists(fullPath);
+            s3Service.deleteFile(oldPath);
+//            String fileName = Paths.get(oldPath).getFileName().toString();
+//            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
+//            Files.deleteIfExists(fullPath);
         }
 
-        String newImagePath = fileStorageService.storeFile(file, "user",user.getUserId());
+        String newImagePath = s3Service.uploadFile(file, "user", user.getUserId());
+//        String newImagePath = fileStorageService.storeFile(file, "user",user.getUserId());
         user.setProfileImage(newImagePath);
+
+        userRepository.save(user);
     }
 
     @Transactional
@@ -305,13 +311,14 @@ public class UserService {
         String imagePath = user.getProfileImage();
 
         if(imagePath != null && !imagePath.isBlank()) {
-            String fileName = Paths.get(imagePath).getFileName().toString();
-            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
-
-            Files.deleteIfExists(fullPath);
+//            String fileName = Paths.get(imagePath).getFileName().toString();
+//            Path fullPath = Paths.get(uploadDir).resolve(fileName).toAbsolutePath();
+            s3Service.deleteFile(imagePath);
+//            Files.deleteIfExists(fullPath);
         }
 
         user.setProfileImage(null);
+        userRepository.save(user);
     }
 
     public Map<String, Object> getUserInfo(Users user) {

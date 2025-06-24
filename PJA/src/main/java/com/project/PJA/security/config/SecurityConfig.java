@@ -34,7 +34,9 @@ public class SecurityConfig {
                                 "/error",
                                 "/api/auth/**",
                                 "/login/oauth2/**",
-                                "/oauth2/**").permitAll()
+                                "/oauth2/**",
+                                "/api/workspaces/project-info",
+                                "/api/workspaces/*/noti/subscribe").permitAll()
                         .anyRequest().authenticated()
                 )
 //                .oauth2Login(oauth2 -> oauth2

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.projectinfo.dto.ProjectInfoRequest;
+import com.project.PJA.projectinfo.entity.ProjectInfo;
+import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.dto.*;
@@ -18,9 +21,13 @@ import com.project.PJA.workspace.repository.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -34,8 +41,10 @@ public class WorkspaceService {
     private final UserRepository userRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final RedisTemplate<String, String> redisTemplate;
+    private final ProjectInfoRepository projectInfoRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate;
     //private final WorkspaceActivityRepository workspaceActivityRepository;
     //private final WorkspaceActivityService workspaceActivityService;
 
@@ -242,6 +251,63 @@ public class WorkspaceService {
                 foundWorkspace.getIsPublic(),
                 foundWorkspace.getUser().getUserId(),
                 foundWorkspace.getProgressStep());
+    }
+
+    // 유사한 워크스페이스 검색
+    public List<WorkspaceResponse> similarWorkspace(Long userId, Long workspaceId) {
+        authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에서 검색할 권한이 없습니다.");
+
+        ProjectInfo foundProjectInfo = projectInfoRepository.findByWorkspace_WorkspaceId(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 프로젝트 정보를 찾을 수 없습니다."));
+
+        ProjectInfoRequest projectInfoRequest =  new ProjectInfoRequest(
+                foundProjectInfo.getTitle(),
+                foundProjectInfo.getCategory(),
+                foundProjectInfo.getTargetUsers(),
+                foundProjectInfo.getCoreFeatures(),
+                foundProjectInfo.getTechnologyStack(),
+                foundProjectInfo.getProblemSolving());
+
+        String projectInfo;
+        try {
+            projectInfo = objectMapper.writeValueAsString(projectInfoRequest);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 직렬화 실패: " + e.getMessage(), e);
+        }
+
+        String mlopsUrl = "http://3.34.185.3:8000/api/PJA/search_project/generate";
+
+        SimilarWorkspaceRequest similarWorkspaceRequest = SimilarWorkspaceRequest.builder()
+                .projectInfo(projectInfo)
+                .build();
+
+        try {
+            ResponseEntity<SimilarWorkspaceResponse> response = restTemplate.postForEntity(
+                    mlopsUrl,
+                    similarWorkspaceRequest,
+                    SimilarWorkspaceResponse.class);
+
+            SimilarWorkspaceResponse body = response.getBody();
+            SimilarWorkspaceIds workspaceIds = body.getSimiler_ID();
+
+            List<Workspace> workspaces = workspaceRepository.findAllById(workspaceIds.getProject_ID());
+
+            List<WorkspaceResponse> workspaceResponses = workspaces.stream()
+                    .map(workspace -> new WorkspaceResponse(
+                            workspace.getWorkspaceId(),
+                            workspace.getProjectName(),
+                            workspace.getTeamName(),
+                            workspace.getIsPublic(),
+                            workspace.getUser().getUserId(),
+                            workspace.getProgressStep()
+                    ))
+                    .collect(Collectors.toList());
+
+            return workspaceResponses;
+        }
+        catch (HttpClientErrorException | HttpServerErrorException e) {
+            throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+        }
     }
 
     // 팀 탈퇴
