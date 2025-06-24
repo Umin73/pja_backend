@@ -132,7 +132,7 @@ public class WorkspaceController {
     }
 
     // 유사한 워크스페이스 검색
-    @PostMapping("{workspaceId}/similar")
+    @GetMapping("{workspaceId}/similar")
     public ResponseEntity<SuccessResponse<List<WorkspaceResponse>>> similarWorkspace(@AuthenticationPrincipal Users user,
                                                                                      @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
