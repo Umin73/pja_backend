@@ -15,19 +15,19 @@ import java.util.List;
 public class CreateActionDto {
 
     @NotBlank
-    private String name = "";
+    private String name;
 
-    private LocalDateTime startDate = LocalDateTime.now();
+    private LocalDateTime startDate;
 
-    private LocalDateTime endDate = LocalDateTime.now();
+    private LocalDateTime endDate;
 
     @NotNull
-    private String state = Progress.BEFORE.toString(); // 문자열로 받아서 enum으로 변환 (BEFORE, IN_PROGRESS, DONE)
+    private String state; // 문자열로 받아서 enum으로 변환 (BEFORE, IN_PROGRESS, DONE)
 
-    private Boolean hasTest = false;
+    private Boolean hasTest;
 
     @Min(0) @Max(5)
-    private Integer importance = 0;
+    private Integer importance;
 
-    private List<Long> participantsIds = new ArrayList<>(); // worksapceMember의 id 목록
+    private List<Long> participantsIds; // worksapceMember의 id 목록
 }
