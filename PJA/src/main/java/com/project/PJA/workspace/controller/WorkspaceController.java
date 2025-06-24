@@ -131,6 +131,22 @@ public class WorkspaceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    // 유사한 워크스페이스 검색
+    @PostMapping("{workspaceId}/similar")
+    public ResponseEntity<SuccessResponse<List<WorkspaceResponse>>> similarWorkspace(@AuthenticationPrincipal Users user,
+                                                                                     @PathVariable Long workspaceId) {
+        Long userId = user.getUserId();
+        log.info("=== 유사한 workspace 검색 API 진입 == userId: {}", userId);
+
+        List<WorkspaceResponse> similarWorkspaces = workspaceService.similarWorkspace(userId, workspaceId);
+
+        SuccessResponse<List<WorkspaceResponse>> response = new SuccessResponse<>(
+                "success", "유사한 워크스페이스를 성공적으로 검색했습니다.", similarWorkspaces
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     // 워크스페이스 팀원 초대 메일 전송
     @PostMapping("/{workspaceId}/invite")
     public ResponseEntity<SuccessResponse<WorkspaceInviteResponse>> inviteUserToWorkspace(@AuthenticationPrincipal Users user,

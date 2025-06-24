@@ -62,9 +62,11 @@ public class ProjectInfoService {
                 .map(workspace -> workspace.getWorkspaceId())
                 .collect(Collectors.toList());
         List<ProjectInfo> projectInfos = projectInfoRepository.findAllByWorkspace_WorkspaceIdIn(foundWorkspaceIds);
-        List<ProjectInfoResponse> projectInfoResponses = projectInfos.stream()
-                .map(projectInfo -> new ProjectInfoResponse(
+
+        List<PublicProjectInfoResponse> projectInfoResponses = projectInfos.stream()
+                .map(projectInfo -> new PublicProjectInfoResponse(
                         projectInfo.getProjectInfoId(),
+                        projectInfo.getWorkspace().getWorkspaceId(),
                         projectInfo.getTitle(),
                         projectInfo.getCategory(),
                         projectInfo.getTargetUsers(),
