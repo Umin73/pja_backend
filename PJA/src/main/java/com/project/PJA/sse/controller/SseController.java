@@ -1,9 +1,11 @@
 package com.project.PJA.sse.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.security.jwt.JwtTokenProvider;
 import com.project.PJA.sse.repository.SseEmitterRepository;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class SseController {
 
     private final SseEmitterRepository sseEmitterRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @GetMapping("/{workspaceId}/noti/subscribe")
     public SseEmitter subscribe(@PathVariable("workspaceId") Long workspaceId,
@@ -34,7 +37,12 @@ public class SseController {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
 
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        log.info("token은 {}", token);
+        String uid = jwtTokenProvider.getUid(token);
+        Users user = userRepository.findByUid(uid)
+                .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
+        Long userId = user.getUserId();
+        
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간 동안 SSE 연결
 
         sseEmitterRepository.save(workspaceId, userId, emitter);
