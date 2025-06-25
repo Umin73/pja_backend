@@ -15,6 +15,8 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ActionAnalysisSaveService {
 
+    private static final Logger log = LoggerFactory.getLogger(ActionAnalysisSaveService.class);
     private final WorkspaceService workspaceService;
     private final TaskImbalanceResultRepository taskImbalanceResultRepository;
     private final AvgProcessingTimeResultRepository avgProcessingTimeResultRepository;
@@ -65,7 +68,11 @@ public class ActionAnalysisSaveService {
 
         // 평균 작업 처리 시간(AvgProcessingTimeResult) 저장 (기존 항목 삭제 후 덮어 씌움)
         String processingTimeRaw = rootNode.get("processing_time").path("data").asText();
-        List<Map<String, Object>> processingList = mapper.readValue(processingTimeRaw.replace("'", "\""), new TypeReference<>() {});
+
+        // JSON 파싱 가능한 형태로 정제
+        String safeProcessingTimeRaw = processingTimeRaw.replace("'", "\"").replace("nan", "\"nan\"");
+
+        List<Map<String, Object>> processingList = mapper.readValue(safeProcessingTimeRaw,  new TypeReference<>() {});
 
         for(Map<String, Object> entry: processingList) {
             Object userIdObj = entry.get("userId");
@@ -77,23 +84,35 @@ public class ActionAnalysisSaveService {
             // 기존 값 삭제(워크스페이스, 유저아이디, 중요도에 따라)
             avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
 
-            AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-            result.setWorkspaceId(workspaceId);
-            result.setUserId(userId);
-            result.setImportance(importance);
-
             Object meanHoursObj = entry.get("mean_hours");
-            long meanHours = 0L;
-            if (meanHoursObj instanceof Number) {
-                meanHours = Math.round(((Number) meanHoursObj).doubleValue()); // 소수점 반올림
-            } else {
-                meanHours = Math.round(Long.parseLong(meanHoursObj.toString())); // 문자열이라면 double로 변환 후 반올림
+            try {
+                String meanStr = meanHoursObj.toString();
+
+                if(meanStr.equalsIgnoreCase("nan")) {
+                    log.info("mean_hours 값이 NaN이므로 평균 작업 처리 시간 DB에는 저장X");
+                    continue;
+                }
+
+                long meanHours = 0L;
+
+                if (meanHoursObj instanceof Number) {
+                    meanHours = Math.round(((Number) meanHoursObj).doubleValue()); // 소수점 반올림
+                } else {
+                    meanHours = Math.round(Long.parseLong(meanHoursObj.toString())); // 문자열이라면 double로 변환 후 반올림
+                }
+
+                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+
+                result.setWorkspaceId(workspaceId);
+                result.setUserId(userId);
+                result.setImportance(importance);
+                result.setMeanHours(meanHours);
+                result.setAnalyzedAt(now);
+
+                avgProcessingTimeResultRepository.save(result);
+            } catch (Exception e) {
+                log.warn("mean_hours 파싱에 실패했습니다. (기본값 0 적용)");
             }
-            result.setMeanHours(meanHours);
-
-            result.setAnalyzedAt(now);
-
-            avgProcessingTimeResultRepository.save(result);
         }
     }
 }
