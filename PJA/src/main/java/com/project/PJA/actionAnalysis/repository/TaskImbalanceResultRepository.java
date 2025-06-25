@@ -2,10 +2,12 @@ package com.project.PJA.actionAnalysis.repository;
 
 import com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto;
 import com.project.PJA.actionAnalysis.entity.TaskImbalanceResult;
+import com.project.PJA.project_progress.entity.Progress;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TaskImbalanceResultRepository extends JpaRepository<TaskImbalanceResult, Long> {
@@ -32,4 +34,11 @@ public interface TaskImbalanceResultRepository extends JpaRepository<TaskImbalan
 """)
     List<TaskImbalanceGraphDto> findLatestGroupedByWorkspaceMember(@Param("workspaceId") Long workspaceId);
 
+    boolean existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
+            Long workspaceId,
+            Long userId,
+            Integer importance,
+            Progress state,
+            LocalDateTime analyzedAt
+    );
 }

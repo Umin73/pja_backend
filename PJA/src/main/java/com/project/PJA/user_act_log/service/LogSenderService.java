@@ -28,6 +28,7 @@ import java.util.Objects;
 public class LogSenderService {
 
     private final UserRepository userRepository;
+
     @Value("${ml.api.url}")
     private String mlApiUrl;
 
@@ -63,34 +64,8 @@ public class LogSenderService {
                 return;
             }
 
-            List<UserActionLogParsing> expandedLogs = logs.stream()
-                    .flatMap(log ->{
-                        Object participatsObj = log.getDetails().getParticipants();
-
-                        if(participatsObj instanceof List<?> participants && !participants.isEmpty()){
-                            return participants.stream()
-                                    .filter(p -> p instanceof Map)
-                                    .map(p -> {
-                                        @SuppressWarnings("unchecked")
-                                        Map<String, Object> participant = (Map<String, Object>) p;
-
-                                        UserActionLogParsing clonedLog = new UserActionLogParsing();
-                                        clonedLog.setEvent(log.getEvent());
-                                        clonedLog.setTimestamp(log.getTimestamp());
-                                        clonedLog.setWorkspaceId(log.getWorkspaceId());
-                                        clonedLog.setUserId((Long) participant.get("userId"));
-                                        clonedLog.setUsername(participant.get("username").toString());
-                                        clonedLog.setDetails(log.getDetails());
-
-                                        return clonedLog;
-                                    });
-                        } else {
-                            return List.of(log).stream();
-                        }
-                    }).toList();
-
-            // logs 리스트를 JSON 문자열로 변환 (JSON array)
-            String logJsonArrayString = objectMapper.writeValueAsString(expandedLogs);
+            // 로그 리스트를 JSON 문자열로 변환 (JSON array)
+            String logJsonArrayString = objectMapper.writeValueAsString(logs);
             Map<String, String> body = Map.of("user_log", logJsonArrayString);
 
             HttpHeaders headers = new HttpHeaders();
