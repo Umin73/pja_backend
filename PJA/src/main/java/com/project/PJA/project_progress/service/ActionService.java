@@ -335,7 +335,34 @@ public class ActionService {
                 );
             }
         }
-        if (dto.getImportance() != null) action.setImportance(dto.getImportance());
+        if (dto.getImportance() != null) {
+            action.setImportance(dto.getImportance());
+
+            Map<String, Object> logDetails = new HashMap<>();
+            logDetails.put("name", action.getName());
+            logDetails.put("state", action.getState().name());
+            logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
+            logDetails.put("participants", action.getParticipants().stream()
+                    .map(pm -> Map.of(
+                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                            "username", pm.getWorkspaceMember().getUser().getUsername()
+                    ))
+                    .collect(Collectors.toList()));
+
+            // 중요도 수정 시 -> 유저 행동 로그 데이터 남김
+            for (ActionParticipant participant : action.getParticipants()) {
+                Users participantUser = participant.getWorkspaceMember().getUser();
+
+                userActionLogService.log(
+                        UserActionType.UPDATE_IMPORTANCE,
+                        String.valueOf(participantUser.getUserId()),
+                        participantUser.getUsername(),
+                        workspaceId,
+                        logDetails,
+                        action.getParticipants()
+                );
+            }
+        }
         if (dto.getOrderIndex() != null) action.setOrderIndex(dto.getOrderIndex());
         if (dto.getHasTest() != null) action.setHasTest(dto.getHasTest());
         if (dto.getParticipantIds() != null) {
