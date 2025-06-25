@@ -1,5 +1,6 @@
 package com.project.PJA.actionAnalysis.repository;
 
+import com.project.PJA.actionAnalysis.dto.AssigneeDto;
 import com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto;
 import com.project.PJA.actionAnalysis.entity.TaskImbalanceResult;
 import com.project.PJA.project_progress.entity.Progress;
@@ -33,6 +34,17 @@ public interface TaskImbalanceResultRepository extends JpaRepository<TaskImbalan
     GROUP BY wm.workspaceMemberId, wm.user.name, t.state, t.importance
 """)
     List<TaskImbalanceGraphDto> findLatestGroupedByWorkspaceMember(@Param("workspaceId") Long workspaceId);
+
+    @Query("""
+        SELECT DISTINCT new com.project.PJA.actionAnalysis.dto.AssigneeDto(
+            wm.user.userId,
+            wm.user.name
+        )
+        FROM ActionParticipant ap
+        JOIN ap.workspaceMember wm
+        WHERE wm.workspace.workspaceId = :workspaceId
+    """)
+    List<AssigneeDto> findDistinctAssigneesByWorkspace(@Param("workspaceId") Long workspaceId);
 
     boolean existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
             Long workspaceId,
