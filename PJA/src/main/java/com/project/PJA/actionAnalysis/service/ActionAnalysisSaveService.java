@@ -9,6 +9,7 @@ import com.project.PJA.actionAnalysis.entity.TaskImbalanceResult;
 import com.project.PJA.actionAnalysis.repository.AvgProcessingTimeResultRepository;
 import com.project.PJA.actionAnalysis.repository.TaskImbalanceResultRepository;
 import com.project.PJA.exception.NotFoundException;
+import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.project_progress.entity.Progress;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +37,7 @@ public class ActionAnalysisSaveService {
     private final WorkspaceRepository workspaceRepository;
 
     @Transactional
-    public void saveAnalysisResult(String responseBody, Long workspaceId) throws JsonProcessingException {
+    public void saveAnalysisResult(String responseBody, Long workspaceId, Set<ActionParticipant> participants) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
         JsonNode rootNode = mapper.readTree(responseBody);
@@ -48,34 +50,47 @@ public class ActionAnalysisSaveService {
                         new TypeReference<>() {});
 
         for(Map<String, Object> entry: imbalanceList) {
-            TaskImbalanceResult result = new TaskImbalanceResult();
-            result.setWorkspaceId(workspaceId);
 
             Object userIdObj = entry.get("userId");
-            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
-            result.setUserId(userId);
+//            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
 
             Object stateObj = entry.get("details.state");
             String stateStr = stateObj.toString();
             Progress state = Progress.valueOf(stateStr);
             Integer importance = (Integer) entry.get("details.importance");
+            Integer count = (Integer) entry.get("count");
 
-            result.setState(state);
-            result.setImportance(importance);
-            result.setTaskCount((Integer) entry.get("count"));
-            result.setAnalyzedAt(now);
+//            result.setState(state);
+//            result.setImportance(importance);
+//            result.setTaskCount((Integer) entry.get("count"));
+//            result.setAnalyzedAt(now);
 
-            boolean alreadyExists = taskImbalanceResultRepository
-                    .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
-                            workspaceId, userId, importance, state, now
-                    );
+            for(ActionParticipant participant: participants) {
+                TaskImbalanceResult result = new TaskImbalanceResult();
+                Long userId = participant.getWorkspaceMember().getUser().getUserId();
 
-            if (!alreadyExists) {
+//                boolean alreadyExists = taskImbalanceResultRepository
+//                        .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
+//                                workspaceId, userId, importance, state, now
+//                        );
+
+                result.setWorkspaceId(workspaceId);
+                result.setUserId(participant.getWorkspaceMember().getUser().getUserId());
+                result.setState(state);
+                result.setImportance(importance);
+                result.setTaskCount(count);
+                result.setAnalyzedAt(now);
+
                 taskImbalanceResultRepository.save(result);
-            } else {
-                log.info("중복된 불균형 분석 결과 존재 - 저장 생략: userId={}, importance={}, state={}, analyzedAt={}",
-                        userId, importance, state, now);
             }
+
+
+//            if (!alreadyExists) {
+//                taskImbalanceResultRepository.save(result);
+//            } else {
+//                log.info("중복된 불균형 분석 결과 존재 - 저장 생략: userId={}, importance={}, state={}, analyzedAt={}",
+//                        userId, importance, state, now);
+//            }
         }
 
         // 평균 작업 처리 시간(AvgProcessingTimeResult) 저장 (기존 항목 삭제 후 덮어 씌움)
