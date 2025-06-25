@@ -2,6 +2,7 @@ package com.project.PJA.user_act_log.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.actionAnalysis.service.ActionAnalysisSaveService;
+import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.user_act_log.dto.UserActionLogParsing;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -38,7 +40,7 @@ public class LogSenderService {
     private final RestTemplate restTemplate;
     private final ActionAnalysisSaveService analysisSaveService;
 
-    public void sendLogsFromFile(Long workspaceId) {
+    public void sendLogsFromFile(Long workspaceId, Set<ActionParticipant> participants) {
         try {
             String fileName = "user-actions-workspace-" + workspaceId + ".json";
             Path path = Paths.get(logFileDir, fileName);
@@ -76,7 +78,7 @@ public class LogSenderService {
             log.info("User Action 로그 전송 완료: {}", response.getStatusCode());
             log.info("응답 내용: {}", response.getBody());
 
-            analysisSaveService.saveAnalysisResult(response.getBody(), workspaceId);
+            analysisSaveService.saveAnalysisResult(response.getBody(), workspaceId, participants);
 
         } catch (IOException e) {
             log.error("User Action 로그 파일 읽기 실패", e);
