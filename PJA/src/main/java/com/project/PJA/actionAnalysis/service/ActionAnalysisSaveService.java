@@ -101,35 +101,81 @@ public class ActionAnalysisSaveService {
 
         List<Map<String, Object>> processingList = mapper.readValue(safeProcessingTimeRaw,  new TypeReference<>() {});
 
-        for(Map<String, Object> entry: processingList) {
-            Object userIdObj = entry.get("userId");
-            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
+//        for(Map<String, Object> entry: processingList) {
+//            Object userIdObj = entry.get("userId");
+//            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
+//
+//            Object importanceObj = entry.get("details.importance");
+//            Integer importance = (importanceObj instanceof Number) ? ((Number) importanceObj).intValue() : Integer.parseInt(importanceObj.toString());
+//
+//            // 기존 값 삭제(워크스페이스, 유저아이디, 중요도에 따라)
+//            avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+//
+//            Object meanHoursObj = entry.get("mean_hours");
+//            try {
+//                String meanStr = meanHoursObj.toString();
+//
+//                if(meanStr.equalsIgnoreCase("nan")) {
+//                    log.info("mean_hours 값이 NaN이므로 평균 작업 처리 시간 DB에는 저장X");
+//                    continue;
+//                }
+//
+//                long meanHours = 0L;
+//
+//                if (meanHoursObj instanceof Number) {
+//                    meanHours = Math.round(((Number) meanHoursObj).doubleValue()); // 소수점 반올림
+//                } else {
+//                    meanHours = Math.round(Long.parseLong(meanHoursObj.toString())); // 문자열이라면 double로 변환 후 반올림
+//                }
+//
+//                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+//
+//                result.setWorkspaceId(workspaceId);
+//                result.setUserId(userId);
+//                result.setImportance(importance);
+//                result.setMeanHours(meanHours);
+//                result.setAnalyzedAt(now);
+//
+//                avgProcessingTimeResultRepository.save(result);
+//            } catch (Exception e) {
+//                log.warn("mean_hours 파싱에 실패했습니다. (기본값 0 적용)");
+//            }
+//        }
 
+        for (Map<String, Object> entry : processingList) {
             Object importanceObj = entry.get("details.importance");
-            Integer importance = (importanceObj instanceof Number) ? ((Number) importanceObj).intValue() : Integer.parseInt(importanceObj.toString());
-
-            // 기존 값 삭제(워크스페이스, 유저아이디, 중요도에 따라)
-            avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+            Integer importance = (importanceObj instanceof Number)
+                    ? ((Number) importanceObj).intValue()
+                    : Integer.parseInt(importanceObj.toString());
 
             Object meanHoursObj = entry.get("mean_hours");
+            String meanStr = meanHoursObj.toString();
+
+            if (meanStr.equalsIgnoreCase("nan")) {
+                log.info("mean_hours 값이 NaN이므로 평균 작업 처리 시간 DB에는 저장X");
+                continue;
+            }
+
+            long meanHours;
             try {
-                String meanStr = meanHoursObj.toString();
-
-                if(meanStr.equalsIgnoreCase("nan")) {
-                    log.info("mean_hours 값이 NaN이므로 평균 작업 처리 시간 DB에는 저장X");
-                    continue;
-                }
-
-                long meanHours = 0L;
-
                 if (meanHoursObj instanceof Number) {
-                    meanHours = Math.round(((Number) meanHoursObj).doubleValue()); // 소수점 반올림
+                    meanHours = Math.round(((Number) meanHoursObj).doubleValue());
                 } else {
-                    meanHours = Math.round(Long.parseLong(meanHoursObj.toString())); // 문자열이라면 double로 변환 후 반올림
+                    meanHours = Math.round(Double.parseDouble(meanStr));
                 }
+            } catch (Exception e) {
+                log.warn("mean_hours 파싱 실패 - 기본값 0 사용");
+                meanHours = 0L;
+            }
+
+            // 모든 참여자에게 동일하게 저장
+            for (ActionParticipant participant : participants) {
+                Long userId = participant.getWorkspaceMember().getUser().getUserId();
+
+                // 기존 데이터 삭제
+                avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
 
                 AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-
                 result.setWorkspaceId(workspaceId);
                 result.setUserId(userId);
                 result.setImportance(importance);
@@ -137,9 +183,8 @@ public class ActionAnalysisSaveService {
                 result.setAnalyzedAt(now);
 
                 avgProcessingTimeResultRepository.save(result);
-            } catch (Exception e) {
-                log.warn("mean_hours 파싱에 실패했습니다. (기본값 0 적용)");
             }
         }
+
     }
 }
