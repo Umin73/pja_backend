@@ -13,6 +13,10 @@ public class FlexibleLocalDateTimeDeserializer extends JsonDeserializer<LocalDat
     public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, IOException {
         String value = p.getText();
 
+        if(value == null || value.trim().isEmpty()) {
+            return null;
+        }
+
         try {
             // ISO 포맷 "yyyy-MM-dd'T'HH:mm:ss"
             return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
