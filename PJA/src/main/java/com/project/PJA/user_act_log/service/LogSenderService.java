@@ -31,7 +31,6 @@ public class LogSenderService {
     @Value("${ml.api.url}")
     private String mlApiUrl;
 
-//    @Value("${log.path}")
     @Value("${log.dir}")
     private String logFileDir;
 
@@ -64,23 +63,43 @@ public class LogSenderService {
                 return;
             }
 
-            // logs 리스트를 JSON 문자열로 변환 (JSON array)
-            String logJsonArrayString = objectMapper.writeValueAsString(logs);
+            List<UserActionLogParsing> expandedLogs = logs.stream()
+                    .flatMap(log ->{
+                        Object participatsObj = log.getDetails().getParticipants();
 
+                        if(participatsObj instanceof List<?> participants && !participants.isEmpty()){
+                            return participants.stream()
+                                    .filter(p -> p instanceof Map)
+                                    .map(p -> {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, Object> participant = (Map<String, Object>) p;
+
+                                        UserActionLogParsing clonedLog = new UserActionLogParsing();
+                                        clonedLog.setEvent(log.getEvent());
+                                        clonedLog.setTimestamp(log.getTimestamp());
+                                        clonedLog.setWorkspaceId(log.getWorkspaceId());
+                                        clonedLog.setUserId((Long) participant.get("userId"));
+                                        clonedLog.setUsername(participant.get("username").toString());
+                                        clonedLog.setDetails(log.getDetails());
+
+                                        return clonedLog;
+                                    });
+                        } else {
+                            return List.of(log).stream();
+                        }
+                    }).toList();
+
+            // logs 리스트를 JSON 문자열로 변환 (JSON array)
+            String logJsonArrayString = objectMapper.writeValueAsString(expandedLogs);
             Map<String, String> body = Map.of("user_log", logJsonArrayString);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
             HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(mlApiUrl, request, String.class);
             log.info("User Action 로그 전송 완료: {}", response.getStatusCode());
             log.info("응답 내용: {}", response.getBody());
-
-            // 분석 결과 DB에 저장
-//            UserActionLogParsing firstLog = logs.get(0);
-//            Long workspaceId = firstLog.getWorkspaceId();
 
             analysisSaveService.saveAnalysisResult(response.getBody(), workspaceId);
 
