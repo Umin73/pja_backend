@@ -333,6 +333,41 @@ public class WorkspaceService {
                 foundWorkspace.getTeamName());
     }
 
+    // 해당 워크스페이스의 역할 조회
+    public WorkspaceRoleResponse getWorkspaceRole(Long userId, Long workspaceId) {
+        String key = "workspaceAuth:" + workspaceId;
+        String data = redisTemplate.opsForValue().get(key);
+
+        // 캐시 없으면 생성
+        if (data == null) {
+            cacheWorkspaceAuth(workspaceId);
+            data = redisTemplate.opsForValue().get(key);
+            if (data == null) {
+                throw new RuntimeException("권한 캐시 생성에 실패했습니다.");
+            }
+        }
+
+        try {
+            JsonNode node = objectMapper.readTree(data);
+            JsonNode memberRoles = node.get("memberRoles");
+
+            for (JsonNode member: memberRoles) {
+                long memberId = member.get("userId").asLong();
+
+                if (memberId == userId) {
+                    String roleText = member.get("workspaceRole").asText();
+                    WorkspaceRole role = WorkspaceRole.valueOf(roleText);
+                    return new WorkspaceRoleResponse(role);
+                }
+            }
+
+            return new WorkspaceRoleResponse(null);
+        } catch (Exception e) {
+            log.error("권한 캐싱 실패: key={}, data={}", key, data, e);
+            throw new RuntimeException("권한 캐싱 실패", e);
+        }
+    }
+
     // 비공개 워크스페이스의 팀원이 아니면 403 반환
     public void validateWorkspaceAccess(Long userId, Workspace workspace) {
         Long workspaceId = workspace.getWorkspaceId();
@@ -388,7 +423,7 @@ public class WorkspaceService {
         try {
             // dto -> json
             String json = objectMapper.writeValueAsString(cacheValue);
-            redisTemplate.opsForValue().set(key, json, Duration.ofHours(9)); // 9시간 TTL
+            redisTemplate.opsForValue().set(key, json, Duration.ofHours(6)); // 6시간 TTL
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Redis 저장 실패", e);
         }

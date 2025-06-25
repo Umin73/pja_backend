@@ -179,4 +179,20 @@ public class WorkspaceController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    // 해당 워크스페이스의 역할 조회
+    @GetMapping("/{workspaceId}/role")
+    public ResponseEntity<SuccessResponse<WorkspaceRoleResponse>> getWorkspaceRole(@AuthenticationPrincipal Users user,
+                                                                                   @PathVariable Long workspaceId) {
+        Long userId = user.getUserId();
+        log.info("=== workspace 역할 조회 == userId: {}", userId);
+
+        WorkspaceRoleResponse role = workspaceService.getWorkspaceRole(userId, workspaceId);
+
+        SuccessResponse<WorkspaceRoleResponse> response = new SuccessResponse<>(
+                "success", "워크스페이스 내 역할을 성공적으로 조회했습니다.", role
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
