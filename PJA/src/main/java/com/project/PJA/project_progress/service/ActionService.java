@@ -23,6 +23,7 @@ import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -129,8 +130,8 @@ public class ActionService {
         Action action = Action.builder()
                 .name(dto.getName())
                 .workspace(foundWorkspace)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now())
+                .startDate(dto.getStartDate() != null ? dto.getStartDate() : LocalDateTime.now())
+                .endDate(dto.getEndDate() != null ? dto.getEndDate(): LocalDateTime.now())
                 .state(Progress.valueOf(dto.getState().toUpperCase()))
                 .importance(dto.getImportance())
                 .hasTest(false)
