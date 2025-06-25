@@ -118,12 +118,6 @@ public class ActionService {
 
         validateFeatureHierarchy(workspaceId, categoryId, featureId, feature);
 
-
-//        Set<WorkspaceMember> participants = workspaceMemberRepository.findAllById(dto.getParticipantsId())
-//                .stream()
-//                .filter(member -> member.getWorkspace().getWorkspaceId().equals(workspaceId))
-//                .collect(Collectors.toSet());
-
         Integer nextOrder = actionRepository
                 .findTopByFeatureOrderByOrderIndexDesc(feature)
                 .map(c -> c.getOrderIndex() + 1)
@@ -135,8 +129,8 @@ public class ActionService {
         Action action = Action.builder()
                 .name(dto.getName())
                 .workspace(foundWorkspace)
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now())
                 .state(Progress.valueOf(dto.getState().toUpperCase()))
                 .importance(dto.getImportance())
                 .hasTest(false)
