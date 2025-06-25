@@ -423,7 +423,7 @@ public class WorkspaceService {
         try {
             // dto -> json
             String json = objectMapper.writeValueAsString(cacheValue);
-            redisTemplate.opsForValue().set(key, json, Duration.ofHours(9)); // 6시간 TTL
+            redisTemplate.opsForValue().set(key, json, Duration.ofHours(9)); // 9시간 TTL
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Redis 저장 실패", e);
         }
