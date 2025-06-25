@@ -2,6 +2,7 @@ package com.project.PJA.actionAnalysis.controller;
 
 import com.project.PJA.actionAnalysis.dto.AvgProcessingTimeGraphDto;
 import com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto;
+import com.project.PJA.actionAnalysis.dto.TaskImbalanceResponseDto;
 import com.project.PJA.actionAnalysis.service.ActionAnalysisQueryService;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.user.entity.Users;
@@ -28,7 +29,7 @@ public class ActionAnalysisController {
     @GetMapping("{workspaceId}/task-imbalance")
     public ResponseEntity<SuccessResponse<?>> getTaskImbalance(@AuthenticationPrincipal Users user,
                                                                @PathVariable Long workspaceId) {
-        List<TaskImbalanceGraphDto> data = actionAnalysisQueryService.getTaskImbalanceGraph(user, workspaceId);
+        TaskImbalanceResponseDto data = actionAnalysisQueryService.getTaskImbalanceGraph(user, workspaceId);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "담당자 불균형 분석 그래프 조회에 성공하였습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);

@@ -1,7 +1,9 @@
 package com.project.PJA.actionAnalysis.service;
 
+import com.project.PJA.actionAnalysis.dto.AssigneeDto;
 import com.project.PJA.actionAnalysis.dto.AvgProcessingTimeGraphDto;
 import com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto;
+import com.project.PJA.actionAnalysis.dto.TaskImbalanceResponseDto;
 import com.project.PJA.actionAnalysis.repository.AvgProcessingTimeResultRepository;
 import com.project.PJA.actionAnalysis.repository.TaskImbalanceResultRepository;
 import com.project.PJA.exception.NotFoundException;
@@ -25,14 +27,22 @@ public class ActionAnalysisQueryService {
     private final AvgProcessingTimeResultRepository avgProcessingTimeResultRepository;
     private final UserRepository userRepository;
 
-    public List<TaskImbalanceGraphDto> getTaskImbalanceGraph(Users user, Long workspaceId) {
+    public TaskImbalanceResponseDto getTaskImbalanceGraph(Users user, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("워크스페이스 아이디로 워크스페이스를 찾을 수 없습니다."));
 
         workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
 
-        return taskImbalanceResultRepository.findLatestGroupedByWorkspaceMember(workspaceId);
+        List<TaskImbalanceGraphDto> graphData = taskImbalanceResultRepository.findLatestGroupedByWorkspaceMember(workspaceId);
+        List<AssigneeDto> assignees = taskImbalanceResultRepository.findDistinctAssigneesByWorkspace(workspaceId);
+
+        return new TaskImbalanceResponseDto(graphData, assignees);
     }
+
+    public List<AssigneeDto> getDistinctAssignees(Long workspaceId) {
+        return taskImbalanceResultRepository.findDistinctAssigneesByWorkspace(workspaceId);
+    }
+
 
     public List<AvgProcessingTimeGraphDto> getAvgProcessingTimeGraph(Users user, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
