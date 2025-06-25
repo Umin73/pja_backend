@@ -198,8 +198,8 @@ public class ActionService {
                 ac -> new ActionData(
                         ac.getName(),
                         ac.getImportance(),
-                        ac.getStartDate().format(formatter),
-                        ac.getEndDate().format(formatter)
+                        ac.getStartDate() != null ? ac.getStartDate().format(formatter) : LocalDateTime.now().format(formatter),
+                        ac.getEndDate() != null ? ac.getEndDate().format(formatter) : LocalDateTime.now().format(formatter)
                 )
         ).toList();
 
