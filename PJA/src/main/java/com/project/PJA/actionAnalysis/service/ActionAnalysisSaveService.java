@@ -57,13 +57,25 @@ public class ActionAnalysisSaveService {
 
             Object stateObj = entry.get("details.state");
             String stateStr = stateObj.toString();
-            result.setState(Progress.valueOf(stateStr));
+            Progress state = Progress.valueOf(stateStr);
+            Integer importance = (Integer) entry.get("details.importance");
 
-            result.setImportance((Integer) entry.get("details.importance"));
+            result.setState(state);
+            result.setImportance(importance);
             result.setTaskCount((Integer) entry.get("count"));
             result.setAnalyzedAt(now);
 
-            taskImbalanceResultRepository.save(result);
+            boolean alreadyExists = taskImbalanceResultRepository
+                    .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
+                            workspaceId, userId, importance, state, now
+                    );
+
+            if (!alreadyExists) {
+                taskImbalanceResultRepository.save(result);
+            } else {
+                log.info("중복된 불균형 분석 결과 존재 - 저장 생략: userId={}, importance={}, state={}, analyzedAt={}",
+                        userId, importance, state, now);
+            }
         }
 
         // 평균 작업 처리 시간(AvgProcessingTimeResult) 저장 (기존 항목 삭제 후 덮어 씌움)
