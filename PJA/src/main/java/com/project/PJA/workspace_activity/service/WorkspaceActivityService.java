@@ -57,7 +57,7 @@ public class WorkspaceActivityService {
 
         workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
 
-        List<WorkspaceActivity> workspaceActivityList = workspaceActivityRepository.findByWorkspaceId(workspaceId);
+        List<WorkspaceActivity> workspaceActivityList = workspaceActivityRepository.findByWorkspaceIdOrderByCreatedAtDesc(workspaceId);
         List<WorkspaceActivityResponseDto> dtoList = new ArrayList<>();
 
         for (WorkspaceActivity activity : workspaceActivityList) {
