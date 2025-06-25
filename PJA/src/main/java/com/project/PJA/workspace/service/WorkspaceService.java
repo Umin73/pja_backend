@@ -83,9 +83,6 @@ public class WorkspaceService {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
-        // 사용자 확인
-        validateWorkspaceAccess(userId, foundWorkspace);
-
         return new WorkspaceDetailResponse(
                 foundWorkspace.getWorkspaceId(),
                 foundWorkspace.getProjectName(),
