@@ -1,6 +1,7 @@
 package com.project.PJA.user_act_log.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.user_act_log.dto.UserActionLog;
 import com.project.PJA.user_act_log.enumeration.UserActionType;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -31,7 +33,8 @@ public class UserActionLogService {
                     String userId,
                     String username,
                     Long workspaceId,
-                    Map<String, Object> details) {
+                    Map<String, Object> details,
+                    Set<ActionParticipant> participants) {
         try {
             log.info("log_file_dir는 {}", LOG_FILE_DIR);
 
@@ -59,7 +62,7 @@ public class UserActionLogService {
                     StandardOpenOption.APPEND);
 
             // 로그 전송 및 분석 저장
-            logSenderService.sendLogsFromFile(workspaceId);
+            logSenderService.sendLogsFromFile(workspaceId, participants);
         } catch (Exception e) {
             log.error("사용자 로그 기록 중 오류 발생", e);
         }
