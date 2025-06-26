@@ -155,24 +155,17 @@ public class ActionService {
         actionPostService.createActionPost(action);
 
         // 액션 생성 시 -> 유저 행동 로그 데이터 남김
-        for (ActionParticipant participant : action.getParticipants()) {
+        for (ActionParticipant participant : action.getParticipants()) { // 해당 액션에 참여중인 모든 사람에 대해 로그를 생성
             Users participantUser = participant.getWorkspaceMember().getUser();
+
+            Map<String, Object> logDetails = createLogDetails(action);
 
             userActionLogService.log(
                     UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
                     String.valueOf(participantUser.getUserId()),
                     participantUser.getUsername(),
                     workspaceId,
-                    Map.of(
-                            "name", action.getName(),
-                            "state", action.getState().name(),
-                            "importance", action.getImportance(),
-                            "participants", action.getParticipants().stream()
-                                    .map(p -> Map.of(
-                                            "userId", p.getWorkspaceMember().getUser().getUserId(),
-                                            "username", p.getWorkspaceMember().getUser().getUsername()
-                                    )).collect(Collectors.toList())
-                    ),
+                    logDetails,
                     action.getParticipants()
             );
         }
@@ -275,58 +268,14 @@ public class ActionService {
         if (dto.getState() != null) {
             action.setState(Progress.valueOf(dto.getState().toUpperCase()));
 
-//            if(Progress.valueOf(dto.getState().toUpperCase()).equals(Progress.DONE)) {
-//                // 상태가 완료로 변경될 시 -> 유저 행동 로그 데이터 남김
-//                Map<String ,Object> logDetails = new HashMap<>();
-//                logDetails.put("name", action.getName());
-//                logDetails.put("state", action.getState().name());
-//                logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
-//                logDetails.put("startDate", action.getStartDate());
-//                logDetails.put("endDate", LocalDateTime.now());
-//                logDetails.put("participants", action.getParticipants().stream()
-//                        .map(pm -> Map.of(
-//                                "userId", pm.getWorkspaceMember().getUser().getUserId(),
-//                                "username", pm.getWorkspaceMember().getUser().getUsername()
-//                        ))
-//                        .collect(Collectors.toList()));
-//
-//                for (ActionParticipant participant : action.getParticipants()) {
-//                    Users participantUser = participant.getWorkspaceMember().getUser();
-//
-//                    userActionLogService.log(
-//                            UserActionType.DONE_PROJECT_PROGRESS_ACTION,
-//                            String.valueOf(participantUser.getUserId()),
-//                            participantUser.getUsername(),
-//                            workspaceId,
-//                            logDetails,
-//                            action.getParticipants()
-//                    );
-//                }
-//            }
+            Map<String ,Object> logDetails = createLogDetails(action);
 
-            Map<String ,Object> logDetails = new HashMap<>();
-            logDetails.put("name", action.getName());
-            logDetails.put("state", action.getState().name());
-            logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
-            logDetails.put("startDate", action.getStartDate());
-            logDetails.put("endDate", LocalDateTime.now());
-            logDetails.put("participants", action.getParticipants().stream()
-                    .map(pm -> Map.of(
-                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
-                            "username", pm.getWorkspaceMember().getUser().getUsername()
-                    ))
-                    .collect(Collectors.toList()));
-
-            UserActionType userActionType =
-                    Progress.valueOf(dto.getState().toUpperCase()).equals(Progress.DONE) ? UserActionType.DONE_PROJECT_PROGRESS_ACTION
-                    : UserActionType.UPDATE_PROJECT_PROGRESS_ACTION;
-
-
+            // 상태 수정 시 -> 유저 행동 로그 데이터 남김
             for (ActionParticipant participant : action.getParticipants()) {
                 Users participantUser = participant.getWorkspaceMember().getUser();
 
                 userActionLogService.log(
-                        userActionType,
+                        UserActionType.DONE_PROJECT_PROGRESS_ACTION,
                         String.valueOf(participantUser.getUserId()),
                         participantUser.getUsername(),
                         workspaceId,
@@ -338,23 +287,14 @@ public class ActionService {
         if (dto.getImportance() != null) {
             action.setImportance(dto.getImportance());
 
-            Map<String, Object> logDetails = new HashMap<>();
-            logDetails.put("name", action.getName());
-            logDetails.put("state", action.getState().name());
-            logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
-            logDetails.put("participants", action.getParticipants().stream()
-                    .map(pm -> Map.of(
-                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
-                            "username", pm.getWorkspaceMember().getUser().getUsername()
-                    ))
-                    .collect(Collectors.toList()));
+            Map<String, Object> logDetails = createLogDetails(action);
 
             // 중요도 수정 시 -> 유저 행동 로그 데이터 남김
             for (ActionParticipant participant : action.getParticipants()) {
                 Users participantUser = participant.getWorkspaceMember().getUser();
 
                 userActionLogService.log(
-                        UserActionType.UPDATE_IMPORTANCE,
+                        UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
                         String.valueOf(participantUser.getUserId()),
                         participantUser.getUsername(),
                         workspaceId,
@@ -379,16 +319,7 @@ public class ActionService {
 
             action.getParticipants().addAll(updatedParticipants);
 
-            Map<String, Object> logDetails = new HashMap<>();
-            logDetails.put("name", action.getName());
-            logDetails.put("state", action.getState().name());
-            logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
-            logDetails.put("participants", action.getParticipants().stream()
-                    .map(pm -> Map.of(
-                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
-                            "username", pm.getWorkspaceMember().getUser().getUsername()
-                    ))
-                    .collect(Collectors.toList()));
+            Map<String, Object> logDetails = createLogDetails(action);
 
             // 참여자 추가(수정) 시 -> 유저 행동 로그 데이터 남김
             for (ActionParticipant participant : action.getParticipants()) {
@@ -430,22 +361,14 @@ public class ActionService {
         for (ActionParticipant participant : action.getParticipants()) {
             Users participantUser = participant.getWorkspaceMember().getUser();
 
+            Map<String, Object> logDetails = createLogDetails(action);
+
             userActionLogService.log(
                     UserActionType.DELETE_PROJECT_PROGRESS_ACTION,
                     String.valueOf(participantUser.getUserId()),
                     participantUser.getUsername(),
                     workspaceId,
-                    Map.of(
-                            "name", action.getName(),
-                            "state", action.getState().name(),
-                            "importance", action.getImportance(),
-                            "participants", action.getParticipants().stream()
-                                    .map(pm -> Map.of(
-                                            "userId", pm.getWorkspaceMember().getUser().getUserId(),
-                                            "username", pm.getWorkspaceMember().getUser().getUsername()
-                                    ))
-                                    .collect(Collectors.toList())
-                    ),
+                    logDetails,
                     action.getParticipants()
             );
         }
@@ -463,4 +386,22 @@ public class ActionService {
         }
     }
 
+    private Map<String, Object> createLogDetails(Action action) {
+
+        Map<String ,Object> logDetails = new HashMap<>();
+
+        logDetails.put("name", action.getName());
+        logDetails.put("state", action.getState().name());
+        logDetails.put("importance", action.getImportance() != null ? action.getImportance() : 0);
+        logDetails.put("startDate", action.getStartDate());
+        logDetails.put("endDate", LocalDateTime.now());
+        logDetails.put("participants", action.getParticipants().stream()
+                .map(pm -> Map.of(
+                        "userId", pm.getWorkspaceMember().getUser().getUserId(),
+                        "username", pm.getWorkspaceMember().getUser().getUsername()
+                ))
+                .collect(Collectors.toList()));
+
+        return logDetails;
+    }
 }
