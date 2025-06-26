@@ -211,10 +211,16 @@ public class WorkspaceService {
         authorizeOwnerOrThrow(userId, foundWorkspace, "이 워크스페이스를 수정할 권한이 없습니다.");
 
         // 해당 워크스페이스의 오너이면 수정
-        if (foundWorkspace.getProgressStep() != ProgressStep.FIVE) {
+        /*if (foundWorkspace.getProgressStep() != ProgressStep.FIVE) {
+            throw new BadRequestException("해당 워크스페이스를 완료하지 않았습니다.");
+        }*/
+        if (foundWorkspace.getProgressStep() == ProgressStep.FIVE) {
+            foundWorkspace.updateProgressStep(ProgressStep.SIX);
+        } else if (foundWorkspace.getProgressStep() == ProgressStep.SIX) {
+            foundWorkspace.updateProgressStep(ProgressStep.FIVE);
+        } else {
             throw new BadRequestException("해당 워크스페이스를 완료하지 않았습니다.");
         }
-        foundWorkspace.updateProgressStep(ProgressStep.SIX);
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),
