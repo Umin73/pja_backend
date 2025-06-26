@@ -177,6 +177,7 @@ public class ActionService {
 //                                .collect(Collectors.toList())
 //                )
 //        );
+        recordActionLog(UserActionType.CREATE_PROJECT_PROGRESS_ACTION, user.getUserId(), user.getUsername(), workspaceId, action);
 
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.CREATE);
@@ -274,7 +275,11 @@ public class ActionService {
         if (dto.getStartDate() != null) action.setStartDate(dto.getStartDate());
         if (dto.getEndDate() != null) action.setEndDate(dto.getEndDate());
         if (dto.getState() != null) {
-            action.setState(Progress.valueOf(dto.getState().toUpperCase()));
+            Progress progress = Progress.valueOf(dto.getState().toUpperCase());
+            action.setState(progress);
+
+            if(progress.equals(Progress.DONE)) recordActionLog(UserActionType.DONE_PROJECT_PROGRESS_ACTION, user.getUserId(), user.getUsername(), workspaceId, action);
+            else recordActionLog(UserActionType.UPDATE_PROJECT_PROGRESS_ACTION, user.getUserId(), user.getUsername(), workspaceId, action);
 
 //            if(Progress.valueOf(dto.getState().toUpperCase()).equals(Progress.DONE)) {
 //                // 상태가 완료로 변경될 시 -> 유저 행동 로그 데이터 남김
@@ -299,7 +304,12 @@ public class ActionService {
 //                );
 //            }
         }
-        if (dto.getImportance() != null) action.setImportance(dto.getImportance());
+        if (dto.getImportance() != null) {
+            action.setImportance(dto.getImportance());
+
+            // 중요도 수정 시 -> 유저 행동 로그 데이터 남김
+            recordActionLog(UserActionType.UPDATE_IMPORTANCE, user.getUserId(), user.getUsername(), workspaceId, action);
+        }
         if (dto.getOrderIndex() != null) action.setOrderIndex(dto.getOrderIndex());
         if (dto.getHasTest() != null) action.setHasTest(dto.getHasTest());
         if (dto.getParticipantIds() != null) {
@@ -316,7 +326,8 @@ public class ActionService {
 
             action.getParticipants().addAll(updatedParticipants);
 
-//            // 참여자 추가(수정) 시 -> 유저 행동 로그 데이터 남김
+            // 참여자 추가(수정) 시 -> 유저 행동 로그 데이터 남김
+            recordActionLog(UserActionType.UPDATE_PARTICIPANT_TO_ACTION, user.getUserId(), user.getUsername(), workspaceId, action);
 //            userActionLogService.log(
 //                    UserActionType.UPDATE_PARTICIPANT_TO_ACTION,
 //                    String.valueOf(user.getUserId()),
@@ -357,7 +368,8 @@ public class ActionService {
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.DELETE);
 
-//        // 액션 삭제 시 -> 유저 행동 로그 데이터 남김
+        // 중요도 삭제 시 -> 유저 행동 로그 데이터 남김
+        recordActionLog(UserActionType.DELETE_PROJECT_PROGRESS_ACTION, user.getUserId(), user.getUsername(), workspaceId, action);
 //        userActionLogService.log(
 //                UserActionType.DELETE_PROJECT_PROGRESS_ACTION,
 //                String.valueOf(user.getUserId()),
@@ -389,4 +401,26 @@ public class ActionService {
         }
     }
 
+    private void recordActionLog(UserActionType userActionType, Long userId, String username, Long workspaceId, Action action) {
+
+        Map<String, Object> logDetails = new HashMap<>();
+        logDetails.put("name", action.getName());
+        logDetails.put("state", action.getState());
+        logDetails.put("importance", action.getImportance());
+        logDetails.put("participants", action.getParticipants().stream()
+                                .map(p -> Map.of(
+                                        "userId", p.getWorkspaceMember().getUser().getUserId(),
+                                        "username", p.getWorkspaceMember().getUser().getUsername()
+                                ))
+                                .collect(Collectors.toList()));
+
+        userActionLogService.log(
+                userActionType,
+                String.valueOf(userId),
+                username,
+                workspaceId,
+                logDetails
+        );
+
+    }
 }
