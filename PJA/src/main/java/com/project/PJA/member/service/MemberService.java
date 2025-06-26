@@ -125,6 +125,10 @@ public class MemberService {
 
         workspaceService.authorizeOwnerOrThrow(userId, foundWorkspace, "멤버를 삭제할 권한이 없습니다.");
 
+        if (userId.equals(memberId)) {
+            throw new BadRequestException("해당 워크스페이스의 오너는 삭제할 수 없습니다.");
+        }
+
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(foundWorkspaceMember.getUser(), workspaceId, ActivityTargetType.MEMBER, ActivityActionType.LEAVE);
 
