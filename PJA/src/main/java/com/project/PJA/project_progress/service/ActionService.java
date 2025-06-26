@@ -284,6 +284,7 @@ public class ActionService {
                                     .workspaceMember(member)
                                     .build()
                     ).collect(Collectors.toSet());
+            action.setParticipants(updatedParticipants);
 
             action.getParticipants().addAll(updatedParticipants);
 
