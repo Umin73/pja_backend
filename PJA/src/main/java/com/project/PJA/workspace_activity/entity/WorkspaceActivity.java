@@ -30,9 +30,9 @@ public class WorkspaceActivity {
 
     @Column(name = "user_id")
     private Long userId;
-    private String username;
-    @Column(name = "user_profile")
-    private String userProfile;
+//    private String username;
+//    @Column(name = "user_profile")
+//    private String userProfile;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

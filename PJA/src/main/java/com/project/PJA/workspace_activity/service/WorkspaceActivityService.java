@@ -2,6 +2,7 @@ package com.project.PJA.workspace_activity.service;
 
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -27,20 +28,21 @@ public class WorkspaceActivityService {
     private final WorkspaceActivityRepository workspaceActivityRepository;
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceService workspaceService;
+    private final UserRepository userRepository;
 
-    public WorkspaceActivityService(WorkspaceActivityRepository workspaceActivityRepository, WorkspaceRepository workspaceRepository, WorkspaceService workspaceService) {
+    public WorkspaceActivityService(WorkspaceActivityRepository workspaceActivityRepository, WorkspaceRepository workspaceRepository, WorkspaceService workspaceService, UserRepository userRepository) {
         this.workspaceActivityRepository = workspaceActivityRepository;
         this.workspaceRepository = workspaceRepository;
         this.workspaceService = workspaceService;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public void addWorkspaceActivity(Users user, Long workspaceId, ActivityTargetType targetType, ActivityActionType actionType) {
-
         WorkspaceActivity workspaceActivity = new WorkspaceActivity();
         workspaceActivity.setUserId(user.getUserId());
-        workspaceActivity.setUsername(user.getUsername());
-        workspaceActivity.setUserProfile(user.getProfileImage());
+//        workspaceActivity.setUsername(user.getUsername());
+//        workspaceActivity.setUserProfile(user.getProfileImage());
         workspaceActivity.setWorkspaceId(workspaceId);
         workspaceActivity.setTargetType(targetType);
         workspaceActivity.setActionType(actionType);
@@ -63,8 +65,12 @@ public class WorkspaceActivityService {
         for (WorkspaceActivity activity : workspaceActivityList) {
             WorkspaceActivityResponseDto dto = new WorkspaceActivityResponseDto();
 
-            dto.setUsername(activity.getUsername());
-            dto.setUserProfile(activity.getUserProfile());
+            Users foundUser = userRepository.findById(activity.getUserId())
+                            .orElseThrow(()
+                                    -> new NotFoundException("[WorkspaceActivityService] getWorkspaceActivities에서 유저 정보를 찾을 수 없습니다."));
+
+            dto.setUsername(foundUser.getUsername());
+            dto.setUserProfile(foundUser.getProfileImage());
             dto.setActionType(activity.getActionType().getKorean());
             dto.setTargetType(activity.getTargetType().getKorean());
             dto.setRelativeDateLabel(getRelativeDate(activity.getCreatedAt()));

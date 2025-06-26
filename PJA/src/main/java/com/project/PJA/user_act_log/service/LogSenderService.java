@@ -78,7 +78,7 @@ public class LogSenderService {
             log.info("User Action 로그 전송 완료: {}", response.getStatusCode());
             log.info("응답 내용: {}", response.getBody());
 
-//            analysisSaveService.saveAnalysisResult(response.getBody(), workspaceId);
+            analysisSaveService.saveAnalysisResult(response.getBody(), workspaceId);
 
         } catch (IOException e) {
             log.error("User Action 로그 파일 읽기 실패", e);
