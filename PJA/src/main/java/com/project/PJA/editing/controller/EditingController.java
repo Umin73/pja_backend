@@ -29,6 +29,8 @@ public class EditingController {
         Long userId = user.getUserId();
         String userName = user.getName();
         String userProfile = user.getProfileImage();
+        log.info("=== 편집 시작 API 진입 == userId: {}", userId);
+
         EditingResponse editingResponse = editingService.startEditing(userId, userName, userProfile, workspaceId, editingRequest);
 
         SuccessResponse<EditingResponse> response = new SuccessResponse<>(
@@ -46,6 +48,8 @@ public class EditingController {
         Long userId = user.getUserId();
         String userName = user.getName();
         String userProfile = user.getProfileImage();
+        log.info("=== 편집 유지 API 진입 == userId: {}", userId);
+
         EditingResponse editingResponse = editingService.keepEditing(userId, userName, userProfile, workspaceId, editingRequest);
 
         SuccessResponse<EditingResponse> response = new SuccessResponse<>(
@@ -63,6 +67,8 @@ public class EditingController {
         Long userId = user.getUserId();
         String userName = user.getName();
         String userProfile = user.getProfileImage();
+        log.info("=== 편집 삭제 API 진입 == userId: {}", userId);
+
         EditingResponse editingResponse = editingService.stopEditing(userId, userName, userProfile, workspaceId, editingRequest);
 
         SuccessResponse<EditingResponse> response = new SuccessResponse<>(
@@ -78,12 +84,16 @@ public class EditingController {
                                                                                    @PathVariable Long workspaceId,
                                                                                    @PathVariable String page) {
         Long userId = user.getUserId();
+        log.info("=== 편집 조회 API 진입 == userId: {}", userId);
+        log.info("=== 편집 조회 page: {}", page);
         List<EditingResponse> editingResponses = editingService.getEditingStatus(userId, workspaceId, page);
 
         SuccessResponse<List<EditingResponse>> response = new SuccessResponse<>(
                 "success", "편집 중인 페이지를 조회합니다.", editingResponses
         );
 
+        log.info("=== 편집 조회 data : {}", editingResponses);
+        log.info("=== 편집 조회 성공응답 : {}", response);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
