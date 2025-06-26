@@ -46,11 +46,11 @@ public interface TaskImbalanceResultRepository extends JpaRepository<TaskImbalan
     """)
     List<AssigneeDto> findDistinctAssigneesByWorkspace(@Param("workspaceId") Long workspaceId);
 
-    boolean existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
-            Long workspaceId,
-            Long userId,
-            Integer importance,
-            Progress state,
-            LocalDateTime analyzedAt
-    );
+//    boolean existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
+//            Long workspaceId,
+//            Long userId,
+//            Integer importance,
+//            Progress state,
+//            LocalDateTime analyzedAt
+//    );
 }

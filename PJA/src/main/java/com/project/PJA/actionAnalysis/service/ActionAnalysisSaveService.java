@@ -65,24 +65,41 @@ public class ActionAnalysisSaveService {
 //            result.setTaskCount((Integer) entry.get("count"));
 //            result.setAnalyzedAt(now);
 
-            for(ActionParticipant participant: participants) {
-                TaskImbalanceResult result = new TaskImbalanceResult();
-                Long userId = participant.getWorkspaceMember().getUser().getUserId();
+//            for(ActionParticipant participant: participants) {
+//                TaskImbalanceResult result = new TaskImbalanceResult();
+//                Long userId = participant.getWorkspaceMember().getUser().getUserId();
+//
+////                boolean alreadyExists = taskImbalanceResultRepository
+////                        .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
+////                                workspaceId, userId, importance, state, now
+////                        );
+//
+//                result.setWorkspaceId(workspaceId);
+//                result.setUserId(participant.getWorkspaceMember().getUser().getUserId());
+//                result.setState(state);
+//                result.setImportance(importance);
+//                result.setTaskCount(count);
+//                result.setAnalyzedAt(now);
+//
+//                taskImbalanceResultRepository.save(result);
+//            }
+
+            TaskImbalanceResult result = new TaskImbalanceResult();
+            Long userId = Long.valueOf(userIdObj.toString());
 
 //                boolean alreadyExists = taskImbalanceResultRepository
 //                        .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
 //                                workspaceId, userId, importance, state, now
 //                        );
 
-                result.setWorkspaceId(workspaceId);
-                result.setUserId(participant.getWorkspaceMember().getUser().getUserId());
-                result.setState(state);
-                result.setImportance(importance);
-                result.setTaskCount(count);
-                result.setAnalyzedAt(now);
+            result.setWorkspaceId(workspaceId);
+            result.setUserId(userId);
+            result.setState(state);
+            result.setImportance(importance);
+            result.setTaskCount(count);
+            result.setAnalyzedAt(now);
 
-                taskImbalanceResultRepository.save(result);
-            }
+            taskImbalanceResultRepository.save(result);
 
 
 //            if (!alreadyExists) {
@@ -168,22 +185,36 @@ public class ActionAnalysisSaveService {
                 meanHours = 0L;
             }
 
-            // 모든 참여자에게 동일하게 저장
-            for (ActionParticipant participant : participants) {
-                Long userId = participant.getWorkspaceMember().getUser().getUserId();
+//            // 모든 참여자에게 동일하게 저장
+//            for (ActionParticipant participant : participants) {
+//                Long userId = participant.getWorkspaceMember().getUser().getUserId();
+//
+//                // 기존 데이터 삭제
+//                avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+//
+//                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+//                result.setWorkspaceId(workspaceId);
+//                result.setUserId(userId);
+//                result.setImportance(importance);
+//                result.setMeanHours(meanHours);
+//                result.setAnalyzedAt(now);
+//
+//                avgProcessingTimeResultRepository.save(result);
+//            }
 
-                // 기존 데이터 삭제
-                avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+            // 기존 데이터 삭제
+            Object userIdObj = entry.get("userId");
+            Long userId = Long.valueOf(userIdObj.toString());
+            avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
 
-                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-                result.setWorkspaceId(workspaceId);
-                result.setUserId(userId);
-                result.setImportance(importance);
-                result.setMeanHours(meanHours);
-                result.setAnalyzedAt(now);
+            AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+            result.setWorkspaceId(workspaceId);
+            result.setUserId(userId);
+            result.setImportance(importance);
+            result.setMeanHours(meanHours);
+            result.setAnalyzedAt(now);
 
-                avgProcessingTimeResultRepository.save(result);
-            }
+            avgProcessingTimeResultRepository.save(result);
         }
 
     }
