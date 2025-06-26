@@ -96,7 +96,8 @@ public class ActionPostService {
             throw new ForbiddenException("액션 포스트가 해당 액션에 속하지 않습니다.");
         }
 
-        actionPost.setContent(content);
+        if(content == null || content.isEmpty()) actionPost.setContent("");
+        else actionPost.setContent(content);
 
         // 기존 파일 삭제
         for (ActionPostFile file : actionPost.getActionPostFiles()) {
