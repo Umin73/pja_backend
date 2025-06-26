@@ -294,6 +294,7 @@ public class WorkspaceService {
             List<Workspace> workspaces = workspaceRepository.findAllById(workspaceIds.getProject_ID());
 
             List<WorkspaceResponse> workspaceResponses = workspaces.stream()
+                    .filter(workspace -> !workspace.getWorkspaceId().equals(workspaceId)) // 유사한 워크스페이스 중 본인의 워크스페이스는 제외
                     .map(workspace -> new WorkspaceResponse(
                             workspace.getWorkspaceId(),
                             workspace.getProjectName(),
