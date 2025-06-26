@@ -15,6 +15,7 @@ import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ActionAnalysisSaveService {
@@ -38,62 +40,113 @@ public class ActionAnalysisSaveService {
         JsonNode rootNode = mapper.readTree(responseBody);
         LocalDateTime now = LocalDateTime.now();
 
-        // 담당자 불균형 분석(taskImbalanceResult) 저장 (이력 저장)
-        String imbalanceRaw = rootNode.get("task_imbalance").path("data").asText();
-        List<Map<String, Object>> imbalanceList = mapper
-                .readValue(imbalanceRaw.replace("'", "\""),
-                        new TypeReference<>() {});
-
-        for(Map<String, Object> entry: imbalanceList) {
-            TaskImbalanceResult result = new TaskImbalanceResult();
-            result.setWorkspaceId(workspaceId);
-
-            Object userIdObj = entry.get("userId");
-            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
-            result.setUserId(userId);
-
-            Object stateObj = entry.get("details.state");
-            String stateStr = stateObj.toString();
-            result.setState(Progress.valueOf(stateStr));
-
-            result.setImportance((Integer) entry.get("details.importance"));
-            result.setTaskCount((Integer) entry.get("count"));
-            result.setAnalyzedAt(now);
-
-            taskImbalanceResultRepository.save(result);
-        }
+        // 담당자 불균형 분석(taskImbalanceResult) 저장
+        saveTaskImbalanceResults(rootNode, workspaceId, now, mapper);
 
         // 평균 작업 처리 시간(AvgProcessingTimeResult) 저장 (기존 항목 삭제 후 덮어 씌움)
-        String processingTimeRaw = rootNode.get("processing_time").path("data").asText();
-        List<Map<String, Object>> processingList = mapper.readValue(processingTimeRaw.replace("'", "\""), new TypeReference<>() {});
-
-        for(Map<String, Object> entry: processingList) {
-            Object userIdObj = entry.get("userId");
-            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
-
-            Object importanceObj = entry.get("details.importance");
-            Integer importance = (importanceObj instanceof Number) ? ((Number) importanceObj).intValue() : Integer.parseInt(importanceObj.toString());
-
-            // 기존 값 삭제(워크스페이스, 유저아이디, 중요도에 따라)
-            avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
-
-            AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-            result.setWorkspaceId(workspaceId);
-            result.setUserId(userId);
-            result.setImportance(importance);
-
-            Object meanHoursObj = entry.get("mean_hours");
-            long meanHours = 0L;
-            if (meanHoursObj instanceof Number) {
-                meanHours = Math.round(((Number) meanHoursObj).doubleValue()); // 소수점 반올림
-            } else {
-                meanHours = Math.round(Long.parseLong(meanHoursObj.toString())); // 문자열이라면 double로 변환 후 반올림
-            }
-            result.setMeanHours(meanHours);
-
-            result.setAnalyzedAt(now);
-
-            avgProcessingTimeResultRepository.save(result);
-        }
+        saveProcessingTimeResults(rootNode, workspaceId, now, mapper);
     }
+
+    private void saveTaskImbalanceResults(JsonNode rootNode, Long workspaceId, LocalDateTime now, ObjectMapper mapper) throws JsonProcessingException {
+        JsonNode taskImbalanceNode = rootNode.get("task_imbalance").get("data");
+
+        // 워크스페이스 아이디로 기존 값들 삭제
+        taskImbalanceResultRepository.deleteByWorkspaceId(workspaceId);
+
+        // grouped1, grouped2, grouped3 각각 처리
+        taskImbalanceNode.fieldNames().forEachRemaining(groupKey -> {
+            JsonNode groupData = taskImbalanceNode.get(groupKey);
+
+            if (groupData != null && groupData.isArray()) {
+                List<Map<String, Object>> imbalanceList = mapper.convertValue(groupData, new TypeReference<List<Map<String, Object>>>() {});
+
+                for (Map<String, Object> entry : imbalanceList) {
+                    TaskImbalanceResult result = new TaskImbalanceResult();
+                    result.setWorkspaceId(workspaceId);
+
+                    // participant_userId를 userId로 매핑
+                    Object userIdObj = entry.get("participant_userId");
+                    Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
+                    result.setUserId(userId);
+
+                    // details.state 처리
+                    Object stateObj = entry.get("details.state");
+                    String stateStr = stateObj.toString();
+                    try {
+                        result.setState(Progress.valueOf(stateStr));
+                    } catch (IllegalArgumentException e) {
+                        log.warn("State의 값이 잘못됨: " + stateStr);
+                        continue;
+                    }
+
+                    // details.importance 처리
+                    Object importanceObj = entry.get("details.importance");
+                    Integer importance = (importanceObj instanceof Number) ? ((Number) importanceObj).intValue() : Integer.parseInt(importanceObj.toString());
+                    result.setImportance(importance);
+
+                    // count 처리
+                    Object countObj = entry.get("count");
+                    Integer taskCount = (countObj instanceof Number) ? ((Number) countObj).intValue() : Integer.parseInt(countObj.toString());
+                    result.setTaskCount(taskCount);
+
+                    result.setAnalyzedAt(now);
+
+                    taskImbalanceResultRepository.save(result);
+                }
+            }
+        });
+    }
+
+    private void saveProcessingTimeResults(JsonNode rootNode, Long workspaceId, LocalDateTime now, ObjectMapper mapper) throws JsonProcessingException {
+        JsonNode processingTimeNode = rootNode.get("processing_time").get("data");
+
+        // 워크스페이스 아이디로 기존 값들 삭제
+        avgProcessingTimeResultRepository.deleteByWorkspaceId(workspaceId);
+
+        processingTimeNode.fieldNames().forEachRemaining(dfKeys -> {
+            JsonNode dfData = processingTimeNode.get(dfKeys);
+
+            if (dfData != null && dfData.isArray()) {
+                List<Map<String, Object>> processingList = mapper.convertValue(dfData, new TypeReference<List<Map<String, Object>>>() {});
+
+                for (Map<String, Object> entry : processingList) {
+                    // participant_userId를 userId로 매핑
+                    Object userIdObj = entry.get("participant_userId");
+                    Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
+
+                    // details.importance 처리
+                    Object importanceObj = entry.get("details.importance");
+                    Integer importance = (importanceObj instanceof Number) ? ((Number) importanceObj).intValue() : Integer.parseInt(importanceObj.toString());
+
+//                    // 기존 값 삭제(워크스페이스, 유저아이디, 중요도에 따라)
+//                    avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+
+                    // mean_hours가 null인 경우 처리
+                    Object meanHoursObj = entry.get("mean_hours");
+                    if (meanHoursObj == null || meanHoursObj.toString().equals("null") || meanHoursObj.toString().equalsIgnoreCase("NaN")) {
+                        continue; // null이면 걍 건너뛱ㅁ
+                    }
+
+                    AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+                    result.setWorkspaceId(workspaceId);
+                    result.setUserId(userId);
+                    result.setImportance(importance);
+
+                    long meanHours = 0L;
+                    if (meanHoursObj instanceof Number) {
+                        meanHours = Math.round(((Number) meanHoursObj).doubleValue()); // 소수점 반올림
+                    } else {
+                        meanHours = Math.round(Double.parseDouble(meanHoursObj.toString())); // 문자열이라면 double로 변환 후 반올림
+                    }
+                    result.setMeanHours(meanHours);
+
+                    result.setAnalyzedAt(now);
+
+                    avgProcessingTimeResultRepository.save(result);
+                }
+            }
+        });
+
+    }
+
 }
