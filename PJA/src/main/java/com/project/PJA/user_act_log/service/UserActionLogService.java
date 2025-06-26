@@ -33,8 +33,7 @@ public class UserActionLogService {
                     String userId,
                     String username,
                     Long workspaceId,
-                    Map<String, Object> details,
-                    Set<Long> participants) {
+                    Map<String, Object> details) {
         try {
             log.info("log_file_dir는 {}", LOG_FILE_DIR);
 
@@ -62,7 +61,7 @@ public class UserActionLogService {
                     StandardOpenOption.APPEND);
 
             // 로그 전송 및 분석 저장
-            logSenderService.sendLogsFromFile(workspaceId, participants);
+            logSenderService.sendLogsFromFile(workspaceId);
         } catch (Exception e) {
             log.error("사용자 로그 기록 중 오류 발생", e);
         }
