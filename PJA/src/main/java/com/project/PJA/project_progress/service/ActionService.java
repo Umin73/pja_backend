@@ -23,6 +23,7 @@ import com.project.PJA.workspace_activity.enumeration.ActivityTargetType;
 import com.project.PJA.workspace_activity.service.WorkspaceActivityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.cglib.core.Local;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -154,34 +155,8 @@ public class ActionService {
 
         actionPostService.createActionPost(action);
 
-        // 액션 생성 시 -> 유저 행동 로그 데이터 남김
-//        for (ActionParticipant participant : action.getParticipants()) { // 해당 액션에 참여중인 모든 사람에 대해 로그를 생성
-//            Users participantUser = participant.getWorkspaceMember().getUser();
-//
-//            Map<String, Object> logDetails = createLogDetails(action);
-//
-//            userActionLogService.log(
-//                    UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
-//                    String.valueOf(participantUser.getUserId()),
-//                    participantUser.getUsername(),
-//                    workspaceId,
-//                    logDetails,
-//                    action.getParticipants()
-//            );
-//        }
-
-        Set<Long> participantUserIds = actionParticipants.stream()
-                .map(p -> p.getWorkspaceMember().getUser().getUserId())
-                .collect(Collectors.toSet());
-
-        userActionLogService.log(
-                UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
-                String.valueOf(user.getUserId()),
-                user.getUsername(),
-                workspaceId,
-                createLogDetails(action),
-                participantUserIds
-        );
+        // 해당 액션의 모든 참여자에게 로그 발생시키기
+        logForAllParticipants(action.getParticipants(), UserActionType.CREATE_PROJECT_PROGRESS_ACTION, workspaceId, createLogDetails(action));
 
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.CREATE);
@@ -281,40 +256,19 @@ public class ActionService {
         if (dto.getState() != null) {
             action.setState(Progress.valueOf(dto.getState().toUpperCase()));
 
-            Map<String ,Object> logDetails = createLogDetails(action);
+            UserActionType actionType =
+                    Progress.valueOf(dto.getState().toUpperCase()).equals(Progress.DONE)
+                    ? UserActionType.DONE_PROJECT_PROGRESS_ACTION : UserActionType.CREATE_PROJECT_PROGRESS_ACTION;
 
-            Set<Long> participantUserIds = action.getParticipants().stream()
-                    .map(p -> p.getWorkspaceMember().getUser().getUserId())
-                    .collect(Collectors.toSet());
+            // 해당 액션의 모든 참여자에게 로그 발생시키기
+            logForAllParticipants(action.getParticipants(),actionType, workspaceId, createLogDetails(action));
 
-            // 상태 수정 시 -> 유저 행동 로그 데이터 남김
-            userActionLogService.log(
-                    UserActionType.DONE_PROJECT_PROGRESS_ACTION,
-                    String.valueOf(user.getUserId()),
-                    user.getUsername(),
-                    workspaceId,
-                    logDetails,
-                    participantUserIds
-            );
         }
         if (dto.getImportance() != null) {
             action.setImportance(dto.getImportance());
 
-            Map<String, Object> logDetails = createLogDetails(action);
-
             // 중요도 수정 시 -> 유저 행동 로그 데이터 남김
-            Set<Long> participantUserIds = action.getParticipants().stream()
-                    .map(p -> p.getWorkspaceMember().getUser().getUserId())
-                    .collect(Collectors.toSet());
-
-            userActionLogService.log(
-                    UserActionType.CREATE_PROJECT_PROGRESS_ACTION,
-                    String.valueOf(user.getUserId()),
-                    user.getUsername(),
-                    workspaceId,
-                    logDetails,
-                    participantUserIds
-            );
+            logForAllParticipants(action.getParticipants(), UserActionType.CREATE_PROJECT_PROGRESS_ACTION, workspaceId, createLogDetails(action));
 
         }
         if (dto.getOrderIndex() != null) action.setOrderIndex(dto.getOrderIndex());
@@ -333,21 +287,8 @@ public class ActionService {
 
             action.getParticipants().addAll(updatedParticipants);
 
-            Map<String, Object> logDetails = createLogDetails(action);
+            logForAllParticipants(action.getParticipants(), UserActionType.UPDATE_PARTICIPANT_TO_ACTION, workspaceId, createLogDetails(action));
 
-            Set<Long> participantUserIds = action.getParticipants().stream()
-                    .map(p -> p.getWorkspaceMember().getUser().getUserId())
-                    .collect(Collectors.toSet());
-
-            // 참여자 추가(수정) 시 -> 유저 행동 로그 데이터 남김
-            userActionLogService.log(
-                    UserActionType.UPDATE_PARTICIPANT_TO_ACTION,
-                    String.valueOf(user.getUserId()),
-                    user.getUsername(),
-                    workspaceId,
-                    logDetails,
-                    participantUserIds
-            );
         }
 
         // 최근 활동 기록 추가
@@ -372,21 +313,7 @@ public class ActionService {
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.ACTION, ActivityActionType.DELETE);
 
         // 액션 삭제 시 -> 유저 행동 로그 데이터 남김
-        Set<Long> participantUserIds = action.getParticipants().stream()
-                .map(p -> p.getWorkspaceMember().getUser().getUserId())
-                .collect(Collectors.toSet());
-
-        Map<String, Object> logDetails = createLogDetails(action);
-
-        userActionLogService.log(
-                UserActionType.DELETE_PROJECT_PROGRESS_ACTION,
-                String.valueOf(user.getUserId()),
-                user.getUsername(),
-                workspaceId,
-                logDetails,
-                participantUserIds
-        );
-
+        logForAllParticipants(action.getParticipants(), UserActionType.DELETE_PROJECT_PROGRESS_ACTION, workspaceId, createLogDetails(action));
     }
 
     private void validateFeatureHierarchy(Long workspaceId, Long categoryId, Long featureId, Feature feature) {
@@ -419,4 +346,23 @@ public class ActionService {
 
         return logDetails;
     }
+
+    private void logForAllParticipants(Set<ActionParticipant> participants, UserActionType type, Long workspaceId, Map<String, Object> logDetails) {
+        Set<Long> participantUserIds = participants.stream()
+                .map(p -> p.getWorkspaceMember().getUser().getUserId())
+                .collect(Collectors.toSet());
+
+        for (ActionParticipant participant : participants) {
+            Users participantUser = participant.getWorkspaceMember().getUser();
+            userActionLogService.log(
+                    type,
+                    String.valueOf(participantUser.getUserId()),
+                    participantUser.getUsername(),
+                    workspaceId,
+                    logDetails,
+                    participantUserIds
+            );
+        }
+    }
+
 }
