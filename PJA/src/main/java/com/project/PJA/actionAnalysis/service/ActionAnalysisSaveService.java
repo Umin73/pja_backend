@@ -37,7 +37,7 @@ public class ActionAnalysisSaveService {
     private final WorkspaceRepository workspaceRepository;
 
     @Transactional
-    public void saveAnalysisResult(String responseBody, Long workspaceId, Set<ActionParticipant> participants) throws JsonProcessingException {
+    public void saveAnalysisResult(String responseBody, Long workspaceId, Set<Long> participants) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
         JsonNode rootNode = mapper.readTree(responseBody);
@@ -51,63 +51,23 @@ public class ActionAnalysisSaveService {
 
         for(Map<String, Object> entry: imbalanceList) {
 
-            Object userIdObj = entry.get("userId");
-//            Long userId = (userIdObj instanceof Number) ? ((Number) userIdObj).longValue() : Long.parseLong(userIdObj.toString());
-
             Object stateObj = entry.get("details.state");
             String stateStr = stateObj.toString();
             Progress state = Progress.valueOf(stateStr);
             Integer importance = (Integer) entry.get("details.importance");
             Integer count = (Integer) entry.get("count");
 
-//            result.setState(state);
-//            result.setImportance(importance);
-//            result.setTaskCount((Integer) entry.get("count"));
-//            result.setAnalyzedAt(now);
+            for (Long userId : participants) {
+                TaskImbalanceResult result = new TaskImbalanceResult();
+                result.setWorkspaceId(workspaceId);
+                result.setUserId(userId);
+                result.setState(state);
+                result.setImportance(importance);
+                result.setTaskCount(count);
+                result.setAnalyzedAt(now);
 
-//            for(ActionParticipant participant: participants) {
-//                TaskImbalanceResult result = new TaskImbalanceResult();
-//                Long userId = participant.getWorkspaceMember().getUser().getUserId();
-//
-////                boolean alreadyExists = taskImbalanceResultRepository
-////                        .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
-////                                workspaceId, userId, importance, state, now
-////                        );
-//
-//                result.setWorkspaceId(workspaceId);
-//                result.setUserId(participant.getWorkspaceMember().getUser().getUserId());
-//                result.setState(state);
-//                result.setImportance(importance);
-//                result.setTaskCount(count);
-//                result.setAnalyzedAt(now);
-//
-//                taskImbalanceResultRepository.save(result);
-//            }
-
-            TaskImbalanceResult result = new TaskImbalanceResult();
-            Long userId = Long.valueOf(userIdObj.toString());
-
-//                boolean alreadyExists = taskImbalanceResultRepository
-//                        .existsByWorkspaceIdAndUserIdAndImportanceAndStateAndAnalyzedAt(
-//                                workspaceId, userId, importance, state, now
-//                        );
-
-            result.setWorkspaceId(workspaceId);
-            result.setUserId(userId);
-            result.setState(state);
-            result.setImportance(importance);
-            result.setTaskCount(count);
-            result.setAnalyzedAt(now);
-
-            taskImbalanceResultRepository.save(result);
-
-
-//            if (!alreadyExists) {
-//                taskImbalanceResultRepository.save(result);
-//            } else {
-//                log.info("중복된 불균형 분석 결과 존재 - 저장 생략: userId={}, importance={}, state={}, analyzedAt={}",
-//                        userId, importance, state, now);
-//            }
+                taskImbalanceResultRepository.save(result);
+            }
         }
 
         // 평균 작업 처리 시간(AvgProcessingTimeResult) 저장 (기존 항목 삭제 후 덮어 씌움)
@@ -185,36 +145,19 @@ public class ActionAnalysisSaveService {
                 meanHours = 0L;
             }
 
-//            // 모든 참여자에게 동일하게 저장
-//            for (ActionParticipant participant : participants) {
-//                Long userId = participant.getWorkspaceMember().getUser().getUserId();
-//
-//                // 기존 데이터 삭제
-//                avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
-//
-//                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-//                result.setWorkspaceId(workspaceId);
-//                result.setUserId(userId);
-//                result.setImportance(importance);
-//                result.setMeanHours(meanHours);
-//                result.setAnalyzedAt(now);
-//
-//                avgProcessingTimeResultRepository.save(result);
-//            }
 
-            // 기존 데이터 삭제
-            Object userIdObj = entry.get("userId");
-            Long userId = Long.valueOf(userIdObj.toString());
-            avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+            for (Long userId: participants) {
+                avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
 
-            AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-            result.setWorkspaceId(workspaceId);
-            result.setUserId(userId);
-            result.setImportance(importance);
-            result.setMeanHours(meanHours);
-            result.setAnalyzedAt(now);
+                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+                result.setWorkspaceId(workspaceId);
+                result.setUserId(userId);
+                result.setImportance(importance);
+                result.setMeanHours(meanHours);
+                result.setAnalyzedAt(now);
 
-            avgProcessingTimeResultRepository.save(result);
+                avgProcessingTimeResultRepository.save(result);
+            }
         }
 
     }

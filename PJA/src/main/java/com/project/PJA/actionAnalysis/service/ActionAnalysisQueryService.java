@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,18 +52,19 @@ public class ActionAnalysisQueryService {
 
         workspaceService.validateWorkspaceAccess(user.getUserId(), foundWorkspace);
 
+        Map<Long, String> userMap = userRepository.findAllById(
+                avgProcessingTimeResultRepository.findByWorkspaceId(workspaceId).stream()
+                        .map(r -> r.getUserId()).distinct().toList()
+        ).stream().collect(Collectors.toMap(Users::getUserId, Users::getUsername));
+
         return avgProcessingTimeResultRepository.findByWorkspaceId(workspaceId)
                 .stream().map(
-                        result -> {
-                            Users foundUser = userRepository.findById(result.getUserId())
-                                    .orElseThrow(() -> new NotFoundException("유저 아이디로 사용자 정보를 찾을 수 없습니다."));
-                            return new AvgProcessingTimeGraphDto(
-                                    foundUser.getUserId(),
-                                    foundUser.getUsername(),
-                                    result.getImportance(),
-                                    result.getMeanHours()
-                                    );
-                        }
+                        result -> new AvgProcessingTimeGraphDto(
+                                result.getUserId(),
+                                userMap.getOrDefault(result.getUserId(), "알 수 없음"),
+                                result.getImportance(),
+                                result.getMeanHours()
+                        )
                 ).toList();
     }
 }
