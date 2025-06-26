@@ -36,7 +36,6 @@ public class WorkspaceActivityService {
 
     @Transactional
     public void addWorkspaceActivity(Users user, Long workspaceId, ActivityTargetType targetType, ActivityActionType actionType) {
-
         WorkspaceActivity workspaceActivity = new WorkspaceActivity();
         workspaceActivity.setUserId(user.getUserId());
         workspaceActivity.setUsername(user.getUsername());
