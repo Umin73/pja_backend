@@ -34,7 +34,7 @@ public class UserActionLogService {
                     String username,
                     Long workspaceId,
                     Map<String, Object> details,
-                    Set<ActionParticipant> participants) {
+                    Set<Long> participants) {
         try {
             log.info("log_file_dir는 {}", LOG_FILE_DIR);
 

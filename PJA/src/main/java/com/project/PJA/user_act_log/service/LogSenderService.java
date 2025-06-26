@@ -40,7 +40,7 @@ public class LogSenderService {
     private final RestTemplate restTemplate;
     private final ActionAnalysisSaveService analysisSaveService;
 
-    public void sendLogsFromFile(Long workspaceId, Set<ActionParticipant> participants) {
+    public void sendLogsFromFile(Long workspaceId, Set<Long> participants) {
         try {
             String fileName = "user-actions-workspace-" + workspaceId + ".json";
             Path path = Paths.get(logFileDir, fileName);
