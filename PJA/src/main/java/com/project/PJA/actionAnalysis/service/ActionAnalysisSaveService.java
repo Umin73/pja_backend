@@ -51,22 +51,29 @@ public class ActionAnalysisSaveService {
 
         for(Map<String, Object> entry: imbalanceList) {
 
-            Object stateObj = entry.get("details.state");
-            String stateStr = stateObj.toString();
-            Progress state = Progress.valueOf(stateStr);
+            Progress state = Progress.valueOf(entry.get("details.state").toString());
             Integer importance = (Integer) entry.get("details.importance");
             Integer count = (Integer) entry.get("count");
 
             for (Long userId : participants) {
-                TaskImbalanceResult result = new TaskImbalanceResult();
-                result.setWorkspaceId(workspaceId);
-                result.setUserId(userId);
-                result.setState(state);
-                result.setImportance(importance);
-                result.setTaskCount(count);
-                result.setAnalyzedAt(now);
+                TaskImbalanceResult existing = taskImbalanceResultRepository
+                        .findByWorkspaceIdAndUserIdAndStateAndImportance(workspaceId, userId, state, importance)
+                        .orElse(null);
 
-                taskImbalanceResultRepository.save(result);
+                if (existing != null) {
+                    existing.setTaskCount(count);
+                    existing.setAnalyzedAt(now);
+                    taskImbalanceResultRepository.save(existing);
+                } else {
+                    TaskImbalanceResult result = new TaskImbalanceResult();
+                    result.setWorkspaceId(workspaceId);
+                    result.setUserId(userId);
+                    result.setState(state);
+                    result.setImportance(importance);
+                    result.setTaskCount(count);
+                    result.setAnalyzedAt(now);
+                    taskImbalanceResultRepository.save(result);
+                }
             }
         }
 
@@ -146,17 +153,24 @@ public class ActionAnalysisSaveService {
             }
 
 
-            for (Long userId: participants) {
-                avgProcessingTimeResultRepository.deleteByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance);
+            for (Long userId : participants) {
+                AvgProcessingTimeResult existing = avgProcessingTimeResultRepository
+                        .findByWorkspaceIdAndUserIdAndImportance(workspaceId, userId, importance)
+                        .orElse(null);
 
-                AvgProcessingTimeResult result = new AvgProcessingTimeResult();
-                result.setWorkspaceId(workspaceId);
-                result.setUserId(userId);
-                result.setImportance(importance);
-                result.setMeanHours(meanHours);
-                result.setAnalyzedAt(now);
-
-                avgProcessingTimeResultRepository.save(result);
+                if (existing != null) {
+                    existing.setMeanHours(meanHours);
+                    existing.setAnalyzedAt(now);
+                    avgProcessingTimeResultRepository.save(existing);
+                } else {
+                    AvgProcessingTimeResult result = new AvgProcessingTimeResult();
+                    result.setWorkspaceId(workspaceId);
+                    result.setUserId(userId);
+                    result.setImportance(importance);
+                    result.setMeanHours(meanHours);
+                    result.setAnalyzedAt(now);
+                    avgProcessingTimeResultRepository.save(result);
+                }
             }
         }
 

@@ -10,9 +10,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskImbalanceResultRepository extends JpaRepository<TaskImbalanceResult, Long> {
 
+    Optional<TaskImbalanceResult> findByWorkspaceIdAndUserIdAndStateAndImportance(Long workspaceId, Long userId, Progress state, Integer importance);
+
+
+    // 동일한 workspaceId, userId, state, importance를 기준으로 중복되는거 덮어씌움
     @Query("""
     SELECT new com.project.PJA.actionAnalysis.dto.TaskImbalanceGraphDto(
         wm.workspaceMemberId,
