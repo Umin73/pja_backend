@@ -45,7 +45,7 @@ public class EditingService {
 
         String luaScript = """
                 local existingFieldKey = redis.call('get', KEYS[1])
-                if existingFieldKey and existingFieldKey == KEYS[2] then
+                if existingFieldKey then
                     redis.call('del', existingFieldKey)
                 end
                 redis.call('del', KEYS[1])
