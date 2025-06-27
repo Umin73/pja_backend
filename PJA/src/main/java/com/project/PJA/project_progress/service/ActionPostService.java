@@ -99,6 +99,20 @@ public class ActionPostService {
         if(content == null || content.isEmpty()) actionPost.setContent("");
         else actionPost.setContent(content);
 
+        // 기존 파일 삭제
+        for (ActionPostFile file : actionPost.getActionPostFiles()) {
+//            fileStorageService.deleteFile(file.getFilePath());
+            s3Service.deleteFile(file.getFilePath());
+        }
+        actionPost.getActionPostFiles().clear();
+
+        if(fileList != null && !fileList.isEmpty()) {
+            for (MultipartFile file : fileList) {
+                String path = s3Service.uploadFile(file, "action", actionPostId);
+//                String path = fileStorageService.storeFile(file, "action", actionPostId);
+            }
+        }
+
         if(fileList != null && !fileList.isEmpty()) {
             for(MultipartFile file : fileList) {
                 String path = s3Service.uploadFile(file, "action", actionPostId);
