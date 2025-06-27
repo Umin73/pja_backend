@@ -40,7 +40,7 @@ public class ActionPostController {
                                                            @PathVariable("workspaceId") Long workspaceId,
                                                            @PathVariable("actionId") Long actionId,
                                                            @PathVariable("postId") Long postId,
-                                                           @RequestPart("content") String content,
+                                                           @RequestPart(value = "content", required = false) String content,
                                                            @RequestPart(value = "files", required = false) List<MultipartFile> fileList) throws IOException {
         Map<String, Object> data = actionPostService.updateActionPostContent(user, workspaceId, actionId, postId, content, fileList);
 
