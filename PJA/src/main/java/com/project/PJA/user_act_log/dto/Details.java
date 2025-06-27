@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Details {
+    private Long actionId;
     private String name;
     private String state;
     private Integer importance;

@@ -413,6 +413,7 @@ public class ActionService {
                                         "username", p.getWorkspaceMember().getUser().getUsername()
                                 ))
                                 .collect(Collectors.toList()));
+        logDetails.put("actionId", action.getActionId());
 
         userActionLogService.log(
                 userActionType,
