@@ -1,5 +1,7 @@
 package com.project.PJA.editing.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.editing.dto.EditingRequest;
 import com.project.PJA.editing.dto.EditingResponse;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequestMapping("/api/editing")
 public class EditingController {
     private final EditingService editingService;
+    private final ObjectMapper objectMapper;
 
     // 편집 시작
     @PostMapping("/{workspaceId}/start")
@@ -92,8 +95,13 @@ public class EditingController {
                 "success", "편집 중인 페이지를 조회합니다.", editingResponses
         );
 
-        log.info("=== 편집 조회 data : {}", editingResponses);
-        log.info("=== 편집 조회 성공응답 : {}", response);
+        try {
+            String dto = objectMapper.writeValueAsString(editingResponses);
+            log.info("=== 편집 조회 data : {}", dto);
+        } catch (JsonProcessingException e) {
+            log.error("편집 조회 데이터 json 변화 실패", e);
+        }
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
