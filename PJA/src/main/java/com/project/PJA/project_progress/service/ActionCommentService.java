@@ -75,6 +75,7 @@ public class ActionCommentService {
         notificationService.createNotification(receivers, notiMessage, actionPost, workspaceId);
 
         Map<String, Object> result = new HashMap<>();
+        result.put("commentId", actionComment.getActionCommentId());
         result.put("username", actionComment.getUser().getName());
         result.put("createdAt", actionComment.getUpdatedAt());
         result.put("content", actionComment.getContent());
