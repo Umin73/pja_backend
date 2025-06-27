@@ -264,7 +264,7 @@ public class EditingService {
                     String parsedField = null;
                     String parsedFieldId = null;
 
-                    if ("project-info".equals(page) || "apis".equals(page) || "action".equals(page)) {
+                    if ("requirements".equals(page) || "project-info".equals(page) || "apis".equals(page) || "action".equals(page)) {
                         // editing:data:{workspaceId}:{page}:{fieldId}
                         if (parts.length == 5) {
                             parsedFieldId = parts[4];
