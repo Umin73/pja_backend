@@ -69,6 +69,7 @@ public class LogSenderService {
             // 로그 리스트를 JSON 문자열로 변환 (JSON array)
             String logJsonArrayString = objectMapper.writeValueAsString(logs);
             Map<String, String> body = Map.of("user_log", logJsonArrayString);
+            log.info("보내는 데이터는: {}", logJsonArrayString);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

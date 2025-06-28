@@ -414,6 +414,8 @@ public class ActionService {
                                 ))
                                 .collect(Collectors.toList()));
         logDetails.put("actionId", action.getActionId());
+        logDetails.put("startDate", action.getStartDate());
+        logDetails.put("endDate", LocalDateTime.now());
 
         userActionLogService.log(
                 userActionType,
