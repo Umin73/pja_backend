@@ -82,15 +82,14 @@ public class WorkspaceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 워크스페이스 진행도 상태 수정
+    // 워크스페이스 진행도 0에서 1로 수정
     @PatchMapping("/{workspaceId}/progress")
     public ResponseEntity<SuccessResponse<WorkspaceResponse>> updateWorkspaceProgressStep(@AuthenticationPrincipal Users user,
-                                                                                          @PathVariable Long workspaceId,
-                                                                                          @RequestBody WorkspaceProgressStep workspaceProgressStep) {
+                                                                                          @PathVariable Long workspaceId) {
         Long userId = user.getUserId();
-        log.info("=== workspace 진행도 상태 수정 API 진입 == userId: {}", userId);
+        log.info("=== workspace 진행도 0에서 1로 수정 API 진입 == userId: {}", userId);
 
-        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspaceProgressStep(userId, workspaceId, workspaceProgressStep);
+        WorkspaceResponse updatedWorkspace = workspaceService.updateWorkspaceProgressStep(userId, workspaceId);
 
         SuccessResponse<WorkspaceResponse> response = new SuccessResponse<>(
                 "success", "요청하신 워크스페이스의 진행도가 성공적으로 수정되었습니다.", updatedWorkspace

@@ -177,19 +177,17 @@ public class WorkspaceService {
                 request.getGithubUrl());
     }
 
-    // 워크스페이스 진행도 상태 수정
+    // 워크스페이스 진행도 0에서 1로 상태 수정
     @Transactional
-    public WorkspaceResponse updateWorkspaceProgressStep(Long userId, Long workspaceId, WorkspaceProgressStep workspaceProgressStep) {
+    public WorkspaceResponse updateWorkspaceProgressStep(Long userId, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
 
         authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
-        ProgressStep stepEnum = ProgressStep.fromValue(workspaceProgressStep.getProgressStep());
-        if (stepEnum == ProgressStep.SIX) {
-            throw new BadRequestException("진행도를 '완료' 단계로 변경할 수 없습니다.");
+        if(foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
+            foundWorkspace.updateProgressStep(ProgressStep.ONE);
         }
-        foundWorkspace.updateProgressStep(stepEnum);
 
         return new WorkspaceResponse(
                 foundWorkspace.getWorkspaceId(),

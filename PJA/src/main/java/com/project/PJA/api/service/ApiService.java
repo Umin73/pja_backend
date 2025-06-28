@@ -97,10 +97,6 @@ public class ApiService {
             throw new BadRequestException("이미 API가 생성되어 AI 생성을 다시 진행할 수 없습니다.");
         }
 
-        if (apiRepository.existsByWorkspace_WorkspaceId(workspaceId)) {
-            throw new BadRequestException("이미 해당 워크스페이스에 API 명세서가 존재합니다.");
-        }
-
         // 아이디어 입력 찾기
         IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
@@ -208,7 +204,7 @@ public class ApiService {
 
             List<Api> savedApis = apiRepository.saveAll(apiEntities);
 
-            //foundWorkspace.updateProgressStep(ProgressStep.FOUR);
+            foundWorkspace.updateProgressStep(ProgressStep.FOUR);
 
             return savedApis.stream()
                     .map(api -> new ApiResponse(

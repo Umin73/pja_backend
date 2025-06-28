@@ -124,10 +124,6 @@ public class ProjectInfoService {
 
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
-        if (projectInfoRepository.existsByWorkspace_WorkspaceId(workspaceId)) {
-            throw new BadRequestException("이미 해당 워크스페이스에 프로젝트 정보가 존재합니다.");
-        }
-
         // 아이디어 입력 정보 찾기
         IdeaInput foundIdeaInput = ideaInputRepository.findByWorkspace_WorkspaceId(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
@@ -202,7 +198,7 @@ public class ProjectInfoService {
                             .build()
             );
 
-            //foundWorkspace.updateProgressStep(ProgressStep.TWO);
+            foundWorkspace.updateProgressStep(ProgressStep.TWO);
 
             return new ProjectInfoResponse(
                     savedProjectInfo.getProjectInfoId(),

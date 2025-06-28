@@ -259,14 +259,6 @@ public class IdeaInputService {
         // 최근 활동 기록 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
 
-        // 단계 검사해서 0이면 1로 올려주기
-        /*Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
-                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
-
-        if (foundWorkspace.getProgressStep() == ProgressStep.ZERO) {
-            foundWorkspace.updateProgressStep(ProgressStep.ONE);
-        }*/
-
         return new IdeaInputResponse(
                 ideaInputId,
                 ideaInputRequest.getProjectName(),

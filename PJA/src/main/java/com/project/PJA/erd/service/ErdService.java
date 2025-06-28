@@ -1,8 +1,10 @@
 package com.project.PJA.erd.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.PJA.erd.dto.aiGenerateDto.*;
+import com.project.PJA.erd.dto.aiGenerateDto.AiErdRelationships;
+import com.project.PJA.erd.dto.aiGenerateDto.AiErdTable;
+import com.project.PJA.erd.dto.aiGenerateDto.ErdAiCreateResponse;
+import com.project.PJA.erd.dto.aiGenerateDto.ErdAiRequestDto;
 import com.project.PJA.erd.entity.*;
 import com.project.PJA.erd.repository.ErdColumnRepository;
 import com.project.PJA.erd.repository.ErdRelationshipsRepository;
@@ -22,6 +24,7 @@ import com.project.PJA.requirement.entity.Requirement;
 import com.project.PJA.requirement.repository.RequirementRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +36,6 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -260,6 +262,7 @@ public class ErdService {
                 savedRelations.add(relation);
             }
             erdRelationshipsRepository.saveAll(savedRelations);
+            foundWorkspace.updateProgressStep(ProgressStep.THREE);
             return body != null ? List.of(body) : new ArrayList<>();
         } catch (HttpClientErrorException | HttpServerErrorException e) {
             throw new RuntimeException("MLOps API 호출 실패: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());

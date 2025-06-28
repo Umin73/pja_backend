@@ -3,19 +3,20 @@ package com.project.PJA.project_progress.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.project_progress.dto.fullAiDto.*;
-import com.project.PJA.project_progress.entity.*;
-import com.project.PJA.projectinfo.dto.ProjectInfoSummaryDto;
-import com.project.PJA.projectinfo.entity.ProjectInfo;
-import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.member.service.MemberService;
 import com.project.PJA.project_progress.dto.*;
+import com.project.PJA.project_progress.dto.fullAiDto.*;
+import com.project.PJA.project_progress.entity.*;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.project_progress.repository.FeatureCategoryRepository;
 import com.project.PJA.project_progress.repository.FeatureRepository;
+import com.project.PJA.projectinfo.dto.ProjectInfoSummaryDto;
+import com.project.PJA.projectinfo.entity.ProjectInfo;
+import com.project.PJA.projectinfo.repository.ProjectInfoRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.Workspace;
 import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.enumeration.ProgressStep;
 import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.repository.WorkspaceRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
@@ -26,8 +27,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -182,6 +183,7 @@ public class ProjectProgressService {
     }
 
     // 프로젝트 진행 카테고리,기능,액션 모두 AI 추천받기
+    @Transactional
     public AiRecommendationResponseDto recommendFeatureStructure(Users user, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
@@ -259,6 +261,8 @@ public class ProjectProgressService {
                     }
                 }
             }
+
+            foundWorkspace.updateProgressStep(ProgressStep.FIVE);
 
             return parsed;
         } catch (Exception e) {
