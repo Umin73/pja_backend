@@ -28,6 +28,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -182,6 +183,7 @@ public class ProjectProgressService {
     }
 
     // 프로젝트 진행 카테고리,기능,액션 모두 AI 추천받기
+    @Transactional
     public AiRecommendationResponseDto recommendFeatureStructure(Users user, Long workspaceId) {
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
