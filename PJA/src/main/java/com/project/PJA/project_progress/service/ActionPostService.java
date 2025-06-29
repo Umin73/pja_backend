@@ -86,7 +86,7 @@ public class ActionPostService {
     }
 
     @Transactional
-    public Map<String, Object> updateActionPostContent(Users user, Long workspaceId, Long actionId, Long actionPostId, String content, List<MultipartFile> fileList) throws IOException {
+    public Map<String, Object> updateActionPostContent(Users user, Long workspaceId, Long actionId, Long actionPostId, String content, List<MultipartFile> fileList, List<String> removedFilePaths) throws IOException {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 포스트를 수정할 권한이 없습니다.");
 
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
@@ -99,22 +99,17 @@ public class ActionPostService {
         if(content == null || content.isEmpty()) actionPost.setContent("");
         else actionPost.setContent(content);
 
-        // 기존 파일 삭제
-        for (ActionPostFile file : actionPost.getActionPostFiles()) {
-//            fileStorageService.deleteFile(file.getFilePath());
-            s3Service.deleteFile(file.getFilePath());
-        }
-        actionPost.getActionPostFiles().clear();
-
-        if(fileList != null && !fileList.isEmpty()) {
-            for (MultipartFile file : fileList) {
-                String path = s3Service.uploadFile(file, "action", actionPostId);
-//                String path = fileStorageService.storeFile(file, "action", actionPostId);
+        // 삭제 할 파일만 제거
+        if (removedFilePaths != null && !removedFilePaths.isEmpty()) {
+            for (String path : removedFilePaths) {
+                s3Service.deleteFile(path);
+                actionPost.getActionPostFiles().removeIf(f -> f.getFilePath().equals(path));
             }
         }
 
+        // 새로운 파일 업로드
         if(fileList != null && !fileList.isEmpty()) {
-            for(MultipartFile file : fileList) {
+            for (MultipartFile file : fileList) {
                 String path = s3Service.uploadFile(file, "action", actionPostId);
                 String type = file.getContentType();
 
@@ -127,6 +122,21 @@ public class ActionPostService {
                 actionPost.getActionPostFiles().add(postFile);
             }
         }
+
+//        if(fileList != null && !fileList.isEmpty()) {
+//            for(MultipartFile file : fileList) {
+//                String path = s3Service.uploadFile(file, "action", actionPostId);
+//                String type = file.getContentType();
+//
+//                ActionPostFile postFile = ActionPostFile.builder()
+//                        .filePath(path)
+//                        .contentType(type)
+//                        .actionPost(actionPost)
+//                        .build();
+//
+//                actionPost.getActionPostFiles().add(postFile);
+//            }
+//        }
 
         List<ActionPostFileResponseDto> fileDtoList = actionPost.getActionPostFiles().stream()
                 .map(file -> ActionPostFileResponseDto.builder()
