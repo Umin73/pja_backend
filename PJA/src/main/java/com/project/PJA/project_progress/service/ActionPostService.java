@@ -1,5 +1,7 @@
 package com.project.PJA.project_progress.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.PJA.common.file.FileStorageService;
 import com.project.PJA.common.service.S3Service;
 import com.project.PJA.exception.ForbiddenException;
@@ -86,7 +88,7 @@ public class ActionPostService {
     }
 
     @Transactional
-    public Map<String, Object> updateActionPostContent(Users user, Long workspaceId, Long actionId, Long actionPostId, String content, List<MultipartFile> fileList, List<String> removedFilePaths) throws IOException {
+    public Map<String, Object> updateActionPostContent(Users user, Long workspaceId, Long actionId, Long actionPostId, String content, List<MultipartFile> fileList, String removedFilePaths) throws IOException {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 포스트를 수정할 권한이 없습니다.");
 
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
@@ -101,7 +103,13 @@ public class ActionPostService {
 
         // 삭제 할 파일만 제거
         if (removedFilePaths != null && !removedFilePaths.isEmpty()) {
-            for (String path : removedFilePaths) {
+            ObjectMapper mapper = new ObjectMapper();
+            List<String> removedList = mapper.readValue(
+                    removedFilePaths,
+                    new TypeReference<List<String>>() {}
+            );
+
+            for (String path : removedList) {
                 s3Service.deleteFile(path);
                 actionPost.getActionPostFiles().removeIf(f -> f.getFilePath().equals(path));
             }
