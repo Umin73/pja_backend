@@ -34,7 +34,7 @@ public class NotificationService {
     private final WorkspaceService workspaceService;
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
-    private final SseEmitterRepository sseEmitterRepository;
+    private final NotiAsyncService notiAsyncService;
 
     // 알림 전체 가져오기
     @Transactional(readOnly = true)
@@ -114,37 +114,7 @@ public class NotificationService {
         userNotificationRepository.saveAll(userNotifications);
 
         // SSE 전송
-        sendNotificationAsync(savedNotification, receivers, workspaceId);
-    }
-
-    @Async
-    void sendNotificationAsync(Notification notification, List<Users> receivers, Long workspaceId) {
-        for(Users receiver : receivers) {
-            try {
-                sseEmitterRepository.get(workspaceId, receiver.getUserId())
-                        .ifPresent(emitter -> {
-                            try {
-                                NotiReadResponseDto notiDto = NotiReadResponseDto.builder()
-                                        .notificationId(notification.getNotificationId())
-                                        .message(notification.getMessage())
-                                        .isRead(false)
-                                        .actionPostId(notification.getActionPost() != null ? notification.getActionPost().getActionPostId() : null)
-                                        .createdAt(notification.getCreatedAt())
-                                        .build();
-
-                                emitter.send(SseEmitter.event()
-                                        .name("notification")
-                                        .data(notiDto));
-                            } catch (IOException e) {
-                                log.warn("SSE 전송 실패 - emitter 제거: {}", e.getMessage());
-                                sseEmitterRepository.delete(workspaceId, receiver.getUserId());
-                            }
-                        });
-
-            } catch (Exception e) {
-                log.error("SSE emitter 조회 중 오류가 발생했습니다: {}", e.getMessage());
-            }
-        }
+        notiAsyncService.sendNotificationAsync(savedNotification, receivers, workspaceId);
     }
 
     // 알림 개별 읽음 처리
