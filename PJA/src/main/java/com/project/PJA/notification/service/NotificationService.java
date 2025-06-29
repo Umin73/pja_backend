@@ -9,12 +9,14 @@ import com.project.PJA.notification.repository.UserNotificationRepository;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.ActionParticipant;
 import com.project.PJA.project_progress.entity.ActionPost;
+import com.project.PJA.project_progress.entity.ActionPostFile;
 import com.project.PJA.sse.repository.SseEmitterRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.WorkspaceMember;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -112,17 +114,22 @@ public class NotificationService {
         userNotificationRepository.saveAll(userNotifications);
 
         // SSE 전송
+        sendNotificationAsync(savedNotification, receivers, workspaceId);
+    }
+
+    @Async
+    void sendNotificationAsync(Notification notification, List<Users> receivers, Long workspaceId) {
         for(Users receiver : receivers) {
             try {
                 sseEmitterRepository.get(workspaceId, receiver.getUserId())
                         .ifPresent(emitter -> {
                             try {
                                 NotiReadResponseDto notiDto = NotiReadResponseDto.builder()
-                                        .notificationId(savedNotification.getNotificationId())
-                                        .message(savedNotification.getMessage())
+                                        .notificationId(notification.getNotificationId())
+                                        .message(notification.getMessage())
                                         .isRead(false)
-                                        .actionPostId(actionPost.getActionPostId())
-                                        .createdAt(savedNotification.getCreatedAt())
+                                        .actionPostId(notification.getActionPost() != null ? notification.getActionPost().getActionPostId() : null)
+                                        .createdAt(notification.getCreatedAt())
                                         .build();
 
                                 emitter.send(SseEmitter.event()

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -51,6 +52,16 @@ public class SseController {
         emitter.onTimeout(() -> sseEmitterRepository.delete(workspaceId, userId));
         emitter.onError((e) -> sseEmitterRepository.delete(workspaceId,userId));
 
+        // emitter 전송을 비동기 쓰레드에서
+        // 이렇게 userId 값 꺼내오는거랑 emitter는 Async 쓰레드에서 전송하게 해야
+        // DB 세션과 emitter이 얽히지 않음
+        sendEmitter(emitter);
+
+        return emitter;
+    }
+
+    @Async
+    public void sendEmitter(SseEmitter emitter) {
         try {
             emitter.send(SseEmitter.event()
                     .name("connect")
@@ -59,7 +70,5 @@ public class SseController {
         } catch (Exception e) {
             throw new RuntimeException("SSE 연결 오류가 발생했습니다.", e);
         }
-
-        return emitter;
     }
 }
