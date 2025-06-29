@@ -1,22 +1,15 @@
 package com.project.PJA.sse.controller;
 
-import com.project.PJA.common.dto.SuccessResponse;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.security.jwt.JwtTokenProvider;
+import com.project.PJA.sse.service.SendEmitterService;
 import com.project.PJA.sse.repository.SseEmitterRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.user.repository.UserRepository;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.net.http.HttpResponse;
 
 @Slf4j
 @RestController
@@ -27,6 +20,7 @@ public class SseController {
     private final SseEmitterRepository sseEmitterRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final SendEmitterService sendEmitter;
 
     @GetMapping("/{workspaceId}/noti/subscribe")
     public SseEmitter subscribe(@PathVariable("workspaceId") Long workspaceId,
@@ -55,20 +49,8 @@ public class SseController {
         // emitter 전송을 비동기 쓰레드에서
         // 이렇게 userId 값 꺼내오는거랑 emitter는 Async 쓰레드에서 전송하게 해야
         // DB 세션과 emitter이 얽히지 않음
-        sendEmitter(emitter);
+        sendEmitter.sendEmitter(emitter);
 
         return emitter;
-    }
-
-    @Async
-    public void sendEmitter(SseEmitter emitter) {
-        try {
-            emitter.send(SseEmitter.event()
-                    .name("connect")
-                    .data("SSE 연결 성공")
-                    .reconnectTime(10_000L));
-        } catch (Exception e) {
-            throw new RuntimeException("SSE 연결 오류가 발생했습니다.", e);
-        }
     }
 }
