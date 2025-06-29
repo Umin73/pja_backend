@@ -41,8 +41,11 @@ public class ActionPostController {
                                                            @PathVariable("actionId") Long actionId,
                                                            @PathVariable("postId") Long postId,
                                                            @RequestPart(value = "content", required = false) String content,
-                                                           @RequestPart(value = "files", required = false) List<MultipartFile> fileList) throws IOException {
-        Map<String, Object> data = actionPostService.updateActionPostContent(user, workspaceId, actionId, postId, content, fileList);
+                                                           @RequestPart(value = "files", required = false) List<MultipartFile> fileList,
+                                                           @RequestPart(value = "removedFilePaths", required = false) List<String> removedFilePaths) throws IOException {
+        Map<String, Object> data
+                = actionPostService.updateActionPostContent
+                (user, workspaceId, actionId, postId, content, fileList, removedFilePaths);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션이 게시글이 수정되었습니다.", data);
 
