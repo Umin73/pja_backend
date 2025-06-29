@@ -64,6 +64,7 @@ public class ActionCommentService {
 
         List<Users> receivers = participants.stream()
                 .map(WorkspaceMember::getUser)
+                .filter(u -> !u.getUserId().equals(user.getUserId())) // 작성자 본인은 제외
                 .collect(Collectors.toList());
 
         log.info("receiver: {}", receivers.size());
