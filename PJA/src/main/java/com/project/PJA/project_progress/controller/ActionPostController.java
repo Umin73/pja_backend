@@ -42,7 +42,7 @@ public class ActionPostController {
                                                            @PathVariable("postId") Long postId,
                                                            @RequestPart(value = "content", required = false) String content,
                                                            @RequestPart(value = "files", required = false) List<MultipartFile> fileList,
-                                                           @RequestPart(value = "removedFilePaths", required = false) List<String> removedFilePaths) throws IOException {
+                                                           @RequestPart(value = "removedFilePaths", required = false) String removedFilePaths) throws IOException {
         Map<String, Object> data
                 = actionPostService.updateActionPostContent
                 (user, workspaceId, actionId, postId, content, fileList, removedFilePaths);
