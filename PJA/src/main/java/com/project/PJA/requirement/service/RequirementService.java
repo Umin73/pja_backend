@@ -94,6 +94,13 @@ public class RequirementService {
         List<MainFunction> foundMainFunctions = mainFunctionRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
         List<TechStack> foundTechStacks = techStackRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
 
+        if (foundMainFunctions.size() < 2) {
+            throw new BadRequestException("메인 기능은 최소 2개 이상 입력해야 합니다.");
+        }
+        if (foundTechStacks.size() < 2) {
+            throw new BadRequestException("기술 스택은 최소 2개 이상 입력해야 합니다.");
+        }
+
         List<MainFunctionData> mainFunctionDataList = foundMainFunctions.stream()
                 .map(mainFunction -> new MainFunctionData(
                         mainFunction.getMainFunctionId(),

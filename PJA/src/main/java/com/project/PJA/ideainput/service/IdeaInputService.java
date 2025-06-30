@@ -2,10 +2,7 @@ package com.project.PJA.ideainput.service;
 
 import com.project.PJA.exception.BadRequestException;
 import com.project.PJA.exception.NotFoundException;
-import com.project.PJA.ideainput.dto.IdeaInputRequest;
-import com.project.PJA.ideainput.dto.IdeaInputResponse;
-import com.project.PJA.ideainput.dto.MainFunctionData;
-import com.project.PJA.ideainput.dto.TechStackData;
+import com.project.PJA.ideainput.dto.*;
 import com.project.PJA.ideainput.entity.IdeaInput;
 import com.project.PJA.ideainput.entity.MainFunction;
 import com.project.PJA.ideainput.entity.TechStack;
@@ -24,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +49,7 @@ public class IdeaInputService {
         List<TechStack> foundTechStacks = techStackRepository.findAllByIdeaInput_IdeaInputId(foundIdeaInput.getIdeaInputId());
 
         List<MainFunctionData> mainFunctionDataList = foundMainFunctions.stream()
+                .sorted(Comparator.comparing(MainFunction::getMainFunctionId))
                 .map(mainFunction -> new MainFunctionData(
                         mainFunction.getMainFunctionId(),
                         mainFunction.getContent()
@@ -58,6 +57,7 @@ public class IdeaInputService {
                 .collect(Collectors.toList());
 
         List<TechStackData> techStackDataList = foundTechStacks.stream()
+                .sorted(Comparator.comparing(TechStack::getTechStackId))
                 .map(techStack -> new TechStackData(
                         techStack.getTechStackId(),
                         techStack.getContent()
@@ -202,7 +202,7 @@ public class IdeaInputService {
     }
 
     // 아이디어 입력 수정
-    @Transactional
+    /*@Transactional
     public IdeaInputResponse updateIdeaInput(Users user, Long workspaceId, Long ideaInputId, IdeaInputRequest ideaInputRequest) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
@@ -267,6 +267,129 @@ public class IdeaInputService {
                 ideaInputRequest.getTechStack(),
                 ideaInputRequest.getProjectDescription()
         );
+    }*/
+
+    // 프로젝트명 수정
+    @Transactional
+    public ProjectNameResponse updateProjectName(Users user, Long workspaceId, Long ideaInputId, ProjectNameRequest request) {
+        // 입력값 검사
+        validateNotEmpty(request.getProjectName(), "프로젝트명을 비어둘 수 없습니다.");
+
+        Long userId = user.getUserId();
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+
+        IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+
+        if (!foundIdeaInput.getWorkspace().getWorkspaceId().equals(workspaceId)) {
+            throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
+        }
+
+        foundIdeaInput.updateProjectName(request.getProjectName());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+
+        return new ProjectNameResponse(foundIdeaInput.getIdeaInputId(), request.getProjectName());
+    }
+
+    // 프로젝트 대상 수정
+    @Transactional
+    public ProjectTargetResponse updateProjectTarget(Users user, Long workspaceId, Long ideaInputId, ProjectTargetRequest request) {
+        // 입력값 검사
+        validateNotEmpty(request.getProjectTarget(), "프로젝트 대상을 비어둘 수 없습니다.");
+
+        Long userId = user.getUserId();
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+
+        IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+
+        if (!foundIdeaInput.getWorkspace().getWorkspaceId().equals(workspaceId)) {
+            throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
+        }
+
+        foundIdeaInput.updateProjectTarget(request.getProjectTarget());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+
+        return new ProjectTargetResponse(foundIdeaInput.getIdeaInputId(), request.getProjectTarget());
+    }
+
+    // 프로젝트 메인 기능 수정
+    @Transactional
+    public MainFunctionData updateMainFunction(Users user, Long workspaceId, Long ideaInputId, Long mainFunctionId, MainFunctionRequest request) {
+        // 입력값 검사
+        validateNotEmpty(request.getContent(), "메인 기능을 비어둘 수 없습니다.");
+
+        Long userId = user.getUserId();
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+
+        MainFunction foundMainFunction = mainFunctionRepository.findById(mainFunctionId)
+                .orElseThrow(() -> new NotFoundException("요청하신 메인 기능을 찾을 수 없습니다."));
+
+        if (!foundMainFunction.getIdeaInput().getIdeaInputId().equals(ideaInputId)) {
+            throw new BadRequestException("메인 기능이 요청하신 아이디어 입력에 속하지 않습니다.");
+        }
+
+        foundMainFunction.update(request.getContent());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+
+        return new MainFunctionData(foundMainFunction.getMainFunctionId(), request.getContent());
+    }
+
+    // 프로젝트 기술 스택 수정
+    @Transactional
+    public TechStackData updateTechStack(Users user, Long workspaceId, Long ideaInputId, Long techStackId, TechStackRequest request) {
+        // 입력값 검사
+        validateNotEmpty(request.getContent(), "메인 기능을 비어둘 수 없습니다.");
+
+        Long userId = user.getUserId();
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+
+        TechStack foundTechStack = techStackRepository.findById(techStackId)
+                .orElseThrow(() -> new NotFoundException("요청하신 메인 기능을 찾을 수 없습니다."));
+
+        if (!foundTechStack.getIdeaInput().getIdeaInputId().equals(ideaInputId)) {
+            throw new BadRequestException("기술 스택이 요청하신 아이디어 입력에 속하지 않습니다.");
+        }
+
+        foundTechStack.update(request.getContent());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+
+        return new TechStackData(foundTechStack.getTechStackId(), request.getContent());
+    }
+
+    // 프로젝트 설명 수정
+    @Transactional
+    public ProjectDescriptionResponse updateProjectDescription(Users user, Long workspaceId, Long ideaInputId, ProjectDescriptionRequest request) {
+        // 입력값 검사
+        validateNotEmpty(request.getProjectDescription(), "프로젝트 설명을 비어둘 수 없습니다.");
+        if (request.getProjectDescription().length() < 200) {
+            throw new BadRequestException("프로젝트 설명은 최소 200자 이상이어야 합니다.");
+        }
+
+        Long userId = user.getUserId();
+        workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
+
+        IdeaInput foundIdeaInput = ideaInputRepository.findById(ideaInputId)
+                .orElseThrow(() -> new NotFoundException("요청하신 아이디어 입력을 찾을 수 없습니다."));
+
+        if (!foundIdeaInput.getWorkspace().getWorkspaceId().equals(workspaceId)) {
+            throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
+        }
+
+        foundIdeaInput.updateProjectDescription(request.getProjectDescription());
+
+        // 최근 활동 기록 추가
+        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+
+        return new ProjectDescriptionResponse(foundIdeaInput.getIdeaInputId(), request.getProjectDescription());
     }
 
     private void validateNotEmpty(String value, String errorMessage) {

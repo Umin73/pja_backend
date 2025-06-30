@@ -1,10 +1,7 @@
 package com.project.PJA.ideainput.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
-import com.project.PJA.ideainput.dto.IdeaInputRequest;
-import com.project.PJA.ideainput.dto.IdeaInputResponse;
-import com.project.PJA.ideainput.dto.MainFunctionData;
-import com.project.PJA.ideainput.dto.TechStackData;
+import com.project.PJA.ideainput.dto.*;
 import com.project.PJA.ideainput.service.IdeaInputService;
 import com.project.PJA.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -122,7 +119,7 @@ public class IdeaInputController {
     }
 
     // 아이디어 입력 수정
-    @PutMapping("/{workspaceId}/idea-input/{ideaInputId}")
+    /*@PutMapping("/{workspaceId}/idea-input/{ideaInputId}")
     public ResponseEntity<SuccessResponse<IdeaInputResponse>> updateOnlyIdeaInput(@AuthenticationPrincipal Users user,
                                                                                   @PathVariable Long workspaceId,
                                                                                   @PathVariable Long ideaInputId,
@@ -134,6 +131,98 @@ public class IdeaInputController {
 
         SuccessResponse<IdeaInputResponse> response = new SuccessResponse<>(
                 "success", "아이디어 입력을 성공적으로 수정했습니다.", ideaInputResponse
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }*/
+
+    // 프로젝트명 수정
+    @PatchMapping("/{workspaceId}/idea-input/{ideaInputId}/project-name")
+    public ResponseEntity<SuccessResponse<ProjectNameResponse>> updateProjectName(@AuthenticationPrincipal Users user,
+                                                                                @PathVariable Long workspaceId,
+                                                                                @PathVariable Long ideaInputId,
+                                                                                @RequestBody ProjectNameRequest projectNameRequest) {
+        Long userId = user.getUserId();
+        log.info("=== 아이디어 입력 프로젝트명 수정 API 진입 == userId: {}", userId);
+
+        ProjectNameResponse projectName = ideaInputService.updateProjectName(user, workspaceId, ideaInputId, projectNameRequest);
+
+        SuccessResponse<ProjectNameResponse> response = new SuccessResponse<>(
+                "success", "프로젝트명을 성공적으로 수정했습니다.", projectName
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 프로젝트 대상 수정
+    @PatchMapping("/{workspaceId}/idea-input/{ideaInputId}/project-target")
+    public ResponseEntity<SuccessResponse<ProjectTargetResponse>> updateProjectTarget(@AuthenticationPrincipal Users user,
+                                                                                      @PathVariable Long workspaceId,
+                                                                                      @PathVariable Long ideaInputId,
+                                                                                      @RequestBody ProjectTargetRequest projectTargetRequest) {
+        Long userId = user.getUserId();
+        log.info("=== 아이디어 입력 프로젝트 대상 수정 API 진입 == userId: {}", userId);
+
+        ProjectTargetResponse projectTarget = ideaInputService.updateProjectTarget(user, workspaceId, ideaInputId, projectTargetRequest);
+
+        SuccessResponse<ProjectTargetResponse> response = new SuccessResponse<>(
+                "success", "프로젝트 대상을 성공적으로 수정했습니다.", projectTarget
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 프로젝트 메인 기능 수정
+    @PatchMapping("/{workspaceId}/idea-input/{ideaInputId}/main-function/{mainFunctionId}")
+    public ResponseEntity<SuccessResponse<MainFunctionData>> updateMainFunction(@AuthenticationPrincipal Users user,
+                                                                                @PathVariable Long workspaceId,
+                                                                                @PathVariable Long ideaInputId,
+                                                                                @PathVariable Long mainFunctionId,
+                                                                                @RequestBody MainFunctionRequest mainFunctionRequest) {
+        Long userId = user.getUserId();
+        log.info("=== 아이디어 입력 프로젝트 메인 기능 수정 API 진입 == userId: {}", userId);
+
+        MainFunctionData mainFunction = ideaInputService.updateMainFunction(user, workspaceId, ideaInputId, mainFunctionId, mainFunctionRequest);
+
+        SuccessResponse<MainFunctionData> response = new SuccessResponse<>(
+                "success", "프로젝트 메인 기능을 성공적으로 수정했습니다.", mainFunction
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 프로젝트 기술 스택 수정
+    @PatchMapping("/{workspaceId}/idea-input/{ideaInputId}/tech-stack/{techStackId}")
+    public ResponseEntity<SuccessResponse<TechStackData>> updateTechStack(@AuthenticationPrincipal Users user,
+                                                                          @PathVariable Long workspaceId,
+                                                                          @PathVariable Long ideaInputId,
+                                                                          @PathVariable Long techStackId,
+                                                                          @RequestBody TechStackRequest techStackRequest) {
+        Long userId = user.getUserId();
+        log.info("=== 아이디어 입력 프로젝트 기술 스택 수정 API 진입 == userId: {}", userId);
+
+        TechStackData techStack = ideaInputService.updateTechStack(user, workspaceId, ideaInputId, techStackId, techStackRequest);
+
+        SuccessResponse<TechStackData> response = new SuccessResponse<>(
+                "success", "프로젝트 기술 스택을 성공적으로 수정했습니다.", techStack
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // 프로젝트 설명 수정
+    @PatchMapping("/{workspaceId}/idea-input/{ideaInputId}/project-description")
+    public ResponseEntity<SuccessResponse<ProjectDescriptionResponse>> updateProjectDescription(@AuthenticationPrincipal Users user,
+                                                                                                @PathVariable Long workspaceId,
+                                                                                                @PathVariable Long ideaInputId,
+                                                                                                @RequestBody ProjectDescriptionRequest projectDescriptionRequest) {
+        Long userId = user.getUserId();
+        log.info("=== 아이디어 입력 프로젝트 설명 수정 API 진입 == userId: {}", userId);
+
+        ProjectDescriptionResponse projectDescription = ideaInputService.updateProjectDescription(user, workspaceId, ideaInputId, projectDescriptionRequest);
+
+        SuccessResponse<ProjectDescriptionResponse> response = new SuccessResponse<>(
+                "success", "프로젝트 설명을 성공적으로 수정했습니다.", projectDescription
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

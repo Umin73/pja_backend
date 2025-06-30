@@ -42,9 +42,21 @@ public class IdeaInput {
         this.projectDescription = projectDescription;
     }
 
-    public void update(String projectName, String projectTarget, String projectDescription) {
+    public void updateProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
+    public void updateProjectTarget(String projectTarget) {
+        this.projectTarget = projectTarget;
+    }
+
+    public void updateProjectDescription(String projectDescription) {
+        this.projectDescription = projectDescription;
+    }
+
+    /*public void update(String projectName, String projectTarget, String projectDescription) {
         this.projectName = projectName;
         this.projectTarget = projectTarget;
         this.projectDescription = projectDescription;
-    }
+    }*/
 }
