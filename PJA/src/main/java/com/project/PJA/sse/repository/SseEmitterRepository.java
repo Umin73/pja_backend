@@ -12,23 +12,23 @@ public class SseEmitterRepository {
 
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    public SseEmitter save(Long workspaceId, Long userId, SseEmitter emitter) {
-        String emitterId = getEmitterId(workspaceId, userId);
+    public SseEmitter save(Long workspaceId, String uid, SseEmitter emitter) {
+        String emitterId = getEmitterId(workspaceId, uid);
         emitters.put(emitterId, emitter);
         return emitter;
     }
 
-    public Optional<SseEmitter> get(Long workspaceId, Long userId) {
-        String emitterId = getEmitterId(workspaceId, userId);
+    public Optional<SseEmitter> get(Long workspaceId, String uid) {
+        String emitterId = getEmitterId(workspaceId, uid);
         return Optional.ofNullable(emitters.get(emitterId));
     }
 
-    public void delete(Long workspaceId, Long userId) {
-        String emitterId = getEmitterId(workspaceId, userId);
+    public void delete(Long workspaceId, String uid) {
+        String emitterId = getEmitterId(workspaceId, uid);
         emitters.remove(emitterId);
     }
 
-    private String getEmitterId(Long workspaceId, Long userId) {
-        return workspaceId + ":" + userId;
+    private String getEmitterId(Long workspaceId, String uid) {
+        return workspaceId + ":" + uid;
     }
 }

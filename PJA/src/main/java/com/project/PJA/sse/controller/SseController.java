@@ -37,15 +37,16 @@ public class SseController {
 //        Long userId = userRepository.findByUid(uid)
 //                .map(Users::getUserId)
 //                .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+//        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String uid = jwtTokenProvider.getUid(token);
 
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간 동안 SSE 연결
 
-        sseEmitterRepository.save(workspaceId, userId, emitter);
+        sseEmitterRepository.save(workspaceId, uid, emitter);
 
-        emitter.onCompletion(() -> sseEmitterRepository.delete(workspaceId, userId));
-        emitter.onTimeout(() -> sseEmitterRepository.delete(workspaceId, userId));
-        emitter.onError((e) -> sseEmitterRepository.delete(workspaceId,userId));
+        emitter.onCompletion(() -> sseEmitterRepository.delete(workspaceId, uid));
+        emitter.onTimeout(() -> sseEmitterRepository.delete(workspaceId, uid));
+        emitter.onError((e) -> sseEmitterRepository.delete(workspaceId, uid));
 
         // emitter 전송을 비동기 쓰레드에서
         // 이렇게 userId 값 꺼내오는거랑 emitter는 Async 쓰레드에서 전송하게 해야
