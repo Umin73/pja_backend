@@ -24,7 +24,7 @@ public class NotiAsyncService {
     public void sendNotificationAsync(Notification notification, List<Users> receivers, Long workspaceId) {
         for(Users receiver : receivers) {
             try {
-                sseEmitterRepository.get(workspaceId, receiver.getUserId())
+                sseEmitterRepository.get(workspaceId, receiver.getUid())
                         .ifPresent(emitter -> {
                             try {
                                 NotiReadResponseDto notiDto = NotiReadResponseDto.builder()
@@ -41,7 +41,7 @@ public class NotiAsyncService {
                             } catch (IOException e) {
                                 log.warn("SSE 전송 실패 - emitter 제거: {}", e.getMessage());
                                 emitter.completeWithError(e);
-                                sseEmitterRepository.delete(workspaceId, receiver.getUserId());
+                                sseEmitterRepository.delete(workspaceId, receiver.getUid());
                             }
                         });
 
