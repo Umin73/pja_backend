@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.*;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,7 @@ public class ApiService {
         List<Api> apis = apiRepository.findByWorkspace_WorkspaceId(workspaceId);
 
         return apis.stream()
+                .sorted(Comparator.comparing(Api::getApiId))
                 .map(api -> new ApiResponse(
                         api.getApiId(),
                         api.getTitle(),
@@ -282,7 +284,6 @@ public class ApiService {
         // 워크스페이스 최근 활동 데이터 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.UPDATE);
 
-
         return new ApiResponse(
                 foundApi.getApiId(),
                 apiRequest.getTitle(),
@@ -306,7 +307,6 @@ public class ApiService {
 
         // 워크스페이스 최근 활동 데이터 추가
         workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.API, ActivityActionType.DELETE);
-
 
         return new ApiResponse(
                 foundApi.getApiId(),
