@@ -55,6 +55,7 @@ public class NotificationService {
             notiDto.setActionPostId(
                     notification.getActionPost() != null ? notification.getActionPost().getActionPostId() : null
             );
+            notiDto.setActionId(notification.getActionPost().getAction().getActionId());
             notiDto.setCreatedAt(notification.getCreatedAt());
 
             notiList.add(notiDto);
@@ -81,7 +82,7 @@ public class NotificationService {
 
     // 알림 생성
     @Transactional
-    public void createNotification(List<Users> receivers, String message, ActionPost actionPost, Long workspaceId) {
+    public Notification createNotification(List<Users> receivers, String message, ActionPost actionPost, Long workspaceId) {
         // 알림 생성
         Notification notification = Notification.builder()
                 .message(message)
@@ -92,9 +93,9 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
 
         Action action = actionPost.getAction();
-        Set<WorkspaceMember> participants = action.getParticipants().stream()
-                .map(ActionParticipant::getWorkspaceMember)
-                .collect(Collectors.toSet());
+//        Set<WorkspaceMember> participants = action.getParticipants().stream()
+//                .map(ActionParticipant::getWorkspaceMember)
+//                .collect(Collectors.toSet());
 
         List<UserNotification> userNotifications = receivers.stream()
                 .map(user -> {
@@ -113,8 +114,9 @@ public class NotificationService {
 
         userNotificationRepository.saveAll(userNotifications);
 
-        // SSE 전송
-        notiAsyncService.sendNotificationAsync(savedNotification, receivers, workspaceId);
+//        // SSE 전송
+//        notiAsyncService.sendNotificationAsync(savedNotification, receivers, workspaceId);
+        return savedNotification;
     }
 
     // 알림 개별 읽음 처리
