@@ -15,6 +15,9 @@ import com.project.PJA.project_progress.entity.ActionPostFile;
 import com.project.PJA.project_progress.repository.ActionPostRepository;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.enumeration.WorkspaceRole;
+import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ public class ActionPostService {
     private final ActionRepository actionRepository;
     private final FileStorageService fileStorageService;
     private final S3Service s3Service;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
 
     @Transactional
     public void createActionPost(Action savedAction) {
@@ -98,6 +102,11 @@ public class ActionPostService {
 
         if(!actionPost.getAction().getActionId().equals(actionId)) {
             throw new ForbiddenException("액션 포스트가 해당 액션에 속하지 않습니다.");
+        }
+
+        WorkspaceRole workspaceRole = workspaceMemberRepository.findWorkspaceRoleByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, user.getUserId());
+        if(!workspaceRole.equals(WorkspaceRole.OWNER) && !workspaceRole.equals(WorkspaceRole.MEMBER)) {
+            throw new ForbiddenException("액션 포스트를 수정할 권한이 없습니다.");
         }
 
         if(content == null || content.isEmpty()) actionPost.setContent("");
