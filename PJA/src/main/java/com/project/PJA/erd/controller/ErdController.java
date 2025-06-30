@@ -50,6 +50,7 @@ public class ErdController {
                                                            @PathVariable("workspaceId")Long workspaceId) {
         log.info("== ERD AI 추천 요청 API 진입 ==");
 
+        Erd createdErd = erdService.createErd(user, workspaceId);
         List<ErdAiCreateResponse> data = erdService.recommendErd(user, workspaceId);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "AI로부터 ERD 추천을 성공적으로 받았습니다.", data);
