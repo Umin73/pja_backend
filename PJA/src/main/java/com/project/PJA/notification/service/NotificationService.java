@@ -55,6 +55,7 @@ public class NotificationService {
             notiDto.setActionPostId(
                     notification.getActionPost() != null ? notification.getActionPost().getActionPostId() : null
             );
+            notiDto.setActionId(notification.getActionPost().getAction().getActionId());
             notiDto.setCreatedAt(notification.getCreatedAt());
 
             notiList.add(notiDto);

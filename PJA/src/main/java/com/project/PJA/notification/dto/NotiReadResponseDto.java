@@ -15,4 +15,5 @@ public class NotiReadResponseDto {
     private boolean isRead;
     private LocalDateTime createdAt;
     private Long actionPostId;
+    private Long actionId;
 }
