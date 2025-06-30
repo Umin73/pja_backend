@@ -14,6 +14,8 @@ import com.project.PJA.project_progress.repository.ActionPostRepository;
 import com.project.PJA.project_progress.repository.ActionRepository;
 import com.project.PJA.user.entity.Users;
 import com.project.PJA.workspace.entity.WorkspaceMember;
+import com.project.PJA.workspace.enumeration.WorkspaceRole;
+import com.project.PJA.workspace.repository.WorkspaceMemberRepository;
 import com.project.PJA.workspace.service.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +38,7 @@ public class ActionCommentService {
     private final ActionRepository actionRepository;
     private final ActionPostRepository actionPostRepository;
     private final ActionCommentRepository actionCommentRepository;
-    private final NotificationService notificationService;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
 
     // 알림 댓글 작성
     @Transactional
@@ -49,6 +51,11 @@ public class ActionCommentService {
         Action action = actionPost.getAction();
         if (!action.getActionId().equals(actionId)) {
             throw new ForbiddenException("액션 포스트가 해당 액션에 속하지 않습니다.");
+        }
+
+        WorkspaceRole workspaceRole = workspaceMemberRepository.findWorkspaceRoleByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, user.getUserId());
+        if(!workspaceRole.equals(WorkspaceRole.OWNER) && !workspaceRole.equals(WorkspaceRole.MEMBER)) {
+            throw new ForbiddenException("액션 댓글을 작성할 권한이 없습니다.");
         }
 
         ActionComment actionComment = new ActionComment();
@@ -104,7 +111,12 @@ public class ActionCommentService {
 
         // 해당 댓글의 작성자가 아니면 댓글 수정 못하게 막기
         if(!comment.getUser().getUserId().equals(user.getUserId())) {
-            throw new ForbiddenException("댓글을 수정할 권한이 없습니다.");
+            throw new ForbiddenException("해당 댓글의 작성자만 수정할 수 있습니다.");
+        }
+
+        WorkspaceRole workspaceRole = workspaceMemberRepository.findWorkspaceRoleByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, user.getUserId());
+        if(!workspaceRole.equals(WorkspaceRole.OWNER) && !workspaceRole.equals(WorkspaceRole.MEMBER)) {
+            throw new ForbiddenException("액션 댓글을 수정할 권한이 없습니다.");
         }
 
         comment.setContent(dto.getContent());
@@ -131,7 +143,12 @@ public class ActionCommentService {
 
         // 해당 댓글의 작성자가 아니면 댓글 수정 못하게 막기
         if(!comment.getUser().getUserId().equals(user.getUserId())) {
-            throw new ForbiddenException("댓글을 삭제할 권한이 없습니다.");
+            throw new ForbiddenException("해당 댓글의 작성자만 댓글을 삭제할 수 있습니다.");
+        }
+
+        WorkspaceRole workspaceRole = workspaceMemberRepository.findWorkspaceRoleByWorkspace_WorkspaceIdAndUser_UserId(workspaceId, user.getUserId());
+        if(!workspaceRole.equals(WorkspaceRole.OWNER) && !workspaceRole.equals(WorkspaceRole.MEMBER)) {
+            throw new ForbiddenException("액션 댓글을 삭제할 권한이 없습니다.");
         }
 
         actionCommentRepository.delete(comment);
