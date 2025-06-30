@@ -54,7 +54,7 @@ public class ActionPostService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> readActionPost(Long actionId, Long actionPostId) {
+    public Map<String, Object> readActionPost(Users user, Long actionId, Long actionPostId) {
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
                 .orElseThrow(()->new NotFoundException("액션 포스트가 존재하지 않습니다."));
 
@@ -76,6 +76,7 @@ public class ActionPostService {
                         .authorName(comment.getUser().getName()) // 또는
                         .authorId(comment.getUser().getUserId()) // 작성자의 userId
                         .updatedAt(comment.getUpdatedAt())
+                        .isAuthor(comment.getUser().getUserId().equals(user.getUserId()))
                         .build())
                 .toList();
 

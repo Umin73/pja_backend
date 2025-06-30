@@ -15,4 +15,5 @@ public class ActionCommentResponseDto {
     private String authorName;
     private Long authorId;
     private LocalDateTime updatedAt;
+    private boolean isAuthor;
 }

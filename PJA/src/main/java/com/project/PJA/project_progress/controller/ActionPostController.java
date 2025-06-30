@@ -27,9 +27,10 @@ public class ActionPostController {
     private final UserActionLogService userActionLogService;
 
     @GetMapping("{workspaceId}/project/action/{actionId}/post/{postId}")
-    public ResponseEntity<SuccessResponse<?>> readActionPost(@PathVariable("actionId") Long actionId,
+    public ResponseEntity<SuccessResponse<?>> readActionPost(@AuthenticationPrincipal Users user,
+                                                            @PathVariable("actionId") Long actionId,
                                                              @PathVariable("postId") Long postId) {
-        Map<String, Object> data = actionPostService.readActionPost(actionId, postId);
+        Map<String, Object> data = actionPostService.readActionPost(user, actionId, postId);
 
         SuccessResponse<?> response = new SuccessResponse<>("success", "액션 게시글이 조회되었습니다.", data);
         return new ResponseEntity<>(response, HttpStatus.OK);
