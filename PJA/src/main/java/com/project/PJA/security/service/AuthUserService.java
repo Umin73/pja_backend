@@ -5,6 +5,7 @@ import com.project.PJA.security.dto.LoginDto;
 import com.project.PJA.security.jwt.JwtTokenProvider;
 import com.project.PJA.user.entity.UserStatus;
 import com.project.PJA.user.entity.Users;
+import com.project.PJA.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class AuthUserService {
     private final UserDetailsService userDetailsService;
     private final JwtTokenProvider jwtTokenProvider;
     private final StringRedisTemplate redisTemplate;
+    private final UserRepository userRepository;
 
     public Map<Object, Object> login(LoginDto loginDto) {
         String uid = loginDto.getUid();
@@ -48,8 +50,9 @@ public class AuthUserService {
 
         UserDetails user = userDetailsService.loadUserByUsername(uid);
 
-        String accessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority());
-        String refreshToken = jwtTokenProvider.createToken(uid, "REFRESH");
+        Long userId = userRepository.findUserIdByUid(uid);
+        String accessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority(), userId);
+        String refreshToken = jwtTokenProvider.createToken(uid, "REFRESH", userId);
 
         log.info("access token: {}", accessToken);
 
@@ -82,9 +85,10 @@ public class AuthUserService {
             throw new UnauthorizedException("Refresh Token이 유효하지 않거나 만료되었습니다.");
         }
 
+        Long userId = userRepository.findUserIdByUid(uid);
         UserDetails user = userDetailsService.loadUserByUsername(uid);
         log.info("user: {}", user);
-        String newAccessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority());
+        String newAccessToken = jwtTokenProvider.createToken(uid, user.getAuthorities().iterator().next().getAuthority(), userId);
         log.info("newAccessToken: {}", newAccessToken);
 
         return newAccessToken;

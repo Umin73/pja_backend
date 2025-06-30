@@ -33,11 +33,12 @@ public class SseController {
         }
 
         log.info("token은 {}", token);
-        String uid = jwtTokenProvider.getUid(token);
-        Long userId = userRepository.findByUid(uid)
-                .map(Users::getUserId)
-                .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
-        
+//        String uid = jwtTokenProvider.getUid(token);
+//        Long userId = userRepository.findByUid(uid)
+//                .map(Users::getUserId)
+//                .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L); // 1시간 동안 SSE 연결
 
         sseEmitterRepository.save(workspaceId, userId, emitter);
