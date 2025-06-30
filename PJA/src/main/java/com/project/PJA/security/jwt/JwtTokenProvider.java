@@ -34,12 +34,13 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createToken(String uid, String role) {
+    public String createToken(String uid, String role, Long usreId) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + (role.equals("REFRESH")? refreshTokenValidity : accessTokenValidity));
 
         return Jwts.builder()
                 .setSubject(uid)
+                .claim("userId", usreId)
                 .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
