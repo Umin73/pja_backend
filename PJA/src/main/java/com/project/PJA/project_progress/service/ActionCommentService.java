@@ -4,6 +4,7 @@ import com.project.PJA.exception.ForbiddenException;
 import com.project.PJA.exception.NotFoundException;
 import com.project.PJA.notification.service.NotificationService;
 import com.project.PJA.project_progress.dto.ActionContentDto;
+import com.project.PJA.project_progress.dto.NotiFacadeDto;
 import com.project.PJA.project_progress.entity.Action;
 import com.project.PJA.project_progress.entity.ActionComment;
 import com.project.PJA.project_progress.entity.ActionParticipant;
@@ -37,8 +38,9 @@ public class ActionCommentService {
     private final ActionCommentRepository actionCommentRepository;
     private final NotificationService notificationService;
 
+    // 알림 댓글 작성
     @Transactional
-    public Map<String, Object> createActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, ActionContentDto dto) {
+    public NotiFacadeDto createActionComment(Users user, Long workspaceId, Long actionId, Long actionPostId, ActionContentDto dto) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "프로젝트 진행 액션 댓글을 작성할 권한이 없습니다.");
 
         ActionPost actionPost = actionPostRepository.findById(actionPostId)
@@ -73,7 +75,6 @@ public class ActionCommentService {
         }
 
         String notiMessage = user.getUsername() + "님이 " + action.getName() + "에 댓글을 달았습니다.";
-        notificationService.createNotification(receivers, notiMessage, actionPost, workspaceId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("commentId", actionComment.getActionCommentId());
@@ -81,7 +82,13 @@ public class ActionCommentService {
         result.put("createdAt", actionComment.getUpdatedAt());
         result.put("content", actionComment.getContent());
 
-        return result;
+        NotiFacadeDto notiFacadeDto = new NotiFacadeDto();
+        notiFacadeDto.setResult(result);
+        notiFacadeDto.setReceivers(receivers);
+        notiFacadeDto.setNotiMessage(notiMessage);
+        notiFacadeDto.setActionPost(actionPost);
+
+        return notiFacadeDto;
     }
 
     @Transactional

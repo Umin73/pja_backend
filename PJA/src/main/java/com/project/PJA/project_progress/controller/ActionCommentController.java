@@ -1,6 +1,7 @@
 package com.project.PJA.project_progress.controller;
 
 import com.project.PJA.common.dto.SuccessResponse;
+import com.project.PJA.project_progress.service.NotificationFacade;
 import com.project.PJA.user_act_log.service.UserActionLogService;
 import com.project.PJA.project_progress.dto.ActionContentDto;
 import com.project.PJA.project_progress.service.ActionCommentService;
@@ -22,6 +23,7 @@ public class ActionCommentController {
 
     private final ActionCommentService actionCommentService;
     private final UserActionLogService userActionLogService;
+    private final NotificationFacade notificationFacade;
 
     @PostMapping("{workspaceId}/project/action/{actionId}/post/{postId}/comment")
     public ResponseEntity<SuccessResponse<?>> createActionComment(@AuthenticationPrincipal Users user,
@@ -29,7 +31,8 @@ public class ActionCommentController {
                                                                   @PathVariable("actionId") Long actionId,
                                                                   @PathVariable("postId") Long postId,
                                                                   @RequestBody ActionContentDto dto) {
-        Map<String, Object> data = actionCommentService.createActionComment(user, workspaceId, actionId, postId, dto);
+        Map<String, Object> data = notificationFacade.createAndSendNotification(user, workspaceId, actionId, postId, dto);
+        //        Map<String, Object> data = actionCommentService.createActionComment(user, workspaceId, actionId, postId, dto);
         SuccessResponse<?> response = new SuccessResponse<>("success", "댓글을 생성했습니다.", data);
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
