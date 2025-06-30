@@ -272,9 +272,6 @@ public class IdeaInputService {
     // 프로젝트명 수정
     @Transactional
     public ProjectNameResponse updateProjectName(Users user, Long workspaceId, Long ideaInputId, ProjectNameRequest request) {
-        // 입력값 검사
-        validateNotEmpty(request.getProjectName(), "프로젝트명을 비어둘 수 없습니다.");
-
         Long userId = user.getUserId();
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
@@ -285,20 +282,17 @@ public class IdeaInputService {
             throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
         }
 
-        foundIdeaInput.updateProjectName(request.getProjectName());
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
-
+        if (request.getProjectName() != null && !request.getProjectName().trim().isEmpty()) {
+            foundIdeaInput.updateProjectName(request.getProjectName());
+            // 최근 활동 기록 추가
+            workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        }
         return new ProjectNameResponse(foundIdeaInput.getIdeaInputId(), request.getProjectName());
     }
 
     // 프로젝트 대상 수정
     @Transactional
     public ProjectTargetResponse updateProjectTarget(Users user, Long workspaceId, Long ideaInputId, ProjectTargetRequest request) {
-        // 입력값 검사
-        validateNotEmpty(request.getProjectTarget(), "프로젝트 대상을 비어둘 수 없습니다.");
-
         Long userId = user.getUserId();
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
@@ -309,10 +303,11 @@ public class IdeaInputService {
             throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
         }
 
-        foundIdeaInput.updateProjectTarget(request.getProjectTarget());
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        if (request.getProjectTarget() != null && !request.getProjectTarget().trim().isEmpty()) {
+            foundIdeaInput.updateProjectTarget(request.getProjectTarget());
+            // 최근 활동 기록 추가
+            workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        }
 
         return new ProjectTargetResponse(foundIdeaInput.getIdeaInputId(), request.getProjectTarget());
     }
@@ -320,9 +315,6 @@ public class IdeaInputService {
     // 프로젝트 메인 기능 수정
     @Transactional
     public MainFunctionData updateMainFunction(Users user, Long workspaceId, Long ideaInputId, Long mainFunctionId, MainFunctionRequest request) {
-        // 입력값 검사
-        validateNotEmpty(request.getContent(), "메인 기능을 비어둘 수 없습니다.");
-
         Long userId = user.getUserId();
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
@@ -333,10 +325,11 @@ public class IdeaInputService {
             throw new BadRequestException("메인 기능이 요청하신 아이디어 입력에 속하지 않습니다.");
         }
 
-        foundMainFunction.update(request.getContent());
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        if (request.getContent() != null && !request.getContent().trim().isEmpty()) {
+            foundMainFunction.update(request.getContent());
+            // 최근 활동 기록 추가
+            workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        }
 
         return new MainFunctionData(foundMainFunction.getMainFunctionId(), request.getContent());
     }
@@ -344,9 +337,6 @@ public class IdeaInputService {
     // 프로젝트 기술 스택 수정
     @Transactional
     public TechStackData updateTechStack(Users user, Long workspaceId, Long ideaInputId, Long techStackId, TechStackRequest request) {
-        // 입력값 검사
-        validateNotEmpty(request.getContent(), "메인 기능을 비어둘 수 없습니다.");
-
         Long userId = user.getUserId();
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
@@ -357,10 +347,11 @@ public class IdeaInputService {
             throw new BadRequestException("기술 스택이 요청하신 아이디어 입력에 속하지 않습니다.");
         }
 
-        foundTechStack.update(request.getContent());
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        if (request.getContent() != null && !request.getContent().trim().isEmpty()) {
+            foundTechStack.update(request.getContent());
+            // 최근 활동 기록 추가
+            workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        }
 
         return new TechStackData(foundTechStack.getTechStackId(), request.getContent());
     }
@@ -368,12 +359,6 @@ public class IdeaInputService {
     // 프로젝트 설명 수정
     @Transactional
     public ProjectDescriptionResponse updateProjectDescription(Users user, Long workspaceId, Long ideaInputId, ProjectDescriptionRequest request) {
-        // 입력값 검사
-        validateNotEmpty(request.getProjectDescription(), "프로젝트 설명을 비어둘 수 없습니다.");
-        if (request.getProjectDescription().length() < 200) {
-            throw new BadRequestException("프로젝트 설명은 최소 200자 이상이어야 합니다.");
-        }
-
         Long userId = user.getUserId();
         workspaceService.authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에 수정할 권한이 없습니다.");
 
@@ -384,17 +369,12 @@ public class IdeaInputService {
             throw new BadRequestException("아이디어 입력이 요청하신 워크스페이스에 속하지 않습니다.");
         }
 
-        foundIdeaInput.updateProjectDescription(request.getProjectDescription());
-
-        // 최근 활동 기록 추가
-        workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        if (request.getProjectDescription() != null && !request.getProjectDescription().trim().isEmpty()) {
+            foundIdeaInput.updateProjectDescription(request.getProjectDescription());
+            // 최근 활동 기록 추가
+            workspaceActivityService.addWorkspaceActivity(user, workspaceId, ActivityTargetType.IDEA, ActivityActionType.UPDATE);
+        }
 
         return new ProjectDescriptionResponse(foundIdeaInput.getIdeaInputId(), request.getProjectDescription());
-    }
-
-    private void validateNotEmpty(String value, String errorMessage) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new BadRequestException(errorMessage);
-        }
     }
 }
