@@ -73,7 +73,8 @@ public class ActionPostService {
                 .map(comment -> ActionCommentResponseDto.builder()
                         .commentId(comment.getActionCommentId())
                         .content(comment.getContent())
-                        .authorName(comment.getUser().getName()) // 또는 nickname
+                        .authorName(comment.getUser().getName()) // 또는
+                        .authorId(comment.getUser().getUserId()) // 작성자의 userId
                         .updatedAt(comment.getUpdatedAt())
                         .build())
                 .toList();

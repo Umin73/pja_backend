@@ -13,5 +13,6 @@ public class ActionCommentResponseDto {
     private Long commentId;
     private String content;
     private String authorName;
+    private Long authorId;
     private LocalDateTime updatedAt;
 }

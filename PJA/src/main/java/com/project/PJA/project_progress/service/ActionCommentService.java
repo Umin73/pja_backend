@@ -102,6 +102,11 @@ public class ActionCommentService {
             throw new ForbiddenException("댓글이 해당 액션에 속하지 않습니다.");
         }
 
+        // 해당 댓글의 작성자가 아니면 댓글 수정 못하게 막기
+        if(!comment.getUser().getUserId().equals(user.getUserId())) {
+            throw new ForbiddenException("댓글을 수정할 권한이 없습니다.");
+        }
+
         comment.setContent(dto.getContent());
         comment.setUpdatedAt(LocalDateTime.now());
 
@@ -123,6 +128,12 @@ public class ActionCommentService {
         if(!comment.getActionPost().getAction().getActionId().equals(actionId)) {
             throw new ForbiddenException("댓글이 해당 액션에 속하지 않습니다.");
         }
+
+        // 해당 댓글의 작성자가 아니면 댓글 수정 못하게 막기
+        if(!comment.getUser().getUserId().equals(user.getUserId())) {
+            throw new ForbiddenException("댓글을 삭제할 권한이 없습니다.");
+        }
+
         actionCommentRepository.delete(comment);
     }
 }
