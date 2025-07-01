@@ -74,12 +74,20 @@ public class ErdService {
     }
 
     // 사용자가 ERD 생성
+    @Transactional
     public Erd createErd(Users user, Long workspaceId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId,"게스트는 ERD를 생성할 권한이 없습니다.");
 
-        if(erdRepository.existsByWorkspaceId(workspaceId)) {
-            throw new
-                    ConflictException("해당 워크스페이스에는 이미 ERD가 존재합니다.");
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new NotFoundException("요청하신 워크스페이스를 찾을 수 없습니다."));
+
+        log.info("현재 progress step: {}", workspace.getProgressStep());
+        if (workspace.getProgressStep() == ProgressStep.ZERO) {
+            throw new BadRequestException("AI 생성을 진행하려면 먼저 아이디어를 입력해 주세요.");
+        } else if(workspace.getProgressStep() == ProgressStep.ONE) {
+            throw new BadRequestException("AI 생성을 진행하려면 먼저 요구사항을 입력해 주세요.");
+        } else if(workspace.getProgressStep() != ProgressStep.TWO) {
+            throw new BadRequestException("이미 ERD가 생성되어 AI 생성을 다시 진행할 수 없습니다.");
         }
         Erd erd = new Erd();
         erd.setWorkspaceId(workspaceId);
@@ -94,10 +102,12 @@ public class ErdService {
     public List<ErdAiCreateResponse> recommendErd(Users user, Long workspaceId) {
         workspaceService.authorizeOwnerOrMemberOrThrow(user.getUserId(), workspaceId, "이 워크스페이스에 생성할 권한이 없습니다.");
 
-        // erd 존재 시 예외처리
-        if(!erdRepository.existsByWorkspaceId(workspaceId)) {
-            throw new BadRequestException("이미 해당 워크스페이스에 ERD가 존재하지 않습니다.");
-        }
+        Erd savedErd = createErd(user, workspaceId);
+
+//        // erd 존재 시 예외처리
+//        if(!erdRepository.existsByWorkspaceId(workspaceId)) {
+//            throw new BadRequestException("이미 해당 워크스페이스에 ERD가 존재하지 않습니다.");
+//        }
         log.info("erd ai 생성 요청(1)");
 
         Workspace foundWorkspace = workspaceRepository.findById(workspaceId)
@@ -185,9 +195,9 @@ public class ErdService {
             ErdAiCreateResponse body = response.getBody();
             log.info("erd ai 생성 요청(9)");
 
-            Erd savedErd = erdRepository.findByWorkspaceId(workspaceId).orElseThrow(
-                    () -> new NotFoundException("workspace에 ERD가 존재하지 않습니다.")
-            );
+//            Erd savedErd = erdRepository.findByWorkspaceId(workspaceId).orElseThrow(
+//                    () -> new NotFoundException("workspace에 ERD가 존재하지 않습니다.")
+//            );
 
             Map<String, ErdTable> tableMap = new HashMap<>();
             List<ErdTable> savedTables = new ArrayList<>();
