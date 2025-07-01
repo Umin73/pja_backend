@@ -254,7 +254,7 @@ public class WorkspaceService {
 
     // 유사한 워크스페이스 검색
     public List<WorkspaceResponse> similarWorkspace(Long userId, Long workspaceId) {
-        authorizeOwnerOrMemberOrThrow(userId, workspaceId, "이 워크스페이스에서 검색할 권한이 없습니다.");
+        validateWorkspaceAccessFromCache(userId, workspaceId);
 
         ProjectInfo foundProjectInfo = projectInfoRepository.findByWorkspace_WorkspaceId(workspaceId)
                 .orElseThrow(() -> new NotFoundException("요청하신 프로젝트 정보를 찾을 수 없습니다."));
@@ -437,6 +437,9 @@ public class WorkspaceService {
         if (data == null) {
             cacheWorkspaceAuth(workspaceId);
             data = redisTemplate.opsForValue().get(key);
+            if (data == null) {
+                throw new RuntimeException("권한 캐시 생성에 실패했습니다.");
+            }
         }
 
         try {
@@ -460,6 +463,8 @@ public class WorkspaceService {
                     throw new ForbiddenException("이 워크스페이스에 접근할 권한이 없습니다.");
                 }
             }
+        } catch (ForbiddenException e) {
+            throw e;
         } catch (Exception e) {
             log.error("권한 캐시 파싱 실패: key={}, data={}", key, data, e);
             throw new RuntimeException("권한 캐시 파싱 실패", e);
