@@ -217,7 +217,8 @@ public class EditingService {
             case "OK":
                 break;
             case "NOT_FOUND":
-                throw new NotFoundException("요청하신 편집 정보를 찾을 수 없습니다.");
+                //throw new NotFoundException("요청하신 편집 정보를 찾을 수 없습니다.");
+                break;
             case "CONFLICT":
                 throw new ConflictException("이미 다른 사용자가 편집 중입니다.");
             case "INVALID_JSON":
