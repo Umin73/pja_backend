@@ -1,5 +1,7 @@
 <a href="https://www.pja.kr"><img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_logo.png?raw=true" alt="배너" width="100%"/></a>
 
+<a href="https://youtu.be/VZwPjE45ycQ?si=bQ88RkjYWxVaa-4O">프로젝트 시연 영상 보러가기</a>
+
 <br/>
 <br/>
 
