@@ -167,7 +167,7 @@
 
 <br/>
 
-# 5. Project Structure (프로젝트 구조)
+# 5. BE Project Structure
 ```plaintext
 📁 src\main
  ┣ 📁 java\com\project\PJA
