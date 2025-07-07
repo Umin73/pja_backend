@@ -22,7 +22,6 @@
 <br/>
 
 # 3. Key Features
-# 3. Key Features
 
 ### <b style="color:#FE5000;">워크스페이스 & 프로젝트 생성</b>
 - **+ 버튼**으로 워크스페이스 생성  
@@ -33,7 +32,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_workspace_create.png?raw=true" alt="워크스페이스 생성"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">아이디어 작성</b>
 - 프로젝트 기본 아이디어를 입력  
@@ -43,7 +41,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_idea_input.png?raw=true" alt="아이디어"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">요구사항 명세서</b>
 - 기능 요구사항, 성능 요구사항 **각 3개 이상** 입력  
@@ -53,7 +50,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_requirement.png?raw=true" alt="요구사항 명세서"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">프로젝트 정보</b>
 - AI가 문제점, 해결 아이디어, 기대효과까지 자동 정리  
@@ -63,7 +59,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_project_info.png?raw=true" alt="프로젝트 정보"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">ERD 추천</b>
 - AI가 기본 ERD 설계안 추천  
@@ -73,7 +68,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_erd_create.png?raw=true" alt="erd"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">API 명세서 추천</b>
 - AI 기반 API 스펙 추천  
@@ -84,7 +78,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_api.png?raw=true" alt="api명세서"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">프로젝트 일정 (리스트/칸반/간트차트)</b>
 - 액션(할 일) 생성 및 일정 관리  
@@ -98,7 +91,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_project_gant.png?raw=true" alt="프로젝트 간트차트"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">알림</b>
 - 알림 확인 및 개별/전체 읽음, 삭제  
@@ -108,7 +100,6 @@
   <img src="https://github.com/Umin73/pja_backend/blob/main/readmefile/pja_noti.png?raw=true" alt="알림"/>
 </div>
 
----
 
 ### <b style="color:#FE5000;">대시보드</b>
 - 내 작업 진행률 확인  
